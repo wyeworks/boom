@@ -21,7 +21,7 @@ defmodule Boom.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, "~> 1.7"}
+      {:plug_cowboy, "~> 1.0"}
     ]
   end
 end
