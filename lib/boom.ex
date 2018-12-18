@@ -1,18 +1,12 @@
 defmodule Boom do
-  @moduledoc """
-  Documentation for Boom.
-  """
+  defmacro __using__(_) do
+    quote location: :keep do
+      use Plug.ErrorHandler
+      import Boom
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Boom.hello()
-      :world
-
-  """
-  def hello do
-    :world
+      defp handle_errors(conn, %{reason: exception}) do
+        IO.inspect exception, label: "Boom library output hackaton"
+      end
+    end
   end
 end
