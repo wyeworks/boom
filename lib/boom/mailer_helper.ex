@@ -1,7 +1,7 @@
 defmodule Boom.MailerHelper do
   import Bamboo.Email
 
-  def notify(reason, stack) do
+  def notify(reason, stack, mailer) do
     welcome_email =
       new_email()
       |> to("foo@example.com")
@@ -10,7 +10,7 @@ defmodule Boom.MailerHelper do
       |> html_body(stack_to_html(stack))
       |> text_body(stack_to_string(stack))
 
-    welcome_email |> mailer().deliver_now
+    welcome_email |> mailer.deliver_now
   end
 
   defp stack_to_string(stack) do
@@ -27,9 +27,5 @@ defmodule Boom.MailerHelper do
     right = "<span style=\"float: right\">#{module}.#{function}/#{arity}</span>"
 
     "<li>#{left}#{right}</li>"
-  end
-
-  defp mailer do
-    Application.fetch_env!(:boom, :mailer)
   end
 end

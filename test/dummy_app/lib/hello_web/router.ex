@@ -1,6 +1,6 @@
 defmodule HelloWeb.Router do
   use HelloWeb, :router
-  use Boom
+  use Boom, mailer: Hello.Mailer
 
   pipeline :browser do
     plug :accepts, ["html"]

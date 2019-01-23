@@ -27,10 +27,6 @@ config :hello, Hello.Mailer,
   adapter: Bamboo.LocalAdapter,
   open_email_in_browser_url: "http://localhost:4000/sent_emails"
 
-# Boom configuration
-config :boom,
-  mailer: Hello.Mailer 
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
