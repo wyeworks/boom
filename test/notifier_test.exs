@@ -1,15 +1,30 @@
-defmodule MailerTest do
+defmodule NotifierTest do
   use ExUnit.Case
   use Plug.Test
 
   doctest Boom
 
   defmodule FakeMailer do
-    def deliver_now(email) do
-      send(self(), {:email_subject, email.subject})
-      send(self(), {:email_from, email.from})
-      send(self(), {:email_to, email.to})
-      send(self(), {:email_text_body, email.text_body})
+    @behaviour Boom.Notifier
+
+    @impl Boom.Notifier
+    def create_payload(reason, stack, options) do
+      subject_prefix = Keyword.get(options, :subject)
+
+      %{
+        email_subject: "#{subject_prefix}: #{reason.message}",
+        email_text_body: Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n")),
+        email_from: Keyword.get(options, :from),
+        email_to: Keyword.get(options, :to)
+      }
+    end
+
+    @impl Boom.Notifier
+    def notify(payload) do
+      send(self(), {:email_subject, payload.email_subject})
+      send(self(), {:email_from, payload.email_from})
+      send(self(), {:email_to, payload.email_to})
+      send(self(), {:email_text_body, payload.email_text_body})
     end
   end
 
@@ -18,7 +33,13 @@ defmodule MailerTest do
   end
 
   defmodule TestPlug do
-    use Boom, mailer: FakeMailer
+    use Boom,
+      notifiers: [
+        {
+          FakeMailer,
+          [from: "me@example.com", to: "foo@example.com", subject: "BOOM error caught"]
+        }
+      ]
 
     def call(_conn, _opts) do
       raise TestException.exception([])
