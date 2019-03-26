@@ -1,5 +1,5 @@
 defmodule Boom do
-  defmacro __using__(notifiers_config) do
+  defmacro __using__(config) do
     quote location: :keep do
       import Boom
 
@@ -7,9 +7,16 @@ defmodule Boom do
 
       defp handle_errors(_conn, %{reason: reason, stack: stack}) do
         try do
-          for [notifier: notifier, options: options] <- unquote(notifiers_config) do
-            payload = notifier.create_payload(reason, stack, options)
-            notifier.notify(payload)
+          case unquote(config) do
+            [notifier: notifier, options: options] ->
+              payload = notifier.create_payload(reason, stack, options)
+              notifier.notify(payload)
+
+            notifiers_config when is_list(notifiers_config) ->
+              for [notifier: notifier, options: options] <- notifiers_config do
+                payload = notifier.create_payload(reason, stack, options)
+                notifier.notify(payload)
+              end
           end
         rescue
           e -> IO.inspect(e, label: "[Boom] Error sending exception")

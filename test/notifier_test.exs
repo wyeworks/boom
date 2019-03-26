@@ -28,7 +28,19 @@ defmodule NotifierTest do
     defexception plug_status: 403, message: "booom!"
   end
 
-  defmodule TestPlug do
+  defmodule TestPlugSingleNotifier do
+    use Boom,
+      notifier: FakeNotifier,
+      options: [
+        subject: "BOOM error caught"
+      ]
+
+    def call(_conn, _opts) do
+      raise TestException.exception([])
+    end
+  end
+
+  defmodule TestPlugMultipleNotifiers do
     use Boom, [
       [
         notifier: FakeNotifier,
@@ -47,20 +59,35 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
 
     assert_raise TestException, "booom!", fn ->
-      TestPlug.call(conn, [])
+      TestPlugSingleNotifier.call(conn, [])
     end
   end
 
   test "options were passed to the notifier" do
     conn = conn(:get, "/")
-    catch_error(TestPlug.call(conn, []))
+    catch_error(TestPlugSingleNotifier.call(conn, []))
 
     assert_received {:subject, "BOOM error caught: booom!"}
 
     receive do
       {:body, [first_line | _]} ->
         expectation =
-          ~r{test/notifier_test.exs:\d+: NotifierTest.TestPlug."call \(overridable 1\)"/2\n}
+          ~r{test/notifier_test.exs:\d+: NotifierTest.TestPlugSingleNotifier."call \(overridable 1\)"/2\n}
+
+        assert Regex.match?(expectation, first_line)
+    end
+  end
+
+  test "options were passed to multiple notifiers" do
+    conn = conn(:get, "/")
+    catch_error(TestPlugMultipleNotifiers.call(conn, []))
+
+    assert_received {:subject, "BOOM error caught: booom!"}
+
+    receive do
+      {:body, [first_line | _]} ->
+        expectation =
+          ~r{test/notifier_test.exs:\d+: NotifierTest.TestPlugMultipleNotifiers."call \(overridable 1\)"/2\n}
 
         assert Regex.match?(expectation, first_line)
     end
