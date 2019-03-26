@@ -33,13 +33,16 @@ defmodule NotifierTest do
   end
 
   defmodule TestPlug do
-    use Boom,
-      notifiers: [
-        {
-          FakeMailer,
-          [from: "me@example.com", to: "foo@example.com", subject: "BOOM error caught"]
-        }
+    use Boom, [
+      [
+        notifier: FakeMailer,
+        options: [
+          from: "me@example.com",
+          to: "foo@example.com",
+          subject: "BOOM error caught"
+        ]
       ]
+    ]
 
     def call(_conn, _opts) do
       raise TestException.exception([])
@@ -74,7 +77,7 @@ defmodule NotifierTest do
     catch_error(TestPlug.call(conn, []))
 
     expection_first_line =
-      "test/notifier_test.exs:45: NotifierTest.TestPlug.\"call (overridable 1)\"/2\n"
+      "test/notifier_test.exs:48: NotifierTest.TestPlug.\"call (overridable 1)\"/2\n"
 
     assert_received {:email_text_body, [^expection_first_line | _]}
   end

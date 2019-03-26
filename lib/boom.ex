@@ -1,5 +1,5 @@
 defmodule Boom do
-  defmacro __using__(notifiers: notifiers) do
+  defmacro __using__(notifiers_config) do
     quote location: :keep do
       import Boom
 
@@ -7,7 +7,7 @@ defmodule Boom do
 
       defp handle_errors(_conn, %{reason: reason, stack: stack}) do
         try do
-          for {notifier, options} <- unquote(notifiers) do
+          for [notifier: notifier, options: options] <- unquote(notifiers_config) do
             payload = notifier.create_payload(reason, stack, options)
             notifier.notify(payload)
           end
