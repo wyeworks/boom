@@ -8,19 +8,14 @@ defmodule NotifierTest do
     @behaviour Boom.Notifier
 
     @impl Boom.Notifier
-    def create_payload(reason, stack, options) do
+    def notify(reason, stack, options) do
       subject_prefix = Keyword.get(options, :subject)
 
-      %{
-        subject: "#{subject_prefix}: #{reason.message}",
-        body: Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
-      }
-    end
+      subject = "#{subject_prefix}: #{reason.message}"
+      body = Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
 
-    @impl Boom.Notifier
-    def notify(payload) do
-      send(self(), {:subject, payload.subject})
-      send(self(), {:body, payload.body})
+      send(self(), {:subject, subject})
+      send(self(), {:body, body})
     end
   end
 

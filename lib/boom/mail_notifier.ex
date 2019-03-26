@@ -3,17 +3,19 @@ defmodule Boom.MailNotifier do
   import Bamboo.Email
 
   @impl Boom.Notifier
-  def create_payload(reason, stack, options) do
-    new_email()
-    |> to(options)
-    |> from(options)
-    |> subject("BOOM error caught: #{reason.message}")
-    |> html_body(stack_to_html(stack))
-    |> text_body(stack_to_string(stack))
-  end
+  def notify(reason, stack, options) do
+    [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
-  @impl Boom.Notifier
-  def notify(email), do: email.deliver_now
+    email =
+      new_email()
+      |> to(email_to)
+      |> from(email_from)
+      |> subject("#{subject}: #{reason.message}")
+      |> html_body(stack_to_html(stack))
+      |> text_body(stack_to_string(stack))
+
+    mailer.deliver_now(email)
+  end
 
   defp stack_to_string(stack) do
     Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))

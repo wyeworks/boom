@@ -9,13 +9,11 @@ defmodule Boom do
         try do
           case unquote(config) do
             [notifier: notifier, options: options] ->
-              payload = notifier.create_payload(reason, stack, options)
-              notifier.notify(payload)
+              notifier.notify(reason, stack, options)
 
             notifiers_config when is_list(notifiers_config) ->
               for [notifier: notifier, options: options] <- notifiers_config do
-                payload = notifier.create_payload(reason, stack, options)
-                notifier.notify(payload)
+                notifier.notify(reason, stack, options)
               end
           end
         rescue
