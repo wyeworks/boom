@@ -74,8 +74,8 @@ defmodule NotifierTest do
     catch_error(TestPlug.call(conn, []))
 
     expection_first_line =
-      "test/mailer_test.exs:24: MailerTest.TestPlug.\"call (overridable 1)\"/2\n"
+      "test/notifier_test.exs:45: NotifierTest.TestPlug.\"call (overridable 1)\"/2\n"
 
-    assert_received {:email_text_body, [expection_first_line | _]}
+    assert_received {:email_text_body, [^expection_first_line | _]}
   end
 end
