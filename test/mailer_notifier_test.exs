@@ -59,12 +59,12 @@ defmodule MailerNotifierTest do
     conn = conn(:get, "/")
     catch_error(TestPlug.call(conn, []))
 
-    receive do
-      {:email_text_body, [first_line | _]} ->
-        expectation =
-          ~r{test/mailer_notifier_test.exs:\d+: MailerNotifierTest.TestPlug."call \(overridable 1\)"/2\n}
-
-        assert Regex.match?(expectation, first_line)
-    end
+    assert_received {:email_text_body,
+                     [
+                       "test/mailer_notifier_test.exs:" <>
+                         <<name::binary-size(2),
+                           ": MailerNotifierTest.TestPlug.\"call \(overridable 1\)\"/2\n">>
+                       | _
+                     ]}
   end
 end

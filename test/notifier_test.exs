@@ -64,13 +64,13 @@ defmodule NotifierTest do
 
     assert_received {:subject, "BOOM error caught: booom!"}
 
-    receive do
-      {:body, [first_line | _]} ->
-        expectation =
-          ~r{test/notifier_test.exs:\d+: NotifierTest.TestPlugSingleNotifier."call \(overridable 1\)"/2\n}
-
-        assert Regex.match?(expectation, first_line)
-    end
+    assert_received {:body,
+                     [
+                       "test/notifier_test.exs:" <>
+                         <<name::binary-size(2),
+                           ": NotifierTest.TestPlugSingleNotifier.\"call \(overridable 1\)\"/2\n">>
+                       | _
+                     ]}
   end
 
   test "options were passed to multiple notifiers" do
@@ -79,12 +79,12 @@ defmodule NotifierTest do
 
     assert_received {:subject, "BOOM error caught: booom!"}
 
-    receive do
-      {:body, [first_line | _]} ->
-        expectation =
-          ~r{test/notifier_test.exs:\d+: NotifierTest.TestPlugMultipleNotifiers."call \(overridable 1\)"/2\n}
-
-        assert Regex.match?(expectation, first_line)
-    end
+    assert_received {:body,
+                     [
+                       "test/notifier_test.exs:" <>
+                         <<name::binary-size(2),
+                           ": NotifierTest.TestPlugMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
+                       | _
+                     ]}
   end
 end
