@@ -3,6 +3,12 @@ defmodule Boom.MailNotifier do
   import Bamboo.Email
 
   @impl Boom.Notifier
+
+  @type option ::
+          {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
+  @type options :: [option]
+
+  @spec notify(Boom.Notifier.reason(), [String.t()], options) :: no_return()
   def notify(reason, stack, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
