@@ -22,7 +22,8 @@ defmodule Boom.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 1.0"},
-      {:bamboo, "~> 1.1"}
+      {:bamboo, "~> 1.1"},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 end

@@ -1,16 +1,26 @@
-defmodule Boom.MailerHelper do
+defmodule Boom.MailNotifier do
+  @behaviour Boom.Notifier
   import Bamboo.Email
 
-  def notify(reason, stack, mailer) do
-    welcome_email =
+  @impl Boom.Notifier
+
+  @type option ::
+          {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
+  @type options :: [option]
+
+  @spec notify(Boom.Notifier.reason(), [String.t()], options) :: no_return()
+  def notify(reason, stack, options) do
+    [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
+
+    email =
       new_email()
-      |> to("foo@example.com")
-      |> from("me@example.com")
-      |> subject("BOOM error caught: #{reason.message}")
+      |> to(email_to)
+      |> from(email_from)
+      |> subject("#{subject}: #{reason.message}")
       |> html_body(stack_to_html(stack))
       |> text_body(stack_to_string(stack))
 
-    welcome_email |> mailer.deliver_now
+    mailer.deliver_now(email)
   end
 
   defp stack_to_string(stack) do

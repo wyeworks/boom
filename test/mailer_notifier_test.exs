@@ -1,4 +1,4 @@
-defmodule MailerTest do
+defmodule MailerNotifierTest do
   use ExUnit.Case
   use Plug.Test
 
@@ -18,7 +18,14 @@ defmodule MailerTest do
   end
 
   defmodule TestPlug do
-    use Boom, mailer: FakeMailer
+    use Boom,
+      notifier: Boom.MailNotifier,
+      options: [
+        mailer: FakeMailer,
+        from: "me@example.com",
+        to: "foo@example.com",
+        subject: "BOOM error caught"
+      ]
 
     def call(_conn, _opts) do
       raise TestException.exception([])
@@ -52,9 +59,12 @@ defmodule MailerTest do
     conn = conn(:get, "/")
     catch_error(TestPlug.call(conn, []))
 
-    expection_first_line =
-      "test/mailer_test.exs:24: MailerTest.TestPlug.\"call (overridable 1)\"/2\n"
-
-    assert_received {:email_text_body, [expection_first_line | _]}
+    assert_received {:email_text_body,
+                     [
+                       "test/mailer_notifier_test.exs:" <>
+                         <<name::binary-size(2),
+                           ": MailerNotifierTest.TestPlug.\"call \(overridable 1\)\"/2\n">>
+                       | _
+                     ]}
   end
 end
