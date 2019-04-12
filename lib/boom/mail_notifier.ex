@@ -8,7 +8,7 @@ defmodule Boom.MailNotifier do
           {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
   @type options :: [option]
 
-  @spec notify(Boom.Notifier.reason(), [String.t()], options) :: no_return()
+  @spec notify(String.t(), [String.t()], options) :: no_return()
   def notify(reason, stack, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
@@ -16,7 +16,7 @@ defmodule Boom.MailNotifier do
       new_email()
       |> to(email_to)
       |> from(email_from)
-      |> subject("#{subject}: #{reason.message}")
+      |> subject("#{subject}: #{reason}")
       |> html_body(stack_to_html(stack))
       |> text_body(stack_to_string(stack))
 
