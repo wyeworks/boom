@@ -4,15 +4,6 @@ defmodule MailerNotifierTest do
 
   doctest Boom
 
-  defmodule FakeMailer do
-    def deliver_now(email) do
-      send(self(), {:email_subject, email.subject})
-      send(self(), {:email_from, email.from})
-      send(self(), {:email_to, email.to})
-      send(self(), {:email_text_body, email.text_body})
-    end
-  end
-
   defmodule TestException do
     defexception plug_status: 403, message: "booom!"
   end
@@ -21,7 +12,7 @@ defmodule MailerNotifierTest do
     use Boom,
       notifier: Boom.MailNotifier,
       options: [
-        mailer: FakeMailer,
+        mailer: Support.FakeMailer,
         from: "me@example.com",
         to: "foo@example.com",
         subject: "BOOM error caught"
