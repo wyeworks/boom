@@ -8,11 +8,11 @@ defmodule NotifierTest do
     @behaviour Boom.Notifier
 
     @impl Boom.Notifier
-    def notify(reason, stack, options) do
+    def notify(error_info, options) do
       subject_prefix = Keyword.get(options, :subject)
 
-      subject = "#{subject_prefix}: #{reason}"
-      body = Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
+      subject = "#{subject_prefix}: #{error_info.reason}"
+      body = Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
 
       send(self(), {:subject, subject})
       send(self(), {:body, body})

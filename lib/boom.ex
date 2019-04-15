@@ -5,15 +5,17 @@ defmodule Boom do
 
       use Plug.ErrorHandler
 
-      defp handle_errors(_conn, %{reason: reason, stack: stack}) do
+      defp handle_errors(conn, %{reason: reason, stack: stack}) do
         try do
+          error_info = build_error_info(reason, stack, conn)
+
           case unquote(config) do
             [notifier: notifier, options: options] ->
-              notify(notifier, reason, stack, options)
+              notifier.notify(error_info, options)
 
             notifiers_config when is_list(notifiers_config) ->
               for [notifier: notifier, options: options] <- notifiers_config do
-                notify(notifier, reason, stack, options)
+                notifier.notify(error_info, options)
               end
           end
         rescue
@@ -21,16 +23,21 @@ defmodule Boom do
         end
       end
 
-      defp notify(notifier, %{message: reason}, stack, options) do
-        notifier.notify(reason, stack, options)
+      # TODO use a ErrorInfo module
+      defp build_error_info(%{message: reason}, stack, conn) do
+        %{
+          reason: reason,
+          stack: stack,
+          controller: get_in(conn.private, [:phoenix_controller])
+        }
       end
 
-      defp notify(notifier, reason, stack, options) when is_binary(reason) do
-        notify(notifier, %{message: reason}, stack, options)
+      defp build_error_info(reason, stack, conn) when is_binary(reason) do
+        build_error_info(%{message: reason}, stack, conn)
       end
 
-      defp notify(notifier, reason, stack, options) do
-        notify(notifier, %{message: inspect(reason)}, stack, options)
+      defp build_error_info(reason, stack, conn) do
+        build_error_info(%{message: inspect(reason)}, stack, conn)
       end
     end
   end

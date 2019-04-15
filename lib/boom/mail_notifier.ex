@@ -8,19 +8,42 @@ defmodule Boom.MailNotifier do
           {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
   @type options :: [option]
 
-  @spec notify(String.t(), [String.t()], options) :: no_return()
-  def notify(reason, stack, options) do
+  @spec notify(map(), options) :: no_return()
+  def notify(error_info, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
     email =
       new_email()
       |> to(email_to)
       |> from(email_from)
-      |> subject("#{subject}: #{reason}")
-      |> html_body(stack_to_html(stack))
-      |> text_body(stack_to_string(stack))
+      |> subject("#{subject}: #{error_info.reason}")
+      |> html_body(html_content(error_info))
+      |> text_body(text_content(error_info))
 
     mailer.deliver_now(email)
+  end
+
+  defp text_content(%{controller: nil, stack: stack}) do
+    stack_to_string(stack)
+  end
+
+  defp text_content(%{controller: controller, stack: stack}) do
+    ["Controller: #{bare_controller_name(controller)}\n" | stack_to_string(stack)]
+  end
+
+  defp html_content(%{controller: nil, stack: stack}) do
+    stack_to_html(stack)
+  end
+
+  defp html_content(%{controller: controller, stack: stack}) do
+    "<p>Controller: #{bare_controller_name(controller)}</p>" <> stack_to_html(stack)
+  end
+
+  defp bare_controller_name(controller) do
+    Atom.to_string(controller)
+    |> String.split(".")
+    |> Enum.reverse()
+    |> List.first()
   end
 
   defp stack_to_string(stack) do

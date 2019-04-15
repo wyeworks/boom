@@ -46,4 +46,22 @@ defmodule ContextInformationTest do
 
     assert_received {:email_subject, "BOOM error caught: booom!"}
   end
+
+  test "Set email text body with controller where error happened" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    assert_received {:email_text_body,
+                     [
+                       "Controller: TestController\n"
+                       | _
+                     ]}
+  end
+
+  test "Set email HTML body with controller where error happened" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    assert_received {:email_html_body, "<p>Controller: TestController</p>" <> _}
+  end
 end
