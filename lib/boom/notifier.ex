@@ -1,3 +1,3 @@
 defmodule Boom.Notifier do
-  @callback notify(map(), keyword(String.t())) :: no_return()
+  @callback notify(%ErrorInfo{}, keyword(String.t())) :: no_return()
 end

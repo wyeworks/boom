@@ -7,7 +7,7 @@ defmodule Boom do
 
       defp handle_errors(conn, %{reason: reason, stack: stack}) do
         try do
-          error_info = build_error_info(reason, stack, conn)
+          error_info = ErrorInfo.build(reason, stack, conn)
 
           case unquote(config) do
             [notifier: notifier, options: options] ->
@@ -21,23 +21,6 @@ defmodule Boom do
         rescue
           e -> IO.inspect(e, label: "[Boom] Error sending exception")
         end
-      end
-
-      # TODO use a ErrorInfo module
-      defp build_error_info(%{message: reason}, stack, conn) do
-        %{
-          reason: reason,
-          stack: stack,
-          controller: get_in(conn.private, [:phoenix_controller])
-        }
-      end
-
-      defp build_error_info(reason, stack, conn) when is_binary(reason) do
-        build_error_info(%{message: reason}, stack, conn)
-      end
-
-      defp build_error_info(reason, stack, conn) do
-        build_error_info(%{message: inspect(reason)}, stack, conn)
       end
     end
   end

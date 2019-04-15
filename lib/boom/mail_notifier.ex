@@ -8,7 +8,7 @@ defmodule Boom.MailNotifier do
           {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
   @type options :: [option]
 
-  @spec notify(map(), options) :: no_return()
+  @spec notify(%ErrorInfo{}, options) :: no_return()
   def notify(error_info, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
@@ -23,19 +23,19 @@ defmodule Boom.MailNotifier do
     mailer.deliver_now(email)
   end
 
-  defp text_content(%{controller: nil, stack: stack}) do
+  defp text_content(%ErrorInfo{controller: nil, stack: stack}) do
     stack_to_string(stack)
   end
 
-  defp text_content(%{controller: controller, stack: stack}) do
+  defp text_content(%ErrorInfo{controller: controller, stack: stack}) do
     ["Controller: #{bare_controller_name(controller)}\n" | stack_to_string(stack)]
   end
 
-  defp html_content(%{controller: nil, stack: stack}) do
+  defp html_content(%ErrorInfo{controller: nil, stack: stack}) do
     stack_to_html(stack)
   end
 
-  defp html_content(%{controller: controller, stack: stack}) do
+  defp html_content(%ErrorInfo{controller: controller, stack: stack}) do
     "<p>Controller: #{bare_controller_name(controller)}</p>" <> stack_to_html(stack)
   end
 
