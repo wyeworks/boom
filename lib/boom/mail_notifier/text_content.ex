@@ -1,12 +1,12 @@
 defmodule Boom.MailNotifier.TextContent do
-  import Boom.MailNotifier.Helpers, only: [bare_controller_name: 1]
+  import Boom.MailNotifier.Helpers
 
   def build(%ErrorInfo{controller: nil, stack: stack}) do
     stack_to_string(stack)
   end
 
-  def build(%ErrorInfo{controller: controller, stack: stack}) do
-    ["Controller: #{bare_controller_name(controller)}\n" | stack_to_string(stack)]
+  def build(%ErrorInfo{name: name, controller: controller, action: action, stack: stack}) do
+    [exception_basic_text(name, controller, action) <> "\n" | stack_to_string(stack)]
   end
 
   defp stack_to_string(stack) do

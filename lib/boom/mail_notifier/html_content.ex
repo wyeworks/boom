@@ -1,12 +1,12 @@
 defmodule Boom.MailNotifier.HTMLContent do
-  import Boom.MailNotifier.Helpers, only: [bare_controller_name: 1]
+  import Boom.MailNotifier.Helpers
 
   def build(%ErrorInfo{controller: nil, stack: stack}) do
     stack_to_html(stack)
   end
 
-  def build(%ErrorInfo{controller: controller, stack: stack}) do
-    "<p>Controller: #{bare_controller_name(controller)}</p>" <> stack_to_html(stack)
+  def build(%ErrorInfo{name: name, controller: controller, action: action, stack: stack}) do
+    "<p>#{exception_basic_text(name, controller, action)}</p>" <> stack_to_html(stack)
   end
 
   defp stack_to_html(stack) do
