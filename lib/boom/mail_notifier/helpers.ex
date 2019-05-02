@@ -17,7 +17,6 @@ defmodule Boom.MailNotifier.Helpers do
   defp extract_nested(name) do
     name
     |> String.split(".")
-    |> Enum.reverse()
-    |> List.first()
+    |> List.last()
   end
 end
