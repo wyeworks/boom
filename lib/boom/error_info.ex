@@ -32,7 +32,11 @@ defmodule ErrorInfo do
     %{
       path: conn.request_path,
       method: conn.method,
-      url: get_full_url(conn)
+      url: get_full_url(conn),
+      port: conn.port,
+      scheme: conn.scheme,
+      query_string: conn.query_string,
+      client_ip: format_ip(conn.remote_ip)
     }
   end
 
@@ -44,5 +48,12 @@ defmodule ErrorInfo do
       "" -> base
       qs -> "#{base}?#{qs}"
     end
+  end
+
+  # Credit: https://github.com/jarednorman/plugsnag/blob/master/lib/plugsnag/basic_error_report_builder.ex
+  defp format_ip(ip) do
+    ip
+    |> Tuple.to_list
+    |> Enum.join(".")
   end
 end

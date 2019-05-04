@@ -20,9 +20,13 @@ defmodule Boom.MailNotifier.TextContent do
   defp request_info_to_string(request) do
     [
       "Request Information:\n",
+      "URL: #{request.url}\n",
       "Path: #{request.path}\n",
       "Method: #{request.method}\n",
-      "URL: #{request.url}\n"
+      "Port: #{request.port}\n",
+      "Scheme: #{request.scheme}\n",
+      "Query String: #{request.query_string}\n",
+      "Client IP: #{request.client_ip}\n"
     ]
   end
 

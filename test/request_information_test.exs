@@ -46,13 +46,17 @@ defmodule RequestInformationTest do
 
     receive do
       {:email_text_body, body} ->
-        request_info_lines = Enum.slice(body, 1..4)
+        request_info_lines = Enum.slice(body, 1..8)
 
         assert [
                  "Request Information:\n",
+                 "URL: http://www.example.com/\n",
                  "Path: /\n",
                  "Method: GET\n",
-                 "URL: http://www.example.com/\n"
+                 "Port: 80\n",
+                 "Scheme: http\n",
+                 "Query String: \n",
+                 "Client IP: 127.0.0.1\n"
                ] = request_info_lines
     end
   end
