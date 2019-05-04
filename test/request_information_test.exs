@@ -1,4 +1,4 @@
-defmodule ContextInformationTest do
+defmodule RequestInformationTest do
   use ExUnit.Case
   use Plug.Test
 
@@ -40,23 +40,29 @@ defmodule ContextInformationTest do
     end
   end
 
-  test "Set email text body with controller/action where error happened" do
+  test "Set email text body with request information" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
 
-    assert_received {:email_text_body,
-                     [
-                       "TestException occurred while the request was processed by TestController#index\n"
-                       | _
-                     ]}
+    receive do
+      {:email_text_body, body} ->
+        request_info_lines = Enum.slice(body, 1..4)
+
+        assert [
+                 "Request Information:\n",
+                 "Path: /\n",
+                 "Method: GET\n",
+                 "URL: http://www.example.com/\n"
+               ] = request_info_lines
+    end
   end
 
-  test "Set email HTML body with controller/action where error happened" do
-    conn = conn(:get, "/")
-    catch_error(TestRouter.call(conn, []))
+  # test "Set email HTML body with controller/action where error happened" do
+  #   conn = conn(:get, "/")
+  #   catch_error(TestRouter.call(conn, []))
 
-    assert_received {:email_html_body,
-                     "<p>TestException occurred while the request was processed by TestController#index</p>" <>
-                       _}
-  end
+  #   assert_received {:email_html_body,
+  #                    "<p>TestException occurred while the request was processed by TestController#index</p>" <>
+  #                      _}
+  # end
 end
