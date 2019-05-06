@@ -53,7 +53,7 @@ defmodule ErrorInfo do
   # Credit: https://github.com/jarednorman/plugsnag/blob/master/lib/plugsnag/basic_error_report_builder.ex
   defp format_ip(ip) do
     ip
-    |> Tuple.to_list
+    |> Tuple.to_list()
     |> Enum.join(".")
   end
 end

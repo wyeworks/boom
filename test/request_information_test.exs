@@ -61,12 +61,27 @@ defmodule RequestInformationTest do
     end
   end
 
-  # test "Set email HTML body with controller/action where error happened" do
-  #   conn = conn(:get, "/")
-  #   catch_error(TestRouter.call(conn, []))
+  test "Set email HTML body with request informationd" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
 
-  #   assert_received {:email_html_body,
-  #                    "<p>TestException occurred while the request was processed by TestController#index</p>" <>
-  #                      _}
-  # end
+    receive do
+      {:email_html_body, body} ->
+        request_info_lines =
+          Regex.scan(~r/<li>(.)+?<\/li>/, body)
+          |> Enum.map(&Enum.at(&1, 0))
+          |> Enum.take(8)
+
+        assert [
+                 "<li>Request Information:</li>",
+                 "<li>URL: http://www.example.com/</li>",
+                 "<li>Path: /</li>",
+                 "<li>Method: GET</li>",
+                 "<li>Port: 80</li>",
+                 "<li>Scheme: http</li>",
+                 "<li>Query String: </li>",
+                 "<li>Client IP: 127.0.0.1</li>"
+               ] = request_info_lines
+    end
+  end
 end
