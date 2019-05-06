@@ -1,10 +1,6 @@
 defmodule Boom.MailNotifier.TextContent do
   import Boom.MailNotifier.Helpers
 
-  def build(%ErrorInfo{controller: nil, stack: stack}) do
-    stack_to_string(stack)
-  end
-
   def build(%ErrorInfo{
         name: name,
         controller: controller,
@@ -12,25 +8,20 @@ defmodule Boom.MailNotifier.TextContent do
         request: request,
         stack: stack
       }) do
-    [exception_basic_text(name, controller, action) <> "\n"] ++
-      request_info_to_string(request) ++
-      stack_to_string(stack)
+    exception_summary =
+      if controller && action do
+        exception_basic_text(name, controller, action)
+      end
+
+    EEx.eval_file(template_path(),
+      exception_summary: exception_summary,
+      request: request,
+      exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1)
+    )
   end
 
-  defp request_info_to_string(request) do
-    [
-      "Request Information:\n",
-      "URL: #{request.url}\n",
-      "Path: #{request.path}\n",
-      "Method: #{request.method}\n",
-      "Port: #{request.port}\n",
-      "Scheme: #{request.scheme}\n",
-      "Query String: #{request.query_string}\n",
-      "Client IP: #{request.client_ip}\n"
-    ]
-  end
-
-  defp stack_to_string(stack) do
-    Enum.map(stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
+  defp template_path do
+    current_folder_path = Path.dirname(__ENV__.file)
+    Path.join([current_folder_path, "templates", "email_body.text.eex"])
   end
 end

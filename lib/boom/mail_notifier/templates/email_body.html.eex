@@ -1,6 +1,6 @@
 <p><%= exception_summary %></p>
 <%= if request do %>
-  <ul style=\"list-style-type: none;\">
+  <ul style="list-style-type: none;">
     <li>Request Information:</li>
     <li>URL: <%= request.url %></li>
     <li>Path: <%= request.path %></li>
@@ -11,7 +11,7 @@
     <li>Client IP: <%= request.client_ip %></li>
   </ul>
 <% end %>
-<ul style=\"list-style-type: none;\">
+<ul style="list-style-type: none;">
   <%= for entry <- exception_stack_entries do %>
     <li>
       <span><%= entry.file %>:<%= entry.line %></span>
