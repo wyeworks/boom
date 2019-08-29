@@ -25,10 +25,11 @@ defmodule Boom.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug_cowboy, "~> 1.0"},
       {:bamboo, "~> 1.1"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:phoenix, "~> 1.4", only: [:test]}
+      {:httpoison, "~> 1.5"},
+      {:phoenix, "~> 1.4", only: [:test]},
+      {:plug_cowboy, "~> 1.0"}
     ]
   end
 end
