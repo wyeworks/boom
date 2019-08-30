@@ -26,6 +26,7 @@ defmodule Boom.MixProject do
   defp deps do
     [
       {:bamboo, "~> 1.1"},
+      {:bypass, "~> 1.0", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:httpoison, "~> 1.5"},
       {:phoenix, "~> 1.4", only: [:test]},
