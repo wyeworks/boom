@@ -4,19 +4,6 @@ defmodule MailerNotifierTest do
 
   doctest Boom
 
-  defmodule TestController do
-    use Phoenix.Controller
-    import Plug.Conn
-
-    defmodule TestException do
-      defexception plug_status: 403, message: "booom!"
-    end
-
-    def index(_conn, _params) do
-      raise TestException.exception([])
-    end
-  end
-
   defmodule TestRouter do
     use Phoenix.Router
     import Phoenix.Controller
@@ -44,7 +31,7 @@ defmodule MailerNotifierTest do
     conn = conn(:get, "/")
 
     assert_raise Plug.Conn.WrapperError,
-                 "** (MailerNotifierTest.TestController.TestException) booom!",
+                 "** (TestController.TestException) booom!",
                  fn ->
                    TestRouter.call(conn, [])
                  end
@@ -138,8 +125,8 @@ defmodule MailerNotifierTest do
       {:email_text_body, body} ->
         first_stack_line = Enum.at(body, 9)
 
-        assert "test/mailer_notifier_test.exs:" <>
-                 <<name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
+        assert "(boom) test/support/test_controller.ex:" <>
+                 <<name::binary-size(2), ": TestController.index/2">> =
                  first_stack_line
     end
   end
@@ -162,8 +149,8 @@ defmodule MailerNotifierTest do
           Regex.scan(~r/<span.*>(.+)<\/span>/, first_stack_line)
           |> Enum.map(&Enum.at(&1, 1))
 
-        assert "test/mailer_notifier_test.exs:16" = file
-        assert "Elixir.MailerNotifierTest.TestController.index/2" = exception
+        assert "test/support/test_controller.ex:10" = file
+        assert "Elixir.TestController.index/2" = exception
     end
   end
 end
