@@ -1,5 +1,5 @@
 defmodule Boom.MailNotifier.TextContent do
-  import Boom.MailNotifier.Helpers
+  import Boom.Helpers
 
   def build(%ErrorInfo{
         name: name,

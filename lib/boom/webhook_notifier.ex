@@ -3,7 +3,7 @@ defmodule Boom.WebhookNotifier do
 
   use HTTPoison.Base
 
-  import Boom.MailNotifier.Helpers
+  import Boom.Helpers
 
   @impl Boom.Notifier
   def notify(error_info, url: url) do

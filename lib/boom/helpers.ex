@@ -1,4 +1,4 @@
-defmodule Boom.MailNotifier.Helpers do
+defmodule Boom.Helpers do
   def exception_basic_text(exception_name, controller, action) do
     "#{module_bare_name(exception_name)} occurred while the request was processed by #{
       module_bare_name(controller)
