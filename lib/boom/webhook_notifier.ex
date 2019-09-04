@@ -1,19 +1,14 @@
 defmodule Boom.WebhookNotifier do
   @behaviour Boom.Notifier
 
-  use HTTPoison.Base
-
   import Boom.Helpers
 
   @impl Boom.Notifier
   def notify(error_info, url: url) do
-    post!(url, error_info, [{"Content-Type", "application/json"}])
+    HTTPoison.post!(url, error_to_json(error_info), [{"Content-Type", "application/json"}])
   end
 
-  @impl true
-  def process_request_body(body), do: json(body)
-
-  defp json(%ErrorInfo{
+  defp error_to_json(%ErrorInfo{
          name: name,
          controller: controller,
          action: action,
