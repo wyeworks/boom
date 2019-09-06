@@ -8,7 +8,10 @@ defmodule Boom.MixProject do
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: [
+        quality: ["format", "credo --strict", "dialyzer"]
+      ]
     ]
   end
 
@@ -27,7 +30,7 @@ defmodule Boom.MixProject do
     [
       {:bamboo, "~> 1.1"},
       {:bypass, "~> 1.0", only: :test},
-      {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:httpoison, "~> 1.5"},
       {:phoenix, "~> 1.4", only: [:test]},
