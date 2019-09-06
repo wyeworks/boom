@@ -27,6 +27,7 @@ defmodule Boom.MixProject do
     [
       {:bamboo, "~> 1.1"},
       {:bypass, "~> 1.0", only: :test},
+      {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:httpoison, "~> 1.5"},
       {:phoenix, "~> 1.4", only: [:test]},
