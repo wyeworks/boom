@@ -1,4 +1,6 @@
 defmodule Boom.MailNotifier.HTMLContent do
+  @moduledoc false
+
   import Boom.Helpers
 
   def build(%ErrorInfo{

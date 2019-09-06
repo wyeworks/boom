@@ -1,4 +1,22 @@
 defmodule Boom.WebhookNotifier do
+  @moduledoc """
+  Send exception notification as a json using `HTTPoison`.
+
+  ## Usage
+  ```elixir
+  defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use Boom,
+    notifier: Boom.WebhookNotifier,
+    options: [
+      url: "http://example.com"
+    ]
+
+  # ...
+  ```
+  """
+
   @behaviour Boom.Notifier
 
   import Boom.Helpers

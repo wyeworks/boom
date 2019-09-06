@@ -1,4 +1,7 @@
 defmodule ErrorInfo do
+  @moduledoc false
+  # Build the ErrorInfo struct
+
   @enforce_keys [:reason, :stack]
   defstruct [:name, :reason, :stack, :controller, :action, :request]
 

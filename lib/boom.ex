@@ -1,9 +1,12 @@
 defmodule Boom do
+  @moduledoc false
+  # Notify the exception to all the defined notifiers
+
   defmacro __using__(config) do
     quote location: :keep do
-      import Boom
-
       use Plug.ErrorHandler
+
+      import Boom
 
       defp handle_errors(conn, %{reason: reason, stack: stack}) do
         try do
