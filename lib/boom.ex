@@ -22,6 +22,8 @@ defmodule Boom do
               end
           end
         rescue
+          # FIXME: we should handle this in a different way
+          # credo:disable-for-next-line
           e -> IO.inspect(e, label: "[Boom] Error sending exception")
         end
       end
