@@ -9,6 +9,7 @@ defmodule Boom.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: [plt_add_apps: [:eex]],
       aliases: [
         quality: ["format", "credo --strict", "dialyzer"]
       ]
