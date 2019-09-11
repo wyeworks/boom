@@ -1,6 +1,9 @@
 defmodule ErrorInfo do
   @moduledoc false
-  # Build the ErrorInfo struct
+  # The ErrorInfo struct holds all the information about the exception.
+  # It includes the error message, the stacktrace and context information
+  # (information about the request, the current controller and action,
+  # among other things).
 
   @enforce_keys [:reason, :stack]
   defstruct [:name, :reason, :stack, :controller, :action, :request]
