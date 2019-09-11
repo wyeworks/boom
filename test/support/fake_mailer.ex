@@ -1,4 +1,9 @@
 defmodule Support.FakeMailer do
+  @moduledoc false
+  # Overrides the `deliver_now` function.
+  # Instead of sending an email it puts the fields in a mailbox so they can be
+  # received in the test
+
   def deliver_now(email) do
     send(self(), {:email_subject, email.subject})
     send(self(), {:email_from, email.from})

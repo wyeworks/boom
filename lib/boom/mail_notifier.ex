@@ -1,16 +1,37 @@
 defmodule Boom.MailNotifier do
+  @moduledoc """
+  Send exception notification by email using `Bamboo`.
+
+  ## Usage
+  ```elixir
+  defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use Boom,
+      notifier: Boom.MailNotifier,
+      options: [
+        mailer: YourApp.Mailer,
+        from: "me@example.com",
+        to: "foo@example.com",
+        subject: "BOOM error caught"
+      ]
+
+  # ...
+  ```
+  """
+
   @behaviour Boom.Notifier
+
   import Bamboo.Email
 
-  alias Boom.MailNotifier.TextContent
   alias Boom.MailNotifier.HTMLContent
-
-  @impl Boom.Notifier
+  alias Boom.MailNotifier.TextContent
 
   @type option ::
           {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
   @type options :: [option]
 
+  @impl Boom.Notifier
   @spec notify(%ErrorInfo{}, options) :: no_return()
   def notify(error_info, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
