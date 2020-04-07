@@ -3,5 +3,5 @@ defmodule Boom.Notifier do
   Defines a callback to be used by custom notifiers
   """
 
-  @callback notify(%ErrorInfo{}, keyword(String.t())) :: no_return()
+  @callback notify(list(%ErrorInfo{}), keyword(String.t())) :: no_return()
 end

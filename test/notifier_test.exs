@@ -8,14 +8,17 @@ defmodule NotifierTest do
     @behaviour Boom.Notifier
 
     @impl Boom.Notifier
-    def notify(error_info, options) do
+    def notify(error_info_list, options) do
+      [first_error | _] = error_info_list
       subject_prefix = Keyword.get(options, :subject)
+      subject = "#{subject_prefix}: #{first_error.reason}"
 
-      subject = "#{subject_prefix}: #{error_info.reason}"
-      body = Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
+      body =
+        Enum.map(error_info_list, fn error_info ->
+          Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
+        end)
 
-      send(self(), {:subject, subject})
-      send(self(), {:body, body})
+      send(self(), %{exception: %{subject: subject, body: body}})
     end
   end
 
@@ -92,43 +95,51 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
 
-    assert_received {:subject, "BOOM error caught: booom!"}
-
-    assert_received {:body,
-                     [
-                       "test/notifier_test.exs:" <>
-                         <<name::binary-size(2),
-                           ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
-                       | _
-                     ]}
+    assert_received %{
+      exception: %{
+        subject: "BOOM error caught: booom!",
+        body: [
+          [
+            "test/notifier_test.exs:" <>
+              <<name::binary-size(2),
+                ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
+            | _
+          ]
+        ]
+      }
+    }
   end
 
   test "reports exception when options were passed to multiple notifiers" do
     conn = conn(:get, "/")
     catch_error(PlugErrorWithMultipleNotifiers.call(conn, []))
 
-    assert_received {:subject, "BOOM error caught: booom!"}
-
-    assert_received {:body,
-                     [
-                       "test/notifier_test.exs:" <>
-                         <<name::binary-size(2),
-                           ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
-                       | _
-                     ]}
+    assert_received %{
+      exception: %{
+        subject: "BOOM error caught: booom!",
+        body: [
+          [
+            "test/notifier_test.exs:" <>
+              <<name::binary-size(2),
+                ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
+            | _
+          ]
+        ]
+      }
+    }
   end
 
   test "reports exit termination" do
     conn = conn(:get, "/")
     catch_exit(PlugExitTermination.call(conn, []))
 
-    assert_received {:subject, "BOOM error caught: :shutdown"}
+    assert_received %{exception: %{subject: "BOOM error caught: :shutdown"}}
   end
 
   test "reports thrown error" do
     conn = conn(:get, "/")
     catch_throw(PlugThrown.call(conn, []))
 
-    assert_received {:subject, "BOOM error caught: thrown error"}
+    assert_received %{exception: %{subject: "BOOM error caught: thrown error"}}
   end
 end

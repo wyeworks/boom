@@ -1,16 +1,20 @@
-<%= if exception_summary do %>
-  <%= exception_summary %>
-<% end %>
-<%= if request do %>
-  Request Information:
-  URL: <%= request.url %>
-  Path: <%= request.path %>
-  Method: <%= request.method %>
-  Port: <%= request.port %>
-  Scheme: <%= request.scheme %>
-  Query String: <%= request.query_string %>
-  Client IP: <%= request.client_ip %>
-<% end %>
-<%= for entry <- exception_stack_entries do %>
-  <%= entry %>
+<%= for error <- errors do %>
+  <%= if error.exception_summary do %>
+    <%= error.exception_summary %>
+  <% end %>
+  <%= if error.request do %>
+    Request Information:
+    URL: <%= error.request.url %>
+    Path: <%= error.request.path %>
+    Method: <%= error.request.method %>
+    Port: <%= error.request.port %>
+    Scheme: <%= error.request.scheme %>
+    Query String: <%= error.request.query_string %>
+    Client IP: <%= error.request.client_ip %>
+  <% end %>
+  <%= for entry <- error.exception_stack_entries do %>
+    <%= entry %>
+  <% end %>
+
+  ----------------------------------------
 <% end %>
