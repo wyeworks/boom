@@ -2,14 +2,11 @@ defmodule Boom do
   @moduledoc false
   # Notify the exception to all the defined notifiers
 
-  def start_link do
-    Agent.start_link(fn -> [] end, name: :boom)
-  end
+  alias Boom.ErrorGrouping
 
   defmacro __using__(config) do
     quote location: :keep do
       use Plug.ErrorHandler
-      use Agent
 
       import Boom
 
@@ -17,22 +14,17 @@ defmodule Boom do
         name = Boom.get_reason_name(error)
         error_info = ErrorInfo.build(reason, stack, conn)
 
-        Agent.update(
-          :boom,
-          &Keyword.update(&1, name, {1, [error_info]}, fn {count, errors} ->
-            {count, errors ++ [error_info]}
-          end)
-        )
-
-        {counter, occurrences} = Agent.get(:boom, fn state -> state end) |> Keyword.get(name)
+        # FIXME: maybe there's a way not to call the agent if error_grouping is disabled
+        {counter, occurrences} = ErrorGrouping.update_errors(name, error_info)
 
         settings = unquote(config)
         {error_grouping, settings} = Keyword.pop(settings, :error_grouping)
 
-        send_conditions = !error_grouping || length(occurrences) >= counter
+        send_notification? = !error_grouping || length(occurrences) >= counter
 
-        if send_conditions do
+        if send_notification? do
           case settings do
+            # FIXME: this doesn't match when extra parameters are set
             [notifier: notifier, options: options] ->
               notifier.notify(occurrences, options)
 
@@ -42,10 +34,7 @@ defmodule Boom do
               end
           end
 
-          Agent.update(
-            :boom,
-            &Keyword.update!(&1, name, fn {count, _errors} -> {count * 2, []} end)
-          )
+          ErrorGrouping.clear_errors(name)
         end
       rescue
         # FIXME: we should handle this in a different way

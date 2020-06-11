@@ -6,7 +6,7 @@ defmodule Boom.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    children = [supervisor(Boom, [])]
+    children = [supervisor(Boom.ErrorGrouping, [])]
     Supervisor.start_link(children, strategy: :one_for_all)
   end
 end
