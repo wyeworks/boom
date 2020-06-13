@@ -31,7 +31,7 @@ defmodule Boom do
             [notifier: notifier, options: options] ->
               notifier.notify(occurrences, options)
 
-            notifiers_config when is_list(notifiers_config) ->
+            [notifiers: notifiers_config] when is_list(notifiers_config) ->
               for [notifier: notifier, options: options] <- notifiers_config do
                 notifier.notify(occurrences, options)
               end

@@ -39,14 +39,15 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithMultipleNotifiers do
-    use Boom, [
-      [
-        notifier: FakeNotifier,
-        options: [
-          subject: "BOOM error caught"
+    use Boom,
+      notifiers: [
+        [
+          notifier: FakeNotifier,
+          options: [
+            subject: "BOOM error caught"
+          ]
         ]
       ]
-    ]
 
     def call(_conn, _opts) do
       raise TestException.exception([])
