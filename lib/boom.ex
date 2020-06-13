@@ -14,13 +14,16 @@ defmodule Boom do
         name = Boom.get_reason_name(error)
         error_info = ErrorInfo.build(reason, stack, conn)
 
-        # FIXME: maybe there's a way not to call the agent if error_grouping is disabled
-        {counter, occurrences} = ErrorGrouping.update_errors(name, error_info)
-
         settings = unquote(config)
         {error_grouping, settings} = Keyword.pop(settings, :error_grouping)
 
-        send_notification? = !error_grouping || length(occurrences) >= counter
+        {send_notification?, occurrences} =
+          if error_grouping do
+            {counter, errors} = ErrorGrouping.update_errors(name, error_info)
+            {length(errors) >= counter, errors}
+          else
+            {true, [error_info]}
+          end
 
         if send_notification? do
           case settings do
@@ -34,7 +37,7 @@ defmodule Boom do
               end
           end
 
-          ErrorGrouping.clear_errors(name)
+          if error_grouping, do: ErrorGrouping.clear_errors(name)
         end
       rescue
         # FIXME: we should handle this in a different way
