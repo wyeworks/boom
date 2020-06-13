@@ -77,6 +77,19 @@ defmodule NotifierTest do
     end
   end
 
+  defmodule PlugErrorWithErrorGroupingNotifier do
+    use Boom,
+      notifier: FakeNotifier,
+      error_grouping: true,
+      options: [
+        subject: "BOOM error caught"
+      ]
+
+    def call(_conn, _opts) do
+      raise TestException.exception([])
+    end
+  end
+
   test "keeps raising an error on exception" do
     conn = conn(:get, "/")
 
@@ -141,5 +154,35 @@ defmodule NotifierTest do
     catch_throw(PlugThrown.call(conn, []))
 
     assert_received %{exception: %{subject: "BOOM error caught: thrown error"}}
+  end
+
+  test "reports exception in groups when :error_grouping setting is enabled" do
+    conn = conn(:get, "/")
+
+    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
+    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
+    assert exceptions == 0
+  end
+
+  test "reports every exception when :error_grouping setting is disabled" do
+    conn = conn(:get, "/")
+
+    catch_error(PlugErrorWithSingleNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithSingleNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithSingleNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
+    assert exceptions == 0
   end
 end
