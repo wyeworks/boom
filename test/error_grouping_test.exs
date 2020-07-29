@@ -2,7 +2,7 @@ defmodule ErrorGroupingTest do
   use ExUnit.Case, async: true
 
   @error_info "Some error information"
-  @name :error_name
+  @error_reason :error_reason
 
   setup_all do
     Boom.ErrorGrouping.start_link()
@@ -13,118 +13,115 @@ defmodule ErrorGroupingTest do
     Agent.update(:boom, fn _ -> [] end)
   end
 
-  test "stores the error info" do
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert occurrences == [@error_info]
+  describe "update_errors/2" do
+    test "appends the error to its proper error reason" do
+      Boom.ErrorGrouping.update_errors(@error_reason, @error_info)
+      assert [{@error_reason, {1, [@error_info]}}] == Agent.get(:boom, fn state -> state end)
 
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert occurrences == [@error_info, @error_info]
+      Boom.ErrorGrouping.update_errors(@error_reason, @error_info)
+
+      assert [{@error_reason, {1, [@error_info, @error_info]}}] ==
+               Agent.get(:boom, fn state -> state end)
+
+      Boom.ErrorGrouping.update_errors(:another_error, @error_info)
+
+      assert [
+               {@error_reason, {1, [@error_info, @error_info]}},
+               {:another_error, {1, [@error_info]}}
+             ] == Agent.get(:boom, fn state -> state end)
+    end
   end
 
-  test "updates the counter when the errors are cleared" do
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 1
+  describe "get_errors/1" do
+    test "returns the errors for the proper error reason" do
+      Agent.update(:boom, fn _ ->
+        [
+          {@error_reason, {1, [@error_info, @error_info]}},
+          {:another_error, {1, ["another_error"]}}
+        ]
+      end)
 
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 1
+      assert [@error_info, @error_info] == Boom.ErrorGrouping.get_errors(@error_reason)
+      assert ["another_error"] == Boom.ErrorGrouping.get_errors(:another_error)
+    end
 
-    Boom.ErrorGrouping.clear_errors(@name)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 2
-
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 2
-
-    Boom.ErrorGrouping.clear_errors(@name)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 4
-
-    Boom.ErrorGrouping.clear_errors(@name)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 8
+    test "returns nil if error reason does not exist" do
+      assert nil == Boom.ErrorGrouping.get_errors(:wrong_error_reason)
+    end
   end
 
-  test "flushes the error list when the errors are cleared" do
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 1
+  describe "send_notification?/1" do
+    test "returns false when count is smaller than the error length" do
+      Agent.update(:boom, fn _ -> [{@error_reason, {2, [@error_info]}}] end)
+      assert false == Boom.ErrorGrouping.send_notification?(@error_reason)
+    end
 
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 2
+    test "returns true when error length is bigger than count" do
+      Agent.update(:boom, fn _ -> [{@error_reason, {2, [@error_info, @error_info]}}] end)
+      assert true == Boom.ErrorGrouping.send_notification?(@error_reason)
+    end
 
-    Boom.ErrorGrouping.clear_errors(@name)
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 1
-
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 2
-
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 3
-
-    Boom.ErrorGrouping.clear_errors(@name)
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 1
+    test "returns false when error reason does not exist" do
+      assert false == Boom.ErrorGrouping.send_notification?(:wrong_error_reason)
+    end
   end
 
-  test "keeps track of different error types" do
-    Boom.ErrorGrouping.update_errors(@name, @error_info)
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert occurrences == [@error_info, @error_info]
+  describe "clear_errors/2" do
+    test "flushes error list" do
+      Agent.update(:boom, fn _ -> [{@error_reason, {2, [@error_info, @error_info]}}] end)
+      Boom.ErrorGrouping.clear_errors(true, @error_reason)
 
-    {_counter, occurrences} =
-      Boom.ErrorGrouping.update_errors(:another_error, "Another error info")
+      {_count, errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert errors == []
 
-    assert occurrences == ["Another error info"]
+      Agent.update(:boom, fn _ -> [{@error_reason, {2, [@error_info, @error_info]}}] end)
+      Boom.ErrorGrouping.clear_errors(false, @error_reason)
 
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert occurrences == [@error_info, @error_info, @error_info]
-  end
+      {_count, errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert errors == []
+    end
 
-  test "updates the counter for the proper error type" do
-    Boom.ErrorGrouping.update_errors(@name, @error_info)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 1
+    test "increases the counter when error_grouping is true" do
+      Agent.update(:boom, fn _ -> [{@error_reason, {1, []}}] end)
 
-    Boom.ErrorGrouping.clear_errors(@name)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 2
+      Boom.ErrorGrouping.clear_errors(true, @error_reason)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter === 2
 
-    {counter, _occurrences} =
-      Boom.ErrorGrouping.update_errors(:another_error, "Another error info")
+      Boom.ErrorGrouping.clear_errors(true, @error_reason)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter === 4
 
-    assert counter == 1
+      Boom.ErrorGrouping.clear_errors(true, @error_reason)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter === 8
+    end
 
-    Boom.ErrorGrouping.clear_errors(:another_error)
+    test "does not increases the counter when error_grouping is false" do
+      Agent.update(:boom, fn _ -> [{@error_reason, {1, []}}] end)
+      Boom.ErrorGrouping.clear_errors(false, @error_reason)
 
-    {counter, _occurrences} =
-      Boom.ErrorGrouping.update_errors(:another_error, "Another error info")
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter === 1
 
-    assert counter == 2
+      Boom.ErrorGrouping.clear_errors(false, @error_reason)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter === 1
+    end
 
-    Boom.ErrorGrouping.clear_errors(@name)
-    {counter, _occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert counter == 4
-  end
+    test "updates the proper error counter" do
+      Agent.update(:boom, fn _ ->
+        [{@error_reason, {1, ["error1", "error2"]}}, {:another_error, {1, ["another_error"]}}]
+      end)
 
-  test "flushes the error list for the proper error type" do
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 1
+      Boom.ErrorGrouping.clear_errors(true, @error_reason)
+      {counter, errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(@error_reason)
+      assert counter == 2
+      assert errors == []
 
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 2
-
-    {_counter, occurrences} =
-      Boom.ErrorGrouping.update_errors(:another_error, "Another error info")
-
-    assert length(occurrences) == 1
-
-    Boom.ErrorGrouping.clear_errors(@name)
-    {_counter, occurrences} = Boom.ErrorGrouping.update_errors(@name, @error_info)
-    assert length(occurrences) == 1
-
-    {_counter, occurrences} =
-      Boom.ErrorGrouping.update_errors(:another_error, "Another error info")
-
-    assert length(occurrences) == 2
+      {counter, errors} = Agent.get(:boom, fn state -> state end) |> Keyword.get(:another_error)
+      assert counter == 1
+      assert errors == ["another_error"]
+    end
   end
 end

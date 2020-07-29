@@ -91,6 +91,10 @@ defmodule NotifierTest do
     end
   end
 
+  setup do
+    Agent.update(:boom, fn _state -> [] end)
+  end
+
   test "keeps raising an error on exception" do
     conn = conn(:get, "/")
 

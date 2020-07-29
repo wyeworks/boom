@@ -10,22 +10,18 @@ defmodule Boom do
 
       import Boom
 
-      defp handle_errors(conn, %{reason: reason, stack: stack} = error) do
-        name = Boom.get_reason_name(error)
+      def handle_errors(conn, %{reason: reason, stack: stack} = error) do
+        error_reason = ErrorInfo.get_reason(error)
         error_info = ErrorInfo.build(reason, stack, conn)
 
         settings = unquote(config)
         {error_grouping, settings} = Keyword.pop(settings, :error_grouping)
 
-        {send_notification?, occurrences} =
-          if error_grouping do
-            {counter, errors} = ErrorGrouping.update_errors(name, error_info)
-            {length(errors) >= counter, errors}
-          else
-            {true, [error_info]}
-          end
+        ErrorGrouping.update_errors(error_reason, error_info)
 
-        if send_notification? do
+        if ErrorGrouping.send_notification?(error_reason) do
+          occurrences = ErrorGrouping.get_errors(error_reason)
+
           case settings do
             # FIXME: this doesn't match when extra parameters are set
             [notifier: notifier, options: options] ->
@@ -37,7 +33,7 @@ defmodule Boom do
               end
           end
 
-          if error_grouping, do: ErrorGrouping.clear_errors(name)
+          ErrorGrouping.clear_errors(error_grouping, error_reason)
         end
       rescue
         # FIXME: we should handle this in a different way
@@ -46,8 +42,4 @@ defmodule Boom do
       end
     end
   end
-
-  def get_reason_name(%{reason: %name{}}), do: name
-  def get_reason_name(%{error: %{kind: kind}}), do: kind
-  def get_reason_name(_), do: :error
 end

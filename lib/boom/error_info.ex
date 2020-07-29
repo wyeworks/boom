@@ -24,6 +24,10 @@ defmodule ErrorInfo do
     build(%{message: inspect(reason)}, stack, conn)
   end
 
+  def get_reason(%{reason: %name{}}), do: name
+  def get_reason(%{error: %{kind: kind}}), do: kind
+  def get_reason(_), do: :error
+
   defp build_without_name(reason, stack, conn) do
     %ErrorInfo{
       reason: reason,
