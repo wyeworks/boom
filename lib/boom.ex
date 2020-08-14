@@ -2,7 +2,7 @@ defmodule Boom do
   @moduledoc false
   # Notify the exception to all the defined notifiers
 
-  alias Boom.ErrorGrouping
+  alias Boom.ErrorStorage
 
   defmacro __using__(config) do
     quote location: :keep do
@@ -17,10 +17,10 @@ defmodule Boom do
         settings = unquote(config)
         {error_grouping, settings} = Keyword.pop(settings, :error_grouping)
 
-        ErrorGrouping.update_errors(error_reason, error_info)
+        ErrorStorage.update_errors(error_reason, error_info)
 
-        if ErrorGrouping.send_notification?(error_reason) do
-          occurrences = ErrorGrouping.get_errors(error_reason)
+        if ErrorStorage.send_notification?(error_reason) do
+          occurrences = ErrorStorage.get_errors(error_reason)
 
           case settings do
             # FIXME: this doesn't match when extra parameters are set
@@ -33,7 +33,7 @@ defmodule Boom do
               end
           end
 
-          ErrorGrouping.clear_errors(error_grouping, error_reason)
+          ErrorStorage.clear_errors(error_grouping, error_reason)
         end
       rescue
         # FIXME: we should handle this in a different way

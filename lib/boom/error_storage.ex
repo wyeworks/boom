@@ -1,4 +1,4 @@
-defmodule Boom.ErrorGrouping do
+defmodule Boom.ErrorStorage do
   @moduledoc false
   # Keeps track of the errors grouped by type and a counter so the notifier
   # knows the next time it should be executed
