@@ -92,7 +92,7 @@ defmodule NotifierTest do
   end
 
   setup do
-    Agent.update(:boom, fn _state -> [] end)
+    Agent.update(:boom, fn _state -> %{} end)
   end
 
   test "keeps raising an error on exception" do

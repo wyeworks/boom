@@ -6,13 +6,13 @@ defmodule Boom.ErrorGrouping do
   use Agent
 
   def start_link do
-    Agent.start_link(fn -> [] end, name: :boom)
+    Agent.start_link(fn -> %{} end, name: :boom)
   end
 
   def update_errors(error_reason, error_info) do
     Agent.update(
       :boom,
-      &Keyword.update(&1, error_reason, {1, [error_info]}, fn {counter, errors} ->
+      &Map.update(&1, error_reason, {1, [error_info]}, fn {counter, errors} ->
         {counter, [error_info | errors]}
       end)
     )
@@ -20,7 +20,7 @@ defmodule Boom.ErrorGrouping do
 
   def get_errors(error_reason) do
     Agent.get(:boom, fn state -> state end)
-    |> Keyword.get(error_reason)
+    |> Map.get(error_reason)
     |> case do
       nil -> nil
       {_counter, errors} -> errors
@@ -29,7 +29,7 @@ defmodule Boom.ErrorGrouping do
 
   def send_notification?(error_reason) do
     Agent.get(:boom, fn state -> state end)
-    |> Keyword.get(error_reason)
+    |> Map.get(error_reason)
     |> case do
       nil -> false
       {counter, errors} -> length(errors) >= counter
@@ -39,14 +39,14 @@ defmodule Boom.ErrorGrouping do
   def clear_errors(true = _error_grouping, error_reason) do
     Agent.update(
       :boom,
-      &Keyword.update!(&1, error_reason, fn {counter, _errors} -> {counter * 2, []} end)
+      &Map.update!(&1, error_reason, fn {counter, _errors} -> {counter * 2, []} end)
     )
   end
 
   def clear_errors(_error_grouping, error_reason) do
     Agent.update(
       :boom,
-      &Keyword.update!(&1, error_reason, fn _value -> {1, []} end)
+      &Map.update!(&1, error_reason, fn _value -> {1, []} end)
     )
   end
 end
