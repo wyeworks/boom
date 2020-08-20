@@ -15,7 +15,7 @@ defmodule Boom do
         error_info = ErrorInfo.build(reason, stack, conn)
 
         settings = unquote(config)
-        {error_grouping, settings} = Keyword.pop(settings, :error_grouping)
+        {notification_trigger, settings} = Keyword.pop(settings, :notification_trigger, :always)
 
         ErrorStorage.update_errors(error_reason, error_info)
 
@@ -33,7 +33,7 @@ defmodule Boom do
               end
           end
 
-          ErrorStorage.clear_errors(error_grouping, error_reason)
+          ErrorStorage.clear_errors(notification_trigger, error_reason)
         end
       rescue
         # FIXME: we should handle this in a different way

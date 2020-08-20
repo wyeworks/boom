@@ -36,14 +36,24 @@ defmodule Boom.ErrorStorage do
     end
   end
 
-  def clear_errors(true = _error_grouping, error_reason) do
+  def clear_errors(:exponential, error_reason) do
     Agent.update(
       :boom,
       &Map.update!(&1, error_reason, fn {counter, _errors} -> {counter * 2, []} end)
     )
   end
 
-  def clear_errors(_error_grouping, error_reason) do
+  def clear_errors([exponential: [limit: limit]], error_reason) do
+    Agent.update(
+      :boom,
+      &Map.update!(&1, error_reason, fn {counter, _errors} ->
+        updated_counter = counter * 2
+        {if(updated_counter >= limit, do: limit, else: updated_counter), []}
+      end)
+    )
+  end
+
+  def clear_errors(:always, error_reason) do
     Agent.update(
       :boom,
       &Map.update!(&1, error_reason, fn _value -> {1, []} end)

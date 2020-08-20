@@ -113,22 +113,53 @@ defmodule YourApp.Router do
     ]
 ```
 
-## Error grouping
-By default, `Boom` will send a notification every time an exception is
-raised. To prevent this, you can choose to group errors by setting the
-`:error_grouping` option to `true`.
+## Notification Trigger
+By default, `Boom` will send a notification ever time an exception is raised.
 
-Error grouping uses a formula of `log2(errors_count)` to determine whether to
-send the notification, based on the accumulated error count for each specific
-exception. This makes the notifier only send a notification when the count
-is: 1, 2, 4, 8, 16, 32, 64, 128, ..., (2**n).
+However, there are different strategies to decide when to send the
+notifications using the `:notification_trigger` option with one of the
+following values: `:always` and `:exponential`.
+
+### Always
+This option is the default one. It will trigger a notification for every
+exception.
 
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router
 
   use Boom,
-    error_grouping: true,
+    notification_trigger: :always,
+    notifiers: [
+      # ...
+    ]
+```
+
+### Exponential
+It uses a formula of `log2(errors_count)` to determine whether to send a
+notification, based on the accumulated error count for each specific
+exception. This makes the notifier only send a notification when the count
+is: 1, 2, 4, 8, 16, 32, 64, 128, ..., (2**n).
+
+You can also set an optional max value.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use Boom,
+    notification_trigger: :exponential,
+    notifiers: [
+      # ...
+    ]
+```
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use Boom,
+    notification_trigger: [exponential: limit: 100]
     notifiers: [
       # ...
     ]

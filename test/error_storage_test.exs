@@ -23,11 +23,11 @@ defmodule ErrorStorageTest do
       assert %{@error_reason => {1, [@error_info, @error_info]}} ==
                Agent.get(:boom, fn state -> state end)
 
-      Boom.ErrorStorage.update_errors(:another_error, @error_info)
+      Boom.ErrorStorage.update_errors(:another_error, "Another error information")
 
       assert %{
         @error_reason => {1, [@error_info, @error_info]},
-        :another_error => {1, ["Some error information"]}
+        :another_error => {1, ["Another error information"]}
       }
     end
   end
@@ -69,42 +69,42 @@ defmodule ErrorStorageTest do
   describe "clear_errors/2" do
     test "flushes error list" do
       Agent.update(:boom, fn _ -> %{@error_reason => {2, [@error_info, @error_info]}} end)
-      Boom.ErrorStorage.clear_errors(true, @error_reason)
+      Boom.ErrorStorage.clear_errors(:exponential, @error_reason)
 
       {_count, errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert errors == []
 
       Agent.update(:boom, fn _ -> %{@error_reason => {2, [@error_info, @error_info]}} end)
-      Boom.ErrorStorage.clear_errors(false, @error_reason)
+      Boom.ErrorStorage.clear_errors(:always, @error_reason)
 
       {_count, errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert errors == []
     end
 
-    test "increases the counter when error_grouping is true" do
+    test "increases the counter when notification trigger is exponential" do
       Agent.update(:boom, fn _ -> %{@error_reason => {1, []}} end)
 
-      Boom.ErrorStorage.clear_errors(true, @error_reason)
+      Boom.ErrorStorage.clear_errors(:exponential, @error_reason)
       {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter === 2
 
-      Boom.ErrorStorage.clear_errors(true, @error_reason)
+      Boom.ErrorStorage.clear_errors(:exponential, @error_reason)
       {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter === 4
 
-      Boom.ErrorStorage.clear_errors(true, @error_reason)
+      Boom.ErrorStorage.clear_errors(:exponential, @error_reason)
       {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter === 8
     end
 
-    test "does not increases the counter when error_grouping is false" do
+    test "does not increases the counter when notification_trigger is always" do
       Agent.update(:boom, fn _ -> %{@error_reason => {1, []}} end)
-      Boom.ErrorStorage.clear_errors(false, @error_reason)
+      Boom.ErrorStorage.clear_errors(:always, @error_reason)
 
       {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter === 1
 
-      Boom.ErrorStorage.clear_errors(false, @error_reason)
+      Boom.ErrorStorage.clear_errors(:always, @error_reason)
       {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter === 1
     end
@@ -114,7 +114,7 @@ defmodule ErrorStorageTest do
         %{@error_reason => {1, ["error1", "error2"]}, :another_error => {1, ["another_error"]}}
       end)
 
-      Boom.ErrorStorage.clear_errors(true, @error_reason)
+      Boom.ErrorStorage.clear_errors(:exponential, @error_reason)
       {counter, errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_reason)
       assert counter == 2
       assert errors == []

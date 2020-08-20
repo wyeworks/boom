@@ -78,10 +78,23 @@ defmodule NotifierTest do
     end
   end
 
-  defmodule PlugErrorWithErrorGroupingNotifier do
+  defmodule PlugErrorWithExponentialTriggerNotifier do
     use Boom,
       notifier: FakeNotifier,
-      error_grouping: true,
+      notification_trigger: :exponential,
+      options: [
+        subject: "BOOM error caught"
+      ]
+
+    def call(_conn, _opts) do
+      raise TestException.exception([])
+    end
+  end
+
+  defmodule PlugErrorWithExponentialTriggerWithLimitNotifier do
+    use Boom,
+      notifier: FakeNotifier,
+      notification_trigger: [exponential: [limit: 3]],
       options: [
         subject: "BOOM error caught"
       ]
@@ -161,21 +174,45 @@ defmodule NotifierTest do
     assert_received %{exception: %{subject: "BOOM error caught: thrown error"}}
   end
 
-  test "reports exception in groups when :error_grouping setting is enabled" do
+  test "reports exception in groups when :notification_trigger setting is :exponential" do
     conn = conn(:get, "/")
 
-    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
     assert_received %{exception: _}
 
-    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
-    catch_error(PlugErrorWithErrorGroupingNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
     assert_received %{exception: _}
 
     {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
     assert exceptions == 0
   end
 
-  test "reports every exception when :error_grouping setting is disabled" do
+  test "reports exception in groups when :notification_trigger setting is :exponential with limit" do
+    conn = conn(:get, "/")
+
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    assert_received %{exception: _}
+
+    {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
+    assert exceptions == 0
+  end
+
+  test "reports every exception when :notification_trigger setting is not set" do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
