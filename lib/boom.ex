@@ -14,24 +14,31 @@ defmodule Boom do
         error_reason = ErrorInfo.get_reason(error)
         error_info = ErrorInfo.build(reason, stack, conn)
 
-        settings = unquote(config)
-        {notification_trigger, settings} = Keyword.pop(settings, :notification_trigger, :always)
-
         ErrorStorage.update_errors(error_reason, error_info)
 
         if ErrorStorage.send_notification?(error_reason) do
           occurrences = ErrorStorage.get_errors(error_reason)
 
-          case settings do
-            # FIXME: this doesn't match when extra parameters are set
-            [notifier: notifier, options: options] ->
-              notifier.notify(occurrences, options)
+          settings = unquote(config)
 
-            [notifiers: notifiers_config] when is_list(notifiers_config) ->
-              for [notifier: notifier, options: options] <- notifiers_config do
+          case Keyword.get(settings, :notifiers) do
+            nil ->
+              with {:ok, notifier} <- Keyword.fetch(settings, :notifier),
+                   {:ok, options} <- Keyword.fetch(settings, :options) do
                 notifier.notify(occurrences, options)
               end
+
+            notifiers_config when is_list(notifiers_config) ->
+              for notifier_config <- notifiers_config do
+                with {:ok, notifier} <- Keyword.fetch(notifier_config, :notifier),
+                     {:ok, options} <- Keyword.fetch(notifier_config, :options) do
+                  notifier.notify(occurrences, options)
+                end
+              end
           end
+
+          {notification_trigger, _settings} =
+            Keyword.pop(settings, :notification_trigger, :always)
 
           ErrorStorage.clear_errors(notification_trigger, error_reason)
         end
