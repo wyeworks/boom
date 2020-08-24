@@ -13,17 +13,17 @@ defmodule ErrorStorageTest do
     Agent.update(:boom, fn _ -> %{} end)
   end
 
-  describe "update_errors/2" do
+  describe "add_errors/2" do
     test "appends the error to its proper error reason" do
-      Boom.ErrorStorage.update_errors(@error_reason, @error_info)
+      Boom.ErrorStorage.add_errors(@error_reason, @error_info)
       assert %{@error_reason => {1, [@error_info]}} == Agent.get(:boom, fn state -> state end)
 
-      Boom.ErrorStorage.update_errors(@error_reason, @error_info)
+      Boom.ErrorStorage.add_errors(@error_reason, @error_info)
 
       assert %{@error_reason => {1, [@error_info, @error_info]}} ==
                Agent.get(:boom, fn state -> state end)
 
-      Boom.ErrorStorage.update_errors(:another_error, "Another error information")
+      Boom.ErrorStorage.add_errors(:another_error, "Another error information")
 
       assert %{
         @error_reason => {1, [@error_info, @error_info]},

@@ -14,7 +14,7 @@ defmodule Boom do
         error_reason = ErrorInfo.get_reason(error)
         error_info = ErrorInfo.build(reason, stack, conn)
 
-        ErrorStorage.update_errors(error_reason, error_info)
+        ErrorStorage.add_errors(error_reason, error_info)
 
         if ErrorStorage.send_notification?(error_reason) do
           occurrences = ErrorStorage.get_errors(error_reason)
