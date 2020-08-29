@@ -53,33 +53,51 @@ defmodule ErrorInfoTest do
 
   test "Generic error without exception name" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
-    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build("Boom", [], conn)
+    error = %{reason: "Boom", stack: []}
+    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn)
 
     assert "Error" = name
     assert "Boom" = reason
+    assert :error = error_kind
   end
 
   test "Error without exception name but message" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
-    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build(%{message: "Boom"}, [], conn)
+    error = %{reason: %{message: "Boom"}, stack: []}
+    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn)
 
     assert "Error" = name
     assert "Boom" = reason
+    assert :error = error_kind
   end
 
   test "Error with exception name" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
 
-    %ErrorInfo{name: name, reason: reason} =
-      ErrorInfo.build(%TestException{message: "Boom"}, [], conn)
+    error = %{reason: %TestException{message: "Boom"}, stack: []}
+
+    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn)
 
     assert ErrorInfoTest.TestException = name
     assert "Boom" = reason
+    assert ErrorInfoTest.TestException = error_kind
+  end
+
+  test "Error without exception reason but error and kind" do
+    %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
+    error = %{error: %{kind: :error_kind}, reason: %{message: "Boom"}, stack: []}
+    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn)
+
+    assert "Error" = name
+    assert "Boom" = reason
+    assert :error_kind = error_kind
   end
 
   test "Error info includes action" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
-    %ErrorInfo{action: action} = ErrorInfo.build(%TestException{message: "Boom"}, [], conn)
+
+    {_error_kind, %ErrorInfo{action: action}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn)
 
     assert :index = action
   end
@@ -87,15 +105,17 @@ defmodule ErrorInfoTest do
   test "Error info includes controller" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
 
-    %ErrorInfo{controller: controller} =
-      ErrorInfo.build(%TestException{message: "Boom"}, [], conn)
+    {_error_kind, %ErrorInfo{controller: controller}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn)
 
     assert TestController = controller
   end
 
   test "Error info includes request info" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(post(build_conn(), "/create?foo=bar"))
-    %ErrorInfo{request: request} = ErrorInfo.build(%TestException{message: "Boom"}, [], conn)
+
+    {_error_kind, %ErrorInfo{request: request}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn)
 
     assert %{
              path: "/create",
@@ -111,8 +131,8 @@ defmodule ErrorInfoTest do
   test "Error info includes stacktrace" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    %ErrorInfo{stack: error_info_stack} =
-      ErrorInfo.build(%TestException{message: "Boom"}, stack, conn)
+    {_error_kind, %ErrorInfo{stack: error_info_stack}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn)
 
     assert {
              ErrorInfoTest.TestController,

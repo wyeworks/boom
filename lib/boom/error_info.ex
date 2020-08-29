@@ -8,25 +8,37 @@ defmodule ErrorInfo do
   @enforce_keys [:reason, :stack]
   defstruct [:name, :reason, :stack, :controller, :action, :request]
 
-  def build(%name{message: reason}, stack, conn) do
+  @spec build(
+          %{
+            required(:reason) => any(),
+            required(:stack) => Exception.stacktrace(),
+            optional(any()) => any()
+          },
+          map()
+        ) :: {atom(), %ErrorInfo{}}
+  def build(%{reason: reason, stack: stack} = error, conn) do
+    {get_reason(error), build_info(reason, stack, conn)}
+  end
+
+  defp build_info(%name{message: reason}, stack, conn) do
     %{build_without_name(reason, stack, conn) | name: name}
   end
 
-  def build(%{message: reason}, stack, conn) do
+  defp build_info(%{message: reason}, stack, conn) do
     %{build_without_name(reason, stack, conn) | name: "Error"}
   end
 
-  def build(reason, stack, conn) when is_binary(reason) do
-    build(%{message: reason}, stack, conn)
+  defp build_info(reason, stack, conn) when is_binary(reason) do
+    build_info(%{message: reason}, stack, conn)
   end
 
-  def build(reason, stack, conn) do
-    build(%{message: inspect(reason)}, stack, conn)
+  defp build_info(reason, stack, conn) do
+    build_info(%{message: inspect(reason)}, stack, conn)
   end
 
-  def get_reason(%{reason: %name{}}), do: name
-  def get_reason(%{error: %{kind: kind}}), do: kind
-  def get_reason(_), do: :error
+  defp get_reason(%{reason: %name{}}), do: name
+  defp get_reason(%{error: %{kind: kind}}), do: kind
+  defp get_reason(_), do: :error
 
   defp build_without_name(reason, stack, conn) do
     %ErrorInfo{

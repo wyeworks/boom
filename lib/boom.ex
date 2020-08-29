@@ -10,14 +10,13 @@ defmodule Boom do
 
       import Boom
 
-      def handle_errors(conn, %{reason: reason, stack: stack} = error) do
-        error_reason = ErrorInfo.get_reason(error)
-        error_info = ErrorInfo.build(reason, stack, conn)
+      def handle_errors(conn, error) do
+        {error_kind, error_info} = ErrorInfo.build(error, conn)
 
-        ErrorStorage.add_errors(error_reason, error_info)
+        ErrorStorage.add_errors(error_kind, error_info)
 
-        if ErrorStorage.send_notification?(error_reason) do
-          occurrences = ErrorStorage.get_errors(error_reason)
+        if ErrorStorage.send_notification?(error_kind) do
+          occurrences = ErrorStorage.get_errors(error_kind)
 
           settings = unquote(config)
 
@@ -40,7 +39,7 @@ defmodule Boom do
           {notification_trigger, _settings} =
             Keyword.pop(settings, :notification_trigger, :always)
 
-          ErrorStorage.clear_errors(notification_trigger, error_reason)
+          ErrorStorage.clear_errors(notification_trigger, error_kind)
         end
       rescue
         # FIXME: we should handle this in a different way
