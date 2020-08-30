@@ -97,6 +97,22 @@ defmodule ErrorStorageTest do
       assert counter === 8
     end
 
+    test "increases the counter when notification trigger is :exponential and :limit is set" do
+      Agent.update(:boom, fn _ -> %{@error_kind => {1, []}} end)
+
+      Boom.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_kind)
+      assert counter === 2
+
+      Boom.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_kind)
+      assert counter === 4
+
+      Boom.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
+      {counter, _errors} = Agent.get(:boom, fn state -> state end) |> Map.get(@error_kind)
+      assert counter === 5
+    end
+
     test "does not increase the counter when notification_trigger is :always" do
       Agent.update(:boom, fn _ -> %{@error_kind => {1, []}} end)
       Boom.ErrorStorage.clear_errors(:always, @error_kind)
