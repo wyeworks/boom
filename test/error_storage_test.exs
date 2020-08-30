@@ -14,7 +14,7 @@ defmodule ErrorStorageTest do
   end
 
   describe "add_errors/2" do
-    test "appends the error to its proper error reason" do
+    test "appends the error to its proper error kind" do
       Boom.ErrorStorage.add_errors(@error_kind, @error_info)
       assert %{@error_kind => {1, [@error_info]}} == Agent.get(:boom, fn state -> state end)
 
@@ -33,7 +33,7 @@ defmodule ErrorStorageTest do
   end
 
   describe "get_errors/1" do
-    test "returns the errors for the proper error reason" do
+    test "returns the errors for the proper error kind" do
       Agent.update(:boom, fn _ ->
         %{
           @error_kind => {1, [@error_info, @error_info]},
@@ -45,7 +45,7 @@ defmodule ErrorStorageTest do
       assert ["another_error"] == Boom.ErrorStorage.get_errors(:another_error_kind)
     end
 
-    test "returns nil if error reason does not exist" do
+    test "returns nil if error kind does not exist" do
       assert nil == Boom.ErrorStorage.get_errors(:wrong_error_kind)
     end
   end
@@ -56,12 +56,12 @@ defmodule ErrorStorageTest do
       assert false == Boom.ErrorStorage.send_notification?(@error_kind)
     end
 
-    test "returns true when error length is bigger than count" do
+    test "returns true when error length is greater or equal than count" do
       Agent.update(:boom, fn _ -> %{@error_kind => {2, [@error_info, @error_info]}} end)
       assert true == Boom.ErrorStorage.send_notification?(@error_kind)
     end
 
-    test "returns false when error reason does not exist" do
+    test "returns false when error kind does not exist" do
       assert false == Boom.ErrorStorage.send_notification?(:wrong_error_kind)
     end
   end
@@ -81,7 +81,7 @@ defmodule ErrorStorageTest do
       assert errors == []
     end
 
-    test "increases the counter when notification trigger is exponential" do
+    test "increases the counter when notification trigger is :exponential" do
       Agent.update(:boom, fn _ -> %{@error_kind => {1, []}} end)
 
       Boom.ErrorStorage.clear_errors(:exponential, @error_kind)
@@ -97,7 +97,7 @@ defmodule ErrorStorageTest do
       assert counter === 8
     end
 
-    test "does not increases the counter when notification_trigger is always" do
+    test "does not increase the counter when notification_trigger is :always" do
       Agent.update(:boom, fn _ -> %{@error_kind => {1, []}} end)
       Boom.ErrorStorage.clear_errors(:always, @error_kind)
 

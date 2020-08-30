@@ -114,7 +114,8 @@ defmodule YourApp.Router do
 ```
 
 ## Notification Trigger
-By default, `Boom` will send a notification ever time an exception is raised.
+By default, `Boom` will send a notification every time an exception is
+raised.
 
 However, there are different strategies to decide when to send the
 notifications using the `:notification_trigger` option with one of the
