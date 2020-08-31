@@ -19,7 +19,8 @@ defmodule Boom.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {Boom.Application, []}
     ]
   end
 
@@ -34,8 +35,9 @@ defmodule Boom.MixProject do
       {:credo, "~> 1.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:httpoison, "~> 1.5"},
+      {:jason, "~> 1.2"},
       {:phoenix, "~> 1.4", only: [:test]},
-      {:plug_cowboy, "~> 1.0"}
+      {:plug_cowboy, "~> 1.0 or ~> 2.0"}
     ]
   end
 end

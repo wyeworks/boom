@@ -32,7 +32,7 @@ defmodule Boom.MailNotifier do
   @type options :: [option]
 
   @impl Boom.Notifier
-  @spec notify(%ErrorInfo{}, options) :: no_return()
+  @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
 
@@ -40,7 +40,7 @@ defmodule Boom.MailNotifier do
       new_email()
       |> to(email_to)
       |> from(email_from)
-      |> subject("#{subject}: #{error_info.reason}")
+      |> subject("#{subject}: #{hd(error_info) |> Map.get(:reason)}")
       |> html_body(HTMLContent.build(error_info))
       |> text_body(TextContent.build(error_info))
 

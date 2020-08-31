@@ -3,6 +3,10 @@ defmodule Boom.MailNotifier.HTMLContent do
 
   import Boom.Helpers
 
+  def build(errors) when is_list(errors) do
+    EEx.eval_file(template_path(), errors: Enum.map(errors, &build/1))
+  end
+
   def build(%ErrorInfo{
         name: name,
         controller: controller,
@@ -15,11 +19,11 @@ defmodule Boom.MailNotifier.HTMLContent do
         exception_basic_text(name, controller, action)
       end
 
-    EEx.eval_file(template_path(),
+    %{
       exception_summary: exception_summary,
       request: request,
       exception_stack_entries: Enum.map(stack, &entry_to_map/1)
-    )
+    }
   end
 
   defp template_path do

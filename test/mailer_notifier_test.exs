@@ -81,7 +81,7 @@ defmodule MailerNotifierTest do
     catch_error(TestRouter.call(conn, []))
 
     assert_received {:email_html_body,
-                     "<p>TestException occurred while the request was processed by TestController#index</p>" <>
+                     "\n  <p>TestException occurred while the request was processed by TestController#index</p>" <>
                        _}
   end
 

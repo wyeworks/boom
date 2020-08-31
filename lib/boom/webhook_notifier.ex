@@ -21,12 +21,24 @@ defmodule Boom.WebhookNotifier do
 
   import Boom.Helpers
 
+  @type options :: [{:url, String.t()}]
+
   @impl Boom.Notifier
-  def notify(error_info, url: url) do
-    HTTPoison.post!(url, error_to_json(error_info), [{"Content-Type", "application/json"}])
+  @spec notify(list(%ErrorInfo{}), options) :: no_return()
+  def notify(errors_info, url: url) do
+    payload =
+      errors_info
+      |> format_errors()
+      |> Jason.encode!()
+
+    HTTPoison.post!(url, payload, [{"Content-Type", "application/json"}])
   end
 
-  defp error_to_json(%ErrorInfo{
+  defp format_errors(errors) when is_list(errors) do
+    Enum.map(errors, &format_error/1)
+  end
+
+  defp format_error(%ErrorInfo{
          name: name,
          controller: controller,
          action: action,
@@ -43,6 +55,5 @@ defmodule Boom.WebhookNotifier do
       request: request,
       exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1)
     }
-    |> Poison.encode!()
   end
 end
