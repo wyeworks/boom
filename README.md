@@ -1,5 +1,9 @@
 # Boom
 
+[![Build Status](https://travis-ci.org/wyeworks/boom.svg?branch=master)](https://travis-ci.org/wyeworks/boom)
+
+---
+
 This package allows your Phoenix application to send notifications whenever
 an exceptions is raised. By default it includes an email and a webhook
 notifier, but you can implement your custom ones.
