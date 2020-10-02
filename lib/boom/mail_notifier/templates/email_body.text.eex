@@ -12,6 +12,7 @@
     Query String: <%= error.request.query_string %>
     Client IP: <%= error.request.client_ip %>
   <% end %>
+    Occurred on: <%= error.timestamp %>
   <%= for entry <- error.exception_stack_entries do %>
     <%= entry %>
   <% end %>

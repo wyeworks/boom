@@ -1,12 +1,13 @@
 defmodule ErrorInfo do
   @moduledoc false
+
   # The ErrorInfo struct holds all the information about the exception.
   # It includes the error message, the stacktrace and context information
   # (information about the request, the current controller and action,
   # among other things).
 
-  @enforce_keys [:reason, :stack]
-  defstruct [:name, :reason, :stack, :controller, :action, :request]
+  @enforce_keys [:reason, :stack, :timestamp]
+  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp]
 
   @spec build(
           %{
@@ -46,7 +47,8 @@ defmodule ErrorInfo do
       stack: stack,
       controller: get_in(conn.private, [:phoenix_controller]),
       action: get_in(conn.private, [:phoenix_action]),
-      request: build_request_info(conn)
+      request: build_request_info(conn),
+      timestamp: DateTime.utc_now()
     }
   end
 

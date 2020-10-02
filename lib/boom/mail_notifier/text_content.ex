@@ -12,7 +12,8 @@ defmodule Boom.MailNotifier.TextContent do
         controller: controller,
         action: action,
         request: request,
-        stack: stack
+        stack: stack,
+        timestamp: timestamp
       }) do
     exception_summary =
       if controller && action do
@@ -22,12 +23,17 @@ defmodule Boom.MailNotifier.TextContent do
     %{
       exception_summary: exception_summary,
       request: request,
-      exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1)
+      exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
+      timestamp: format_timestamp(timestamp)
     }
   end
 
   defp template_path do
     current_folder_path = Path.dirname(__ENV__.file)
     Path.join([current_folder_path, "templates", "email_body.text.eex"])
+  end
+
+  defp format_timestamp(timestamp) do
+    timestamp |> DateTime.truncate(:second) |> DateTime.to_string() |> String.trim_trailing("Z")
   end
 end
