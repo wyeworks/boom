@@ -12,6 +12,9 @@
       <li>Client IP: <%= error.request.client_ip %></li>
     </ul>
   <% end %>
+    <ul style="list-style-type: none;">
+      <li>Occurred on: <%= error.timestamp %></li>
+    </ul>
   <ul style="list-style-type: none;">
     <%= for entry <- error.exception_stack_entries do %>
       <li>

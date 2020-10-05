@@ -12,7 +12,8 @@ defmodule Boom.MailNotifier.HTMLContent do
         controller: controller,
         action: action,
         request: request,
-        stack: stack
+        stack: stack,
+        timestamp: timestamp
       }) do
     exception_summary =
       if controller && action do
@@ -22,7 +23,8 @@ defmodule Boom.MailNotifier.HTMLContent do
     %{
       exception_summary: exception_summary,
       request: request,
-      exception_stack_entries: Enum.map(stack, &entry_to_map/1)
+      exception_stack_entries: Enum.map(stack, &entry_to_map/1),
+      timestamp: format_timestamp(timestamp)
     }
   end
 
@@ -41,5 +43,9 @@ defmodule Boom.MailNotifier.HTMLContent do
       file: file,
       line: line
     }
+  end
+
+  defp format_timestamp(timestamp) do
+    timestamp |> DateTime.truncate(:second) |> DateTime.to_naive() |> NaiveDateTime.to_string()
   end
 end

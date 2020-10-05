@@ -136,7 +136,7 @@ defmodule MailerNotifierTest do
 
     receive do
       {:email_text_body, body} ->
-        first_stack_line = Enum.at(body, 9)
+        first_stack_line = Enum.at(body, 10)
 
         assert "test/mailer_notifier_test.exs:" <>
                  <<name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
@@ -152,7 +152,7 @@ defmodule MailerNotifierTest do
       {:email_html_body, body} ->
         [stacktrace_list | _] =
           Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
-          |> Enum.at(1)
+          |> Enum.at(2)
 
         [first_stack_line | _] =
           Regex.scan(~r/<li>(.)+?<\/li>/s, stacktrace_list)
@@ -164,6 +164,36 @@ defmodule MailerNotifierTest do
 
         assert "test/mailer_notifier_test.exs:16" = file
         assert "Elixir.MailerNotifierTest.TestController.index/2" = exception
+    end
+  end
+
+  test "Exception timestamp appears in email text body" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_text_body, body} ->
+        timestamp_line = Enum.at(body, 9)
+
+        assert timestamp_line =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
+    end
+  end
+
+  test "Exception timestamp appears in email HTML body" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_html_body, body} ->
+        [timestamp_list | _] =
+          Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
+          |> Enum.at(1)
+
+        [timestamp_line | _] =
+          Regex.scan(~r/<li>(.)+?<\/li>/s, timestamp_list)
+          |> Enum.map(&Enum.at(&1, 0))
+
+        assert timestamp_line =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
     end
   end
 end

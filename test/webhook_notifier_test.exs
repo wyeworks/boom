@@ -66,7 +66,8 @@ defmodule WebhookNotifierTest do
         %{
           exception_summary: exception_summary,
           exception_stack_entries: [first_stack_entry | _] = exception_stack_entries,
-          request: request
+          request: request,
+          timestamp: timestamp
         }
       ] = Jason.decode!(body, keys: :atoms)
 
@@ -76,6 +77,9 @@ defmodule WebhookNotifierTest do
       assert first_stack_entry =~ "WebhookNotifierTest.TestController.index/2"
 
       assert request == @expected_response.request
+
+      {:ok, timestamp, _utc_offset} = DateTime.from_iso8601(timestamp)
+      assert DateTime.diff(timestamp, DateTime.utc_now(), :second) <= 1
 
       Plug.Conn.resp(conn, 200, [])
     end)
