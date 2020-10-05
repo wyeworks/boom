@@ -34,6 +34,6 @@ defmodule Boom.MailNotifier.TextContent do
   end
 
   defp format_timestamp(timestamp) do
-    timestamp |> DateTime.truncate(:second) |> DateTime.to_string() |> String.trim_trailing("Z")
+    timestamp |> DateTime.truncate(:second) |> DateTime.to_naive() |> NaiveDateTime.to_string()
   end
 end
