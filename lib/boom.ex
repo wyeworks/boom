@@ -46,14 +46,14 @@ defmodule Boom do
         e ->
           error_info = Exception.format_banner(:error, e, __STACKTRACE__)
 
-          [first_stack_entry | _] = __STACKTRACE__
+          failing_notifier =
+            case __STACKTRACE__ do
+              [{module, function, arity, _} | _] ->
+                Exception.format_mfa(module, function, arity)
 
-          # Will transform '(boom) test/notifier_test.exs:32: NotifierTest.FailingNotifier.notify/2'
-          # into 'NotifierTest.FailingNotifier.notify/2'
-          [_failing_notifier_file, failing_notifier] =
-            first_stack_entry
-            |> Exception.format_stacktrace_entry()
-            |> String.split(~r{:\d+:\s})
+              [first_stack_entry | _] ->
+                Exception.format_stacktrace_entry(first_stack_entry)
+            end
 
           Logger.warn(
             "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
