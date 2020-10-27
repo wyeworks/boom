@@ -2,6 +2,8 @@ defmodule NotifierTest do
   use ExUnit.Case
   use Plug.Test
 
+  import ExUnit.CaptureLog
+
   doctest Boom
 
   defmodule FakeNotifier do
@@ -19,6 +21,15 @@ defmodule NotifierTest do
         end)
 
       send(self(), %{exception: %{subject: subject, body: body}})
+    end
+  end
+
+  defmodule FailingNotifier do
+    @behaviour Boom.Notifier
+
+    @impl Boom.Notifier
+    def notify(_, _) do
+      raise ArgumentError, message: "invalid argument foo"
     end
   end
 
@@ -95,6 +106,18 @@ defmodule NotifierTest do
     use Boom,
       notifier: FakeNotifier,
       notification_trigger: [exponential: [limit: 3]],
+      options: [
+        subject: "BOOM error caught"
+      ]
+
+    def call(_conn, _opts) do
+      raise TestException.exception([])
+    end
+  end
+
+  defmodule PlugErrorWithFailingNotifier do
+    use Boom,
+      notifier: FailingNotifier,
       options: [
         subject: "BOOM error caught"
       ]
@@ -226,5 +249,18 @@ defmodule NotifierTest do
 
     {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
     assert exceptions == 0
+  end
+
+  test "fails silently when there's an exception" do
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             assert_raise TestException, "booom!", fn ->
+               PlugErrorWithFailingNotifier.call(conn, [])
+             end
+           end) =~
+             "An error occurred when sending a notification: ** (ArgumentError) invalid argument foo in NotifierTest.FailingNotifier.notify/2"
+
+    assert true
   end
 end

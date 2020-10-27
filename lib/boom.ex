@@ -9,6 +9,7 @@ defmodule Boom do
       use Plug.ErrorHandler
 
       import Boom
+      require Logger
 
       def handle_errors(conn, error) do
         {error_kind, error_info} = ErrorInfo.build(error, conn)
@@ -42,9 +43,21 @@ defmodule Boom do
           ErrorStorage.clear_errors(notification_trigger, error_kind)
         end
       rescue
-        # FIXME: we should handle this in a different way
-        # credo:disable-for-next-line
-        e -> IO.inspect(e, label: "[Boom] Error sending exception")
+        e ->
+          error_info = Exception.format_banner(:error, e, __STACKTRACE__)
+
+          failing_notifier =
+            case __STACKTRACE__ do
+              [{module, function, arity, _} | _] ->
+                Exception.format_mfa(module, function, arity)
+
+              [first_stack_entry | _] ->
+                Exception.format_stacktrace_entry(first_stack_entry)
+            end
+
+          Logger.warn(
+            "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
+          )
       end
     end
   end
