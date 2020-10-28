@@ -1,6 +1,8 @@
 defmodule Boom.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/wyeworks/boom"
+
   def project do
     [
       app: :boom,
@@ -12,7 +14,8 @@ defmodule Boom.MixProject do
       dialyzer: [plt_add_apps: [:eex]],
       aliases: [
         quality: ["format", "credo --strict", "dialyzer"]
-      ]
+      ],
+      docs: docs()
     ]
   end
 
@@ -34,10 +37,21 @@ defmodule Boom.MixProject do
       {:bypass, "~> 1.0", only: :test},
       {:credo, "~> 1.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.23", only: :dev},
       {:httpoison, "~> 1.5"},
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.4", only: [:test]},
       {:plug_cowboy, "~> 1.0 or ~> 2.0"}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_url: @source_url,
+      extras: [
+        "README.md"
+      ]
     ]
   end
 end
