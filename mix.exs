@@ -15,7 +15,28 @@ defmodule Boom.MixProject do
       aliases: [
         quality: ["format", "credo --strict", "dialyzer"]
       ],
-      docs: docs()
+      docs: docs(),
+      description: description(),
+      package: package()
+    ]
+  end
+
+  defp description do
+    """
+    This package allows your Phoenix application to send notifications
+    whenever an exceptions is raised. By default it includes an email and a
+    webhook notifier, but you can implement your custom ones.
+    """
+  end
+
+  defp package do
+    [
+      files: ["lib", "mix.exs", "README.md"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => @source_url,
+        "Docs" => "https://hexdocs.pm/boom"
+      }
     ]
   end
 
