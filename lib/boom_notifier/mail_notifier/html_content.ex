@@ -1,7 +1,7 @@
-defmodule Boom.MailNotifier.TextContent do
+defmodule BoomNotifier.MailNotifier.HTMLContent do
   @moduledoc false
 
-  import Boom.Helpers
+  import BoomNotifier.Helpers
 
   def build(errors) when is_list(errors) do
     EEx.eval_file(template_path(), errors: Enum.map(errors, &build/1))
@@ -23,14 +23,26 @@ defmodule Boom.MailNotifier.TextContent do
     %{
       exception_summary: exception_summary,
       request: request,
-      exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
+      exception_stack_entries: Enum.map(stack, &entry_to_map/1),
       timestamp: format_timestamp(timestamp)
     }
   end
 
   defp template_path do
     current_folder_path = Path.dirname(__ENV__.file)
-    Path.join([current_folder_path, "templates", "email_body.text.eex"])
+    Path.join([current_folder_path, "templates", "email_body.html.eex"])
+  end
+
+  defp entry_to_map(entry) do
+    {module, function, arity, [file: file, line: line]} = entry
+
+    %{
+      module: module,
+      function: function,
+      arity: arity,
+      file: file,
+      line: line
+    }
   end
 
   defp format_timestamp(timestamp) do

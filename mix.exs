@@ -1,11 +1,11 @@
-defmodule Boom.MixProject do
+defmodule BoomNotifier.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/wyeworks/boom"
 
   def project do
     [
-      app: :boom,
+      app: :boom_notifier,
       version: "0.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -44,7 +44,7 @@ defmodule Boom.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Boom.Application, []}
+      mod: {BoomNotifier.Application, []}
     ]
   end
 

@@ -1,4 +1,4 @@
-defmodule Boom.Application do
+defmodule BoomNotifier.Application do
   use Application
 
   @moduledoc false
@@ -6,7 +6,7 @@ defmodule Boom.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    children = [supervisor(Boom.ErrorStorage, [])]
+    children = [supervisor(BoomNotifier.ErrorStorage, [])]
     Supervisor.start_link(children, strategy: :one_for_all)
   end
 end

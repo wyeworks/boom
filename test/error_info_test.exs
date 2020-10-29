@@ -23,8 +23,8 @@ defmodule ErrorInfoTest do
     use Phoenix.Router
     import Phoenix.Controller
 
-    use Boom,
-      notifier: Boom.MailNotifier,
+    use BoomNotifier,
+      notifier: BoomNotifier.MailNotifier,
       options: [
         mailer: Support.FakeMailer,
         from: "me@example.com",
@@ -45,7 +45,7 @@ defmodule ErrorInfoTest do
 
   @endpoint TestRouter
 
-  doctest Boom
+  doctest BoomNotifier
 
   defmodule TestException do
     defexception message: "booom!"

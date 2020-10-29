@@ -1,4 +1,4 @@
-defmodule Boom.Helpers do
+defmodule BoomNotifier.Helpers do
   @moduledoc false
   # Create basic info based on exception information
 

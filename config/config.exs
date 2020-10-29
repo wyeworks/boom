@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :boom, key: :value
+#     config :boom_notifier, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:boom, :key)
+#     Application.get_env(:boom_notifier, :key)
 #
 # You can also configure a 3rd-party app:
 #
