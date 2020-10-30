@@ -1,14 +1,14 @@
-defmodule Boom do
+defmodule BoomNotifier do
   @moduledoc false
   # Notify the exception to all the defined notifiers
 
-  alias Boom.ErrorStorage
+  alias BoomNotifier.ErrorStorage
 
   defmacro __using__(config) do
     quote location: :keep do
       use Plug.ErrorHandler
 
-      import Boom
+      import BoomNotifier
       require Logger
 
       def handle_errors(conn, error) do

@@ -1,4 +1,4 @@
-defmodule Boom.Notifier do
+defmodule BoomNotifier.Notifier do
   @moduledoc """
   Defines a callback to be used by custom notifiers
   """

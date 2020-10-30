@@ -1,4 +1,4 @@
-defmodule Boom.WebhookNotifier do
+defmodule BoomNotifier.WebhookNotifier do
   @moduledoc """
   Send exception notification as a json using `HTTPoison`.
 
@@ -7,8 +7,8 @@ defmodule Boom.WebhookNotifier do
   defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
-    notifier: Boom.WebhookNotifier,
+  use BoomNotifier,
+    notifier: BoomNotifier.WebhookNotifier,
     options: [
       url: "http://example.com"
     ]
@@ -17,13 +17,13 @@ defmodule Boom.WebhookNotifier do
   ```
   """
 
-  @behaviour Boom.Notifier
+  @behaviour BoomNotifier.Notifier
 
-  import Boom.Helpers
+  import BoomNotifier.Helpers
 
   @type options :: [{:url, String.t()}]
 
-  @impl Boom.Notifier
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(errors_info, url: url) do
     payload =

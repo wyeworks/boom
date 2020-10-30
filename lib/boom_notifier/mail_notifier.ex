@@ -1,4 +1,4 @@
-defmodule Boom.MailNotifier do
+defmodule BoomNotifier.MailNotifier do
   @moduledoc """
   Send exception notification by email using `Bamboo`.
 
@@ -7,8 +7,8 @@ defmodule Boom.MailNotifier do
   defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
-      notifier: Boom.MailNotifier,
+  use BoomNotifier,
+      notifier: BoomNotifier.MailNotifier,
       options: [
         mailer: YourApp.Mailer,
         from: "me@example.com",
@@ -20,18 +20,18 @@ defmodule Boom.MailNotifier do
   ```
   """
 
-  @behaviour Boom.Notifier
+  @behaviour BoomNotifier.Notifier
 
   import Bamboo.Email
 
-  alias Boom.MailNotifier.HTMLContent
-  alias Boom.MailNotifier.TextContent
+  alias BoomNotifier.MailNotifier.HTMLContent
+  alias BoomNotifier.MailNotifier.TextContent
 
   @type option ::
           {:mailer, module()} | {:from, String.t()} | {:to, String.t()} | {:subject, String.t()}
   @type options :: [option]
 
-  @impl Boom.Notifier
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
     [mailer: mailer, from: email_from, to: email_to, subject: subject] = options

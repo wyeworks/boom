@@ -2,7 +2,7 @@ defmodule WebhookNotifierTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
-  doctest Boom
+  doctest BoomNotifier
 
   @expected_response %{
     exception_summary:
@@ -38,8 +38,8 @@ defmodule WebhookNotifierTest do
     use Phoenix.Router
     import Phoenix.Controller
 
-    use Boom,
-      notifier: Boom.WebhookNotifier,
+    use BoomNotifier,
+      notifier: BoomNotifier.WebhookNotifier,
       options: [url: "http://localhost:1234"]
 
     pipeline :browser do

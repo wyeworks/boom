@@ -1,4 +1,4 @@
-# Boom
+# BoomNotifier
 
 [![Build Status](https://travis-ci.org/wyeworks/boom.svg?branch=master)](https://travis-ci.org/wyeworks/boom)
 
@@ -19,7 +19,7 @@ The package can be installed by adding `boom` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:boom, "~> 0.1.0"}
+    {:boom_notifier, "~> 0.1.0"}
   ]
 end
 ```
@@ -32,8 +32,8 @@ end
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
-    notifier: Boom.WebhookNotifier,
+  use BoomNotifier,
+    notifier: BoomNotifier.WebhookNotifier,
     options: [
       url: "http://example.com"
     ]
@@ -49,8 +49,8 @@ To configure it, you need to set the `url` in the `options` keyword list. A `POS
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
-      notifier: Boom.MailNotifier,
+  use BoomNotifier,
+      notifier: BoomNotifier.MailNotifier,
       options: [
         mailer: YourApp.Mailer,
         from: "me@example.com",
@@ -65,7 +65,7 @@ For the email to be sent, you need to define a valid mailer in the `options` key
 
 ## Custom notifiers
 
-To create a custom notifier, you need to implement the `Boom.Notifier` behaviour:
+To create a custom notifier, you need to implement the `BoomNotifier.Notifier` behaviour:
 
 ```elixir
 @callback notify(list(%ErrorInfo{}), keyword(String.t())) :: no_return()
@@ -73,9 +73,9 @@ To create a custom notifier, you need to implement the `Boom.Notifier` behaviour
 
 ```elixir
 defmodule CustomNotifier do
-  @behaviour Boom.Notifier
+  @behaviour BoomNotifier.Notifier
 
-  @impl Boom.Notifier
+  @impl BoomNotifier.Notifier
   def notify(errors, options) do
     # ...
     # ...
@@ -87,7 +87,7 @@ defmodule CustomNotifier do
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
+  use BoomNotifier,
     notifier: CustomNotifier,
     options: [
       # ...
@@ -96,16 +96,16 @@ defmodule YourApp.Router do
 
 ## Multiple notifiers
 
-Boom also supports a list of multiple notifiers like in the example below:
+BoomNotifier also supports a list of multiple notifiers like in the example below:
 
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
+  use BoomNotifier,
     notifiers: [
       [
-        notifier: Boom.WebhookNotifier,
+        notifier: BoomNotifier.WebhookNotifier,
         options: [
           url: "http://example.com",
         ]
@@ -118,7 +118,7 @@ defmodule YourApp.Router do
 ```
 
 ## Notification Trigger
-By default, `Boom` will send a notification every time an exception is
+By default, `BoomNotifier` will send a notification every time an exception is
 raised.
 
 However, there are different strategies to decide when to send the
@@ -133,7 +133,7 @@ exception.
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
+  use BoomNotifier,
     notification_trigger: :always,
     notifiers: [
       # ...
@@ -152,7 +152,7 @@ You can also set an optional max value.
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
+  use BoomNotifier,
     notification_trigger: :exponential,
     notifiers: [
       # ...
@@ -163,7 +163,7 @@ defmodule YourApp.Router do
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  use Boom,
+  use BoomNotifier,
     notification_trigger: [exponential: limit: 100]
     notifiers: [
       # ...

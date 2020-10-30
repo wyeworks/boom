@@ -4,12 +4,12 @@ defmodule NotifierTest do
 
   import ExUnit.CaptureLog
 
-  doctest Boom
+  doctest BoomNotifier
 
   defmodule FakeNotifier do
-    @behaviour Boom.Notifier
+    @behaviour BoomNotifier.Notifier
 
-    @impl Boom.Notifier
+    @impl BoomNotifier.Notifier
     def notify(error_info_list, options) do
       [first_error | _] = error_info_list
       subject_prefix = Keyword.get(options, :subject)
@@ -25,9 +25,9 @@ defmodule NotifierTest do
   end
 
   defmodule FailingNotifier do
-    @behaviour Boom.Notifier
+    @behaviour BoomNotifier.Notifier
 
-    @impl Boom.Notifier
+    @impl BoomNotifier.Notifier
     def notify(_, _) do
       raise ArgumentError, message: "invalid argument foo"
     end
@@ -38,7 +38,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithSingleNotifier do
-    use Boom,
+    use BoomNotifier,
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught"
@@ -50,7 +50,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithMultipleNotifiers do
-    use Boom,
+    use BoomNotifier,
       notifiers: [
         [
           notifier: FakeNotifier,
@@ -66,7 +66,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugExitTermination do
-    use Boom,
+    use BoomNotifier,
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught"
@@ -78,7 +78,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugThrown do
-    use Boom,
+    use BoomNotifier,
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught"
@@ -90,7 +90,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithExponentialTriggerNotifier do
-    use Boom,
+    use BoomNotifier,
       notifier: FakeNotifier,
       notification_trigger: :exponential,
       options: [
@@ -103,7 +103,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithExponentialTriggerWithLimitNotifier do
-    use Boom,
+    use BoomNotifier,
       notifier: FakeNotifier,
       notification_trigger: [exponential: [limit: 3]],
       options: [
@@ -116,7 +116,7 @@ defmodule NotifierTest do
   end
 
   defmodule PlugErrorWithFailingNotifier do
-    use Boom,
+    use BoomNotifier,
       notifier: FailingNotifier,
       options: [
         subject: "BOOM error caught"
@@ -128,7 +128,7 @@ defmodule NotifierTest do
   end
 
   setup do
-    Agent.update(:boom, fn _state -> %{} end)
+    Agent.update(:boom_notifier, fn _state -> %{} end)
   end
 
   test "keeps raising an error on exception" do

@@ -2,7 +2,7 @@ defmodule MailerNotifierTest do
   use ExUnit.Case
   use Plug.Test
 
-  doctest Boom
+  doctest BoomNotifier
 
   defmodule TestController do
     use Phoenix.Controller
@@ -21,8 +21,8 @@ defmodule MailerNotifierTest do
     use Phoenix.Router
     import Phoenix.Controller
 
-    use Boom,
-      notifier: Boom.MailNotifier,
+    use BoomNotifier,
+      notifier: BoomNotifier.MailNotifier,
       options: [
         mailer: Support.FakeMailer,
         from: "me@example.com",
