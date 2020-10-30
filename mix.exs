@@ -35,7 +35,7 @@ defmodule BoomNotifier.MixProject do
       licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url,
-        "Docs" => "https://hexdocs.pm/boom"
+        "Docs" => "https://hexdocs.pm/boom_notifier"
       }
     ]
   end
