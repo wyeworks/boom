@@ -1,5 +1,6 @@
 # BoomNotifier
 
+[![Build Status](https://img.shields.io/hexpm/v/boom_notifier?color=78529a)](https://hex.pm/packages/boom_notifier)
 [![Build Status](https://travis-ci.org/wyeworks/boom.svg?branch=master)](https://travis-ci.org/wyeworks/boom)
 
 ---
@@ -11,9 +12,11 @@ notifier, but you can implement your custom ones.
 It was inspired by the [ExceptionNotification](https://github.com/smartinez87/exception_notification)
 gem that provides a similar functionality for Rack/Rails applications.
 
+You can read the full documentation at [https://hexdocs.pm/boom_notifier](https://hexdocs.pm/boom_notifier).
+
 ## Installation
 
-The package can be installed by adding `boom` to your list of dependencies in
+The package can be installed by adding `boom_notifier` to your list of dependencies in
 `mix.exs`:
 
 ```elixir
