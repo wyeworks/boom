@@ -44,6 +44,6 @@ defmodule BoomNotifier.MailNotifier do
       |> html_body(HTMLContent.build(error_info))
       |> text_body(TextContent.build(error_info))
 
-    mailer.deliver_now(email)
+    mailer.deliver_later(email)
   end
 end

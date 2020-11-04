@@ -4,7 +4,7 @@ defmodule Support.FakeMailer do
   # Instead of sending an email it puts the fields in a mailbox so they can be
   # received in the test
 
-  def deliver_now(email) do
+  def deliver_later(email) do
     send(self(), {:email_subject, email.subject})
     send(self(), {:email_from, email.from})
     send(self(), {:email_to, email.to})
