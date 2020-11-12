@@ -172,3 +172,9 @@ defmodule YourApp.Router do
       # ...
     ]
 ```
+
+## License
+BoomNotifier is released under the terms of the [MIT License](https://github.com/wyeworks/boom/blob/master/LICENSE).
+
+## Credits
+The authors of this project are [Ignacio](https://github.com/iaguirre88) and [Jorge](https://github.com/jmbejar). It is sponsored and maintained by [<img src="https://www.wyeworks.com/images/logo-wbg.svg"/>](https://www.wyeworks.com)
