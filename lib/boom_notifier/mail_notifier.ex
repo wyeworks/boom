@@ -33,10 +33,12 @@ defmodule BoomNotifier.MailNotifier do
 
   @impl BoomNotifier.Notifier
   def validate!(options) do
-    Keyword.fetch!(options, :mailer)
-    Keyword.fetch!(options, :from)
-    Keyword.fetch!(options, :to)
-    Keyword.fetch!(options, :subject)
+    with _mailer <- Keyword.fetch!(options, :mailer),
+         _from <- Keyword.fetch!(options, :from),
+         _to <- Keyword.fetch!(options, :to),
+         _subject <- Keyword.fetch!(options, :subject) do
+      nil
+    end
   end
 
   @impl BoomNotifier.Notifier

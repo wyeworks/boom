@@ -35,7 +35,7 @@ defmodule BoomNotifier do
       try do
         walkthrough_notifiers(
           settings,
-          &if(function_exported?(&1, :validate!, 1)) do
+          &if function_exported?(&1, :validate!, 1) do
             &1.validate!(&2)
           end
         )
