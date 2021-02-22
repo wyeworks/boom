@@ -24,6 +24,11 @@ defmodule BoomNotifier.WebhookNotifier do
   @type options :: [{:url, String.t()}]
 
   @impl BoomNotifier.Notifier
+  def validate!(options) do
+    Keyword.fetch!(options, :url)
+  end
+
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(errors_info, url: url) do
     payload =

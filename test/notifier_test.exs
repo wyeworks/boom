@@ -22,6 +22,11 @@ defmodule NotifierTest do
 
       send(self(), %{exception: %{subject: subject, body: body}})
     end
+
+    @impl BoomNotifier.Notifier
+    def validate!(options) do
+      Keyword.fetch!(options, :subject)
+    end
   end
 
   defmodule FailingNotifier do
@@ -30,6 +35,20 @@ defmodule NotifierTest do
     @impl BoomNotifier.Notifier
     def notify(_, _) do
       raise ArgumentError, message: "invalid argument foo"
+    end
+  end
+
+  defmodule MissingParameterNotifier do
+    @behaviour BoomNotifier.Notifier
+
+    @impl BoomNotifier.Notifier
+    def notify(_error_info_list, _options) do
+      nil
+    end
+
+    @impl BoomNotifier.Notifier
+    def validate!(options) do
+      Keyword.fetch!(options, :parameter)
     end
   end
 
@@ -260,6 +279,27 @@ defmodule NotifierTest do
              end
            end) =~
              "An error occurred when sending a notification: ** (ArgumentError) invalid argument foo in NotifierTest.FailingNotifier.notify/2"
+
+    assert true
+  end
+
+  test "logs when parameter is missing" do
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugErrorWithMissingParameterNotifier do
+               use BoomNotifier,
+                 notifier: MissingParameterNotifier,
+                 options: [
+                   another_parameter: "value"
+                 ]
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Missing parameter: ** (KeyError) key :parameter not found in: [another_parameter: \"value\"]"
 
     assert true
   end

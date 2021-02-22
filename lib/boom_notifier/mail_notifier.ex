@@ -32,18 +32,29 @@ defmodule BoomNotifier.MailNotifier do
   @type options :: [option]
 
   @impl BoomNotifier.Notifier
+  def validate!(options) do
+    Keyword.fetch!(options, :mailer)
+    Keyword.fetch!(options, :from)
+    Keyword.fetch!(options, :to)
+    Keyword.fetch!(options, :subject)
+  end
+
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
-    [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
+    with {:ok, mailer} <- Keyword.fetch(options, :mailer),
+         {:ok, email_from} <- Keyword.fetch(options, :from),
+         {:ok, email_to} <- Keyword.fetch(options, :to),
+         {:ok, subject} <- Keyword.fetch(options, :subject) do
+      email =
+        new_email()
+        |> to(email_to)
+        |> from(email_from)
+        |> subject("#{subject}: #{hd(error_info) |> Map.get(:reason)}")
+        |> html_body(HTMLContent.build(error_info))
+        |> text_body(TextContent.build(error_info))
 
-    email =
-      new_email()
-      |> to(email_to)
-      |> from(email_from)
-      |> subject("#{subject}: #{hd(error_info) |> Map.get(:reason)}")
-      |> html_body(HTMLContent.build(error_info))
-      |> text_body(TextContent.build(error_info))
-
-    mailer.deliver_later(email)
+      mailer.deliver_later(email)
+    end
   end
 end

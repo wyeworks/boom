@@ -196,4 +196,31 @@ defmodule MailerNotifierTest do
         assert timestamp_line =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
     end
   end
+
+  test "validates raises an exception when required params are not present" do
+    assert_raise KeyError, "key :mailer not found in: [random_param: nil]", fn ->
+      BoomNotifier.MailNotifier.validate!(random_param: nil)
+    end
+
+    assert_raise KeyError, "key :from not found in: [mailer: nil, random_param: nil]", fn ->
+      BoomNotifier.MailNotifier.validate!(mailer: nil, random_param: nil)
+    end
+
+    assert_raise KeyError,
+                 "key :to not found in: [mailer: nil, from: nil, random_param: nil]",
+                 fn ->
+                   BoomNotifier.MailNotifier.validate!(mailer: nil, from: nil, random_param: nil)
+                 end
+
+    assert_raise KeyError,
+                 "key :subject not found in: [mailer: nil, from: nil, to: nil, random_param: nil]",
+                 fn ->
+                   BoomNotifier.MailNotifier.validate!(
+                     mailer: nil,
+                     from: nil,
+                     to: nil,
+                     random_param: nil
+                   )
+                 end
+  end
 end

@@ -1,5 +1,6 @@
 defmodule BoomNotifier.Helpers do
   @moduledoc false
+
   # Create basic info based on exception information
 
   def exception_basic_text(exception_name, controller, action) do
