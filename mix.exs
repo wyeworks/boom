@@ -11,7 +11,11 @@ defmodule BoomNotifier.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      dialyzer: [plt_add_apps: [:eex]],
+      dialyzer: [
+        plt_add_apps: [:eex],
+        plt_core_path: "priv/plts",
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
+      ],
       aliases: [
         quality: ["format", "credo --strict", "dialyzer"]
       ],
