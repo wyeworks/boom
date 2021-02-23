@@ -32,31 +32,31 @@ defmodule BoomNotifier.MailNotifier do
   @type options :: [option]
 
   @impl BoomNotifier.Notifier
-  def validate!(options) do
-    with _mailer <- Keyword.fetch!(options, :mailer),
-         _from <- Keyword.fetch!(options, :from),
-         _to <- Keyword.fetch!(options, :to),
-         _subject <- Keyword.fetch!(options, :subject) do
-      nil
+  def validate_config(options) do
+    with {:mailer, {:ok, _mailer}} <- {:mailer, Keyword.fetch(options, :mailer)},
+         {:from, {:ok, _from}} <- {:from, Keyword.fetch(options, :from)},
+         {:to, {:ok, _to}} <- {:to, Keyword.fetch(options, :to)},
+         {:subject, {:ok, _subject}} <- {:subject, Keyword.fetch(options, :subject)} do
+      :ok
+    else
+      {:mailer, :error} -> {:error, "Mailer is missing"}
+      {:from, :error} -> {:error, "From is missing"}
+      {:to, :error} -> {:error, "To is missing"}
+      {:subject, :error} -> {:error, "Subject is missing"}
     end
   end
 
   @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
-    with {:ok, mailer} <- Keyword.fetch(options, :mailer),
-         {:ok, email_from} <- Keyword.fetch(options, :from),
-         {:ok, email_to} <- Keyword.fetch(options, :to),
-         {:ok, subject} <- Keyword.fetch(options, :subject) do
-      email =
-        new_email()
-        |> to(email_to)
-        |> from(email_from)
-        |> subject("#{subject}: #{hd(error_info) |> Map.get(:reason)}")
-        |> html_body(HTMLContent.build(error_info))
-        |> text_body(TextContent.build(error_info))
+    email =
+      new_email()
+      |> to(options[:to])
+      |> from(options[:from])
+      |> subject("#{options[:subject]}: #{hd(error_info) |> Map.get(:reason)}")
+      |> html_body(HTMLContent.build(error_info))
+      |> text_body(TextContent.build(error_info))
 
-      mailer.deliver_later(email)
-    end
+    options[:mailer].deliver_later(email)
   end
 end

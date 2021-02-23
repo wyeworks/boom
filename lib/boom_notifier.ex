@@ -32,25 +32,16 @@ defmodule BoomNotifier do
 
       settings = unquote(config)
 
-      try do
-        walkthrough_notifiers(
-          settings,
-          &if function_exported?(&1, :validate!, 1) do
-            &1.validate!(&2)
+      walkthrough_notifiers(
+        settings,
+        &if function_exported?(&1, :validate_config, 1) do
+          with {:error, message} <- &1.validate_config(&2) do
+            Logger.warn("Notifier option error: #{message} in #{
+              &1 |> to_string() |> String.split(".") |> List.last()
+            }")
           end
-        )
-      rescue
-        e ->
-          error_info = Exception.format_banner(:error, e, __STACKTRACE__)
-          [{module, function, arity, _}, {notifier, _, _, _} | _] = __STACKTRACE__
-          Exception.format_mfa(module, function, arity)
-
-          Logger.warn(
-            "Missing parameter: #{error_info} in #{
-              notifier |> to_string() |> String.split(".") |> List.last()
-            }"
-          )
-      end
+        end
+      )
 
       def handle_errors(conn, error) do
         {error_kind, error_info} = ErrorInfo.build(error, conn)

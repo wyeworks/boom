@@ -57,10 +57,9 @@ defmodule WebhookNotifierTest do
     {:ok, bypass: bypass}
   end
 
-  test "validates raises an exception when url is not present" do
-    assert_raise KeyError, "key :url not found in: [random_param: nil]", fn ->
-      BoomNotifier.WebhookNotifier.validate!(random_param: nil)
-    end
+  test "validates return {:error, message} when url is not present" do
+    assert {:error, "Url is missing"} ==
+      BoomNotifier.WebhookNotifier.validate_config(random_param: nil)
   end
 
   test "request is sent to webhook", %{bypass: bypass} do

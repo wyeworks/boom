@@ -22,11 +22,6 @@ defmodule NotifierTest do
 
       send(self(), %{exception: %{subject: subject, body: body}})
     end
-
-    @impl BoomNotifier.Notifier
-    def validate!(options) do
-      Keyword.fetch!(options, :subject)
-    end
   end
 
   defmodule FailingNotifier do
@@ -47,8 +42,12 @@ defmodule NotifierTest do
     end
 
     @impl BoomNotifier.Notifier
-    def validate!(options) do
-      Keyword.fetch!(options, :parameter)
+    def validate_config(options) do
+      with {:ok, _parameter} <- Keyword.fetch(options, :url) do
+        :ok
+      else
+        :error -> {:error, "Parameter is missing"}
+      end
     end
   end
 
@@ -299,8 +298,7 @@ defmodule NotifierTest do
                end
              end
            end) =~
-             "Missing parameter: ** (KeyError) key :parameter not found in: [another_parameter: \"value\"]"
+             "Notifier option error: Parameter is missing in MissingParameterNotifier"
 
-    assert true
   end
 end

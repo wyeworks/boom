@@ -197,30 +197,26 @@ defmodule MailerNotifierTest do
     end
   end
 
-  test "validates raises an exception when required params are not present" do
-    assert_raise KeyError, "key :mailer not found in: [random_param: nil]", fn ->
-      BoomNotifier.MailNotifier.validate!(random_param: nil)
-    end
+  test "validates return {:error, message} when required params are not present" do
+    assert {:error, "Mailer is missing"} ==
+             BoomNotifier.MailNotifier.validate_config(random_param: nil)
 
-    assert_raise KeyError, "key :from not found in: [mailer: nil, random_param: nil]", fn ->
-      BoomNotifier.MailNotifier.validate!(mailer: nil, random_param: nil)
-    end
+    assert {:error, "From is missing"} ==
+             BoomNotifier.MailNotifier.validate_config(mailer: nil, random_param: nil)
 
-    assert_raise KeyError,
-                 "key :to not found in: [mailer: nil, from: nil, random_param: nil]",
-                 fn ->
-                   BoomNotifier.MailNotifier.validate!(mailer: nil, from: nil, random_param: nil)
-                 end
+    assert {:error, "To is missing"} ==
+             BoomNotifier.MailNotifier.validate_config(
+               mailer: nil,
+               from: nil,
+               random_param: nil
+             )
 
-    assert_raise KeyError,
-                 "key :subject not found in: [mailer: nil, from: nil, to: nil, random_param: nil]",
-                 fn ->
-                   BoomNotifier.MailNotifier.validate!(
-                     mailer: nil,
-                     from: nil,
-                     to: nil,
-                     random_param: nil
-                   )
-                 end
+    assert {:error, "Subject is missing"} ==
+             BoomNotifier.MailNotifier.validate_config(
+               mailer: nil,
+               from: nil,
+               to: nil,
+               random_param: nil
+             )
   end
 end
