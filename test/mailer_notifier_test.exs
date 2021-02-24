@@ -198,20 +198,20 @@ defmodule MailerNotifierTest do
   end
 
   test "validates return {:error, message} when required params are not present" do
-    assert {:error, "Mailer is missing"} ==
+    assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
              BoomNotifier.MailNotifier.validate_config(random_param: nil)
 
-    assert {:error, "From is missing"} ==
+    assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
              BoomNotifier.MailNotifier.validate_config(mailer: nil, random_param: nil)
 
-    assert {:error, "To is missing"} ==
+    assert {:error, "The following parameters are missing: [:to, :subject]"} ==
              BoomNotifier.MailNotifier.validate_config(
                mailer: nil,
                from: nil,
                random_param: nil
              )
 
-    assert {:error, "Subject is missing"} ==
+    assert {:error, ":subject parameter is missing"} ==
              BoomNotifier.MailNotifier.validate_config(
                mailer: nil,
                from: nil,

@@ -36,9 +36,11 @@ defmodule BoomNotifier do
         settings,
         &if function_exported?(&1, :validate_config, 1) do
           with {:error, message} <- &1.validate_config(&2) do
-            Logger.warn("Notifier option error: #{message} in #{
-              &1 |> to_string() |> String.split(".") |> List.last()
-            }")
+            Logger.warn(
+              "Notifier validation: #{message} in #{
+                &1 |> to_string() |> String.split(".") |> List.last()
+              }"
+            )
           end
         end
       )

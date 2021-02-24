@@ -25,10 +25,10 @@ defmodule BoomNotifier.WebhookNotifier do
 
   @impl BoomNotifier.Notifier
   def validate_config(options) do
-    with {:ok, _url} <- Keyword.fetch(options, :url) do
+    if Keyword.has_key?(options, :url) do
       :ok
     else
-      :error -> {:error, "Url is missing"}
+      {:error, ":url parameter is missing"}
     end
   end
 

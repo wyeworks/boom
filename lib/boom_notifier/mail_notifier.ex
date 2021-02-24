@@ -33,16 +33,12 @@ defmodule BoomNotifier.MailNotifier do
 
   @impl BoomNotifier.Notifier
   def validate_config(options) do
-    with {:mailer, {:ok, _mailer}} <- {:mailer, Keyword.fetch(options, :mailer)},
-         {:from, {:ok, _from}} <- {:from, Keyword.fetch(options, :from)},
-         {:to, {:ok, _to}} <- {:to, Keyword.fetch(options, :to)},
-         {:subject, {:ok, _subject}} <- {:subject, Keyword.fetch(options, :subject)} do
-      :ok
-    else
-      {:mailer, :error} -> {:error, "Mailer is missing"}
-      {:from, :error} -> {:error, "From is missing"}
-      {:to, :error} -> {:error, "To is missing"}
-      {:subject, :error} -> {:error, "Subject is missing"}
+    missing_keys = Enum.reject([:mailer, :from, :to, :subject], &Keyword.has_key?(options, &1))
+
+    case missing_keys do
+      [] -> :ok
+      [missing_key] -> {:error, "#{inspect(missing_key)} parameter is missing"}
+      _ -> {:error, "The following parameters are missing: #{inspect(missing_keys)}"}
     end
   end
 

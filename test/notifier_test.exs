@@ -43,10 +43,10 @@ defmodule NotifierTest do
 
     @impl BoomNotifier.Notifier
     def validate_config(options) do
-      with {:ok, _parameter} <- Keyword.fetch(options, :url) do
+      if Keyword.has_key?(options, :parameter) do
         :ok
       else
-        :error -> {:error, "Parameter is missing"}
+        {:error, ":parameter parameter is missing"}
       end
     end
   end
@@ -298,7 +298,6 @@ defmodule NotifierTest do
                end
              end
            end) =~
-             "Notifier option error: Parameter is missing in MissingParameterNotifier"
-
+             "Notifier validation: :parameter parameter is missing in MissingParameterNotifier"
   end
 end

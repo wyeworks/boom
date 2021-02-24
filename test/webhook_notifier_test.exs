@@ -58,8 +58,8 @@ defmodule WebhookNotifierTest do
   end
 
   test "validates return {:error, message} when url is not present" do
-    assert {:error, "Url is missing"} ==
-      BoomNotifier.WebhookNotifier.validate_config(random_param: nil)
+    assert {:error, ":url parameter is missing"} ==
+             BoomNotifier.WebhookNotifier.validate_config(random_param: nil)
   end
 
   test "request is sent to webhook", %{bypass: bypass} do
