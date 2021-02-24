@@ -282,11 +282,11 @@ defmodule NotifierTest do
     assert true
   end
 
-  test "logs when parameter is missing" do
+  test "logs when parameter in options is missing" do
     conn = conn(:get, "/")
 
     assert capture_log(fn ->
-             defmodule PlugErrorWithMissingParameterNotifier do
+             defmodule PlugLogWithMissingParameterNotifier do
                use BoomNotifier,
                  notifier: MissingParameterNotifier,
                  options: [
@@ -299,5 +299,38 @@ defmodule NotifierTest do
              end
            end) =~
              "Notifier validation: :parameter parameter is missing in MissingParameterNotifier"
+  end
+
+  test "logs when parameters in config are missing" do
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugLogWithMissingParameterNotifier do
+               use BoomNotifier, other: nil
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Settings error: The following parameters are missing: [:notifier, :options]"
+  end
+
+  test "logs when one parameter in config is missing" do
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugLogNotifierWithMissingParameterNotifier do
+               use BoomNotifier,
+                 options: [
+                   parameter: "value"
+                 ]
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Settings error: :notifier parameter missing"
   end
 end

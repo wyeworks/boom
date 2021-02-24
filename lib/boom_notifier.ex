@@ -4,21 +4,33 @@ defmodule BoomNotifier do
   # Notify the exception to all the defined notifiers
 
   alias BoomNotifier.ErrorStorage
+  require Logger
+
+  def run_callback(settings, callback) do
+    missing_keys = Enum.reject([:notifier, :options], &Keyword.has_key?(settings, &1))
+
+    case missing_keys do
+      [] ->
+        callback.(settings[:notifier], settings[:options])
+
+      [missing_key] ->
+        Logger.error("Settings error: #{inspect(missing_key)} parameter missing")
+
+      _ ->
+        Logger.error(
+          "Settings error: The following parameters are missing: #{inspect(missing_keys)}"
+        )
+    end
+  end
 
   def walkthrough_notifiers(settings, callback) do
     case Keyword.get(settings, :notifiers) do
       nil ->
-        with {:ok, notifier} <- Keyword.fetch(settings, :notifier),
-             {:ok, options} <- Keyword.fetch(settings, :options) do
-          callback.(notifier, options)
-        end
+        run_callback(settings, callback)
 
-      notifiers_config when is_list(notifiers_config) ->
-        for notifier_config <- notifiers_config do
-          with {:ok, notifier} <- Keyword.fetch(notifier_config, :notifier),
-               {:ok, options} <- Keyword.fetch(notifier_config, :options) do
-            callback.(notifier, options)
-          end
+      notifiers_settings when is_list(notifiers_settings) ->
+        for notifier_settings <- notifiers_settings do
+          run_callback(notifier_settings, callback)
         end
     end
   end
@@ -36,7 +48,7 @@ defmodule BoomNotifier do
         settings,
         &if function_exported?(&1, :validate_config, 1) do
           with {:error, message} <- &1.validate_config(&2) do
-            Logger.warn(
+            Logger.error(
               "Notifier validation: #{message} in #{
                 &1 |> to_string() |> String.split(".") |> List.last()
               }"
@@ -75,7 +87,7 @@ defmodule BoomNotifier do
                 Exception.format_stacktrace_entry(first_stack_entry)
             end
 
-          Logger.warn(
+          Logger.error(
             "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
           )
       end
