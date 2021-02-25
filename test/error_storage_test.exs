@@ -16,7 +16,9 @@ defmodule ErrorStorageTest do
   describe "add_errors/2" do
     test "appends the error to its proper error kind" do
       BoomNotifier.ErrorStorage.add_errors(@error_kind, @error_info)
-      assert %{@error_kind => {1, [@error_info]}} == Agent.get(:boom_notifier, fn state -> state end)
+
+      assert %{@error_kind => {1, [@error_info]}} ==
+               Agent.get(:boom_notifier, fn state -> state end)
 
       BoomNotifier.ErrorStorage.add_errors(@error_kind, @error_info)
 
@@ -85,15 +87,24 @@ defmodule ErrorStorageTest do
       Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
 
       BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 2
 
       BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 4
 
       BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 8
     end
 
@@ -101,15 +112,24 @@ defmodule ErrorStorageTest do
       Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
 
       BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 2
 
       BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 4
 
       BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 5
     end
 
@@ -117,11 +137,16 @@ defmodule ErrorStorageTest do
       Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
       BoomNotifier.ErrorStorage.clear_errors(:always, @error_kind)
 
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 1
 
       BoomNotifier.ErrorStorage.clear_errors(:always, @error_kind)
-      {counter, _errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
+      {counter, _errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+
       assert counter === 1
     end
 
@@ -135,7 +160,9 @@ defmodule ErrorStorageTest do
       assert counter == 2
       assert errors == []
 
-      {counter, errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(:another_error_kind)
+      {counter, errors} =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(:another_error_kind)
+
       assert counter == 1
       assert errors == ["another_error"]
     end
