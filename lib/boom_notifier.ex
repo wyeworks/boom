@@ -29,9 +29,7 @@ defmodule BoomNotifier do
         run_callback(settings, callback)
 
       notifiers_settings when is_list(notifiers_settings) ->
-        for notifier_settings <- notifiers_settings do
-          run_callback(notifier_settings, callback)
-        end
+        Enum.each(notifiers_settings, &run_callback(&1, callback))
     end
   end
 
