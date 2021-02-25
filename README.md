@@ -1,7 +1,7 @@
 # BoomNotifier
 
-[![Build Status](https://img.shields.io/hexpm/v/boom_notifier?color=78529a)](https://hex.pm/packages/boom_notifier)
-[![Build Status](https://travis-ci.org/wyeworks/boom.svg?branch=master)](https://travis-ci.org/wyeworks/boom)
+[![hex](https://img.shields.io/hexpm/v/boom_notifier?color=78529a)](https://hex.pm/packages/boom_notifier)
+[![Elixir CI](https://github.com/wyeworks/boom/actions/workflows/elixir.yml/badge.svg)](https://github.com/wyeworks/boom/actions/workflows/elixir.yml)
 
 ---
 
