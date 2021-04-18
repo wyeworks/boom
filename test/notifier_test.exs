@@ -283,6 +283,8 @@ defmodule NotifierTest do
   end
 
   test "logs when parameter in options is missing" do
+    Code.compiler_options(ignore_module_conflict: true)
+
     conn = conn(:get, "/")
 
     assert capture_log(fn ->
@@ -299,9 +301,13 @@ defmodule NotifierTest do
              end
            end) =~
              "Notifier validation: :parameter parameter is missing in MissingParameterNotifier"
+
+    Code.compiler_options(ignore_module_conflict: false)
   end
 
   test "logs when parameters in config are missing" do
+    Code.compiler_options(ignore_module_conflict: true)
+
     conn = conn(:get, "/")
 
     assert capture_log(fn ->
@@ -314,6 +320,8 @@ defmodule NotifierTest do
              end
            end) =~
              "Settings error: The following parameters are missing: [:notifier, :options]"
+
+    Code.compiler_options(ignore_module_conflict: false)
   end
 
   test "logs when one parameter in config is missing" do

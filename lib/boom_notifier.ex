@@ -33,6 +33,23 @@ defmodule BoomNotifier do
     end
   end
 
+  def validate_notifiers(notifier, options) do
+    if Code.ensure_loaded?(notifier) &&
+         function_exported?(notifier, :validate_config, 1) do
+      case notifier.validate_config(options) do
+        {:error, message} ->
+          Logger.error(
+            "Notifier validation: #{message} in #{
+              notifier |> to_string() |> String.split(".") |> List.last()
+            }"
+          )
+
+        _ ->
+          nil
+      end
+    end
+  end
+
   defmacro __using__(config) do
     quote location: :keep do
       use Plug.ErrorHandler
@@ -42,17 +59,10 @@ defmodule BoomNotifier do
 
       settings = unquote(config)
 
+      # Notifiers validation
       walkthrough_notifiers(
         settings,
-        &if function_exported?(&1, :validate_config, 1) do
-          with {:error, message} <- &1.validate_config(&2) do
-            Logger.error(
-              "Notifier validation: #{message} in #{
-                &1 |> to_string() |> String.split(".") |> List.last()
-              }"
-            )
-          end
-        end
+        fn notifier, options -> validate_notifiers(notifier, options) end
       )
 
       def handle_errors(conn, error) do
@@ -65,7 +75,10 @@ defmodule BoomNotifier do
 
           settings = unquote(config)
 
-          walkthrough_notifiers(settings, & &1.notify(occurrences, &2))
+          # Triggers the notification in each notifier
+          walkthrough_notifiers(settings, fn notifier, options ->
+            notifier.notify(occurrences, options)
+          end)
 
           {notification_trigger, _settings} =
             Keyword.pop(settings, :notification_trigger, :always)
