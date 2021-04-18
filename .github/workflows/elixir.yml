@@ -17,9 +17,6 @@ jobs:
         include:
           - pair:
               elixir: 1.7
-              otp: 19.0
-          - pair:
-              elixir: 1.7
               otp: 20.0
           - pair:
               elixir: 1.8
@@ -44,7 +41,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Elixir
-      uses: actions/setup-elixir@v1
+      uses: erlef/setup-beam@v1
       with:
         elixir-version: ${{ matrix.pair.elixir }}
         otp-version: ${{ matrix.pair.otp }}
