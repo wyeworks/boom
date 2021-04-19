@@ -4,4 +4,6 @@ defmodule BoomNotifier.Notifier do
   """
 
   @callback notify(list(%ErrorInfo{}), keyword(String.t())) :: no_return()
+  @callback validate_config(keyword(String.t())) :: :ok | {:error, String.t()}
+  @optional_callbacks validate_config: 1
 end

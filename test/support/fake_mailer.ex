@@ -1,5 +1,6 @@
 defmodule Support.FakeMailer do
   @moduledoc false
+
   # Overrides the `deliver_now` function.
   # Instead of sending an email it puts the fields in a mailbox so they can be
   # received in the test

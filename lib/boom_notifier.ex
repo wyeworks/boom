@@ -1,8 +1,54 @@
 defmodule BoomNotifier do
   @moduledoc false
+
   # Notify the exception to all the defined notifiers
 
   alias BoomNotifier.ErrorStorage
+  require Logger
+
+  def run_callback(settings, callback) do
+    missing_keys = Enum.reject([:notifier, :options], &Keyword.has_key?(settings, &1))
+
+    case missing_keys do
+      [] ->
+        callback.(settings[:notifier], settings[:options])
+
+      [missing_key] ->
+        Logger.error("Settings error: #{inspect(missing_key)} parameter missing")
+
+      _ ->
+        Logger.error(
+          "Settings error: The following parameters are missing: #{inspect(missing_keys)}"
+        )
+    end
+  end
+
+  def walkthrough_notifiers(settings, callback) do
+    case Keyword.get(settings, :notifiers) do
+      nil ->
+        run_callback(settings, callback)
+
+      notifiers_settings when is_list(notifiers_settings) ->
+        Enum.each(notifiers_settings, &run_callback(&1, callback))
+    end
+  end
+
+  def validate_notifiers(notifier, options) do
+    if Code.ensure_loaded?(notifier) &&
+         function_exported?(notifier, :validate_config, 1) do
+      case notifier.validate_config(options) do
+        {:error, message} ->
+          Logger.error(
+            "Notifier validation: #{message} in #{
+              notifier |> to_string() |> String.split(".") |> List.last()
+            }"
+          )
+
+        _ ->
+          nil
+      end
+    end
+  end
 
   defmacro __using__(config) do
     quote location: :keep do
@@ -10,6 +56,14 @@ defmodule BoomNotifier do
 
       import BoomNotifier
       require Logger
+
+      settings = unquote(config)
+
+      # Notifiers validation
+      walkthrough_notifiers(
+        settings,
+        fn notifier, options -> validate_notifiers(notifier, options) end
+      )
 
       def handle_errors(conn, error) do
         {error_kind, error_info} = ErrorInfo.build(error, conn)
@@ -21,21 +75,10 @@ defmodule BoomNotifier do
 
           settings = unquote(config)
 
-          case Keyword.get(settings, :notifiers) do
-            nil ->
-              with {:ok, notifier} <- Keyword.fetch(settings, :notifier),
-                   {:ok, options} <- Keyword.fetch(settings, :options) do
-                notifier.notify(occurrences, options)
-              end
-
-            notifiers_config when is_list(notifiers_config) ->
-              for notifier_config <- notifiers_config do
-                with {:ok, notifier} <- Keyword.fetch(notifier_config, :notifier),
-                     {:ok, options} <- Keyword.fetch(notifier_config, :options) do
-                  notifier.notify(occurrences, options)
-                end
-              end
-          end
+          # Triggers the notification in each notifier
+          walkthrough_notifiers(settings, fn notifier, options ->
+            notifier.notify(occurrences, options)
+          end)
 
           {notification_trigger, _settings} =
             Keyword.pop(settings, :notification_trigger, :always)
@@ -55,7 +98,7 @@ defmodule BoomNotifier do
                 Exception.format_stacktrace_entry(first_stack_entry)
             end
 
-          Logger.warn(
+          Logger.error(
             "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
           )
       end

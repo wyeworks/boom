@@ -33,6 +33,24 @@ defmodule NotifierTest do
     end
   end
 
+  defmodule MissingParameterNotifier do
+    @behaviour BoomNotifier.Notifier
+
+    @impl BoomNotifier.Notifier
+    def notify(_error_info_list, _options) do
+      nil
+    end
+
+    @impl BoomNotifier.Notifier
+    def validate_config(options) do
+      if Keyword.has_key?(options, :parameter) do
+        :ok
+      else
+        {:error, ":parameter parameter is missing"}
+      end
+    end
+  end
+
   defmodule TestException do
     defexception plug_status: 403, message: "booom!"
   end
@@ -262,5 +280,65 @@ defmodule NotifierTest do
              "An error occurred when sending a notification: ** (ArgumentError) invalid argument foo in NotifierTest.FailingNotifier.notify/2"
 
     assert true
+  end
+
+  test "logs when parameter in options is missing" do
+    Code.compiler_options(ignore_module_conflict: true)
+
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugLogWithMissingParameterNotifier do
+               use BoomNotifier,
+                 notifier: MissingParameterNotifier,
+                 options: [
+                   another_parameter: "value"
+                 ]
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Notifier validation: :parameter parameter is missing in MissingParameterNotifier"
+
+    Code.compiler_options(ignore_module_conflict: false)
+  end
+
+  test "logs when parameters in config are missing" do
+    Code.compiler_options(ignore_module_conflict: true)
+
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugLogWithMissingParameterNotifier do
+               use BoomNotifier, other: nil
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Settings error: The following parameters are missing: [:notifier, :options]"
+
+    Code.compiler_options(ignore_module_conflict: false)
+  end
+
+  test "logs when one parameter in config is missing" do
+    conn = conn(:get, "/")
+
+    assert capture_log(fn ->
+             defmodule PlugLogNotifierWithMissingParameterNotifier do
+               use BoomNotifier,
+                 options: [
+                   parameter: "value"
+                 ]
+
+               def call(_conn, _opts) do
+                 raise TestException.exception([])
+               end
+             end
+           end) =~
+             "Settings error: :notifier parameter missing"
   end
 end

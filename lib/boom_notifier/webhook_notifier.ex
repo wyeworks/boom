@@ -24,6 +24,15 @@ defmodule BoomNotifier.WebhookNotifier do
   @type options :: [{:url, String.t()}]
 
   @impl BoomNotifier.Notifier
+  def validate_config(options) do
+    if Keyword.has_key?(options, :url) do
+      :ok
+    else
+      {:error, ":url parameter is missing"}
+    end
+  end
+
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(errors_info, url: url) do
     payload =

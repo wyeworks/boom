@@ -32,18 +32,27 @@ defmodule BoomNotifier.MailNotifier do
   @type options :: [option]
 
   @impl BoomNotifier.Notifier
+  def validate_config(options) do
+    missing_keys = Enum.reject([:mailer, :from, :to, :subject], &Keyword.has_key?(options, &1))
+
+    case missing_keys do
+      [] -> :ok
+      [missing_key] -> {:error, "#{inspect(missing_key)} parameter is missing"}
+      _ -> {:error, "The following parameters are missing: #{inspect(missing_keys)}"}
+    end
+  end
+
+  @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
-    [mailer: mailer, from: email_from, to: email_to, subject: subject] = options
-
     email =
       new_email()
-      |> to(email_to)
-      |> from(email_from)
-      |> subject("#{subject}: #{hd(error_info) |> Map.get(:reason)}")
+      |> to(options[:to])
+      |> from(options[:from])
+      |> subject("#{options[:subject]}: #{hd(error_info) |> Map.get(:reason)}")
       |> html_body(HTMLContent.build(error_info))
       |> text_body(TextContent.build(error_info))
 
-    mailer.deliver_later(email)
+    options[:mailer].deliver_later(email)
   end
 end

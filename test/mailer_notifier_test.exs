@@ -196,4 +196,27 @@ defmodule MailerNotifierTest do
         assert timestamp_line =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
     end
   end
+
+  test "validates return {:error, message} when required params are not present" do
+    assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
+             BoomNotifier.MailNotifier.validate_config(random_param: nil)
+
+    assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
+             BoomNotifier.MailNotifier.validate_config(mailer: nil, random_param: nil)
+
+    assert {:error, "The following parameters are missing: [:to, :subject]"} ==
+             BoomNotifier.MailNotifier.validate_config(
+               mailer: nil,
+               from: nil,
+               random_param: nil
+             )
+
+    assert {:error, ":subject parameter is missing"} ==
+             BoomNotifier.MailNotifier.validate_config(
+               mailer: nil,
+               from: nil,
+               to: nil,
+               random_param: nil
+             )
+  end
 end
