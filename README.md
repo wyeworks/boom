@@ -97,6 +97,14 @@ defmodule YourApp.Router do
     ]
 ```
 
+You can also implement an optional callback `validate_config` that receives
+the `options` keyword list set in the notifier so the user can be warned
+during compilation if the attributes are not correct.
+
+```elixir
+@callback validate_config(keyword(String.t())) :: :ok | {:error, String.t()}
+```
+
 ## Multiple notifiers
 
 BoomNotifier also supports a list of multiple notifiers like in the example below:
