@@ -18,39 +18,29 @@ defmodule ErrorInfo do
           map()
         ) :: {atom(), %ErrorInfo{}}
   def build(%{reason: reason, stack: stack} = error, conn) do
-    {get_reason(error), build_info(reason, stack, conn)}
-  end
+    {error_reason, error_name} = error_reason(reason)
 
-  defp build_info(%name{message: reason}, stack, conn) do
-    %{build_without_name(reason, stack, conn) | name: name}
-  end
-
-  defp build_info(%{message: reason}, stack, conn) do
-    %{build_without_name(reason, stack, conn) | name: "Error"}
-  end
-
-  defp build_info(reason, stack, conn) when is_binary(reason) do
-    build_info(%{message: reason}, stack, conn)
-  end
-
-  defp build_info(reason, stack, conn) do
-    build_info(%{message: inspect(reason)}, stack, conn)
-  end
-
-  defp get_reason(%{reason: %name{}}), do: name
-  defp get_reason(%{error: %{kind: kind}}), do: kind
-  defp get_reason(_), do: :error
-
-  defp build_without_name(reason, stack, conn) do
-    %ErrorInfo{
-      reason: reason,
+    error_info = %ErrorInfo{
+      reason: error_reason,
       stack: stack,
       controller: get_in(conn.private, [:phoenix_controller]),
       action: get_in(conn.private, [:phoenix_action]),
       request: build_request_info(conn),
-      timestamp: DateTime.utc_now()
+      timestamp: DateTime.utc_now(),
+      name: error_name,
     }
+
+    {error_type(error), error_info}
   end
+
+  defp error_reason(%name{message: reason}), do: {reason, name}
+  defp error_reason(%{message: reason}), do: {reason, "Error"}
+  defp error_reason(reason) when is_binary(reason), do: error_reason(%{message: reason})
+  defp error_reason(reason), do: error_reason(%{message: inspect(reason)})
+
+  defp error_type(%{reason: %name{}}), do: name
+  defp error_type(%{error: %{kind: kind}}), do: kind
+  defp error_type(_), do: :error
 
   defp build_request_info(conn) do
     %{
@@ -73,7 +63,7 @@ defmodule ErrorInfo do
       qs -> "#{base}?#{qs}"
     end
   end
-
+  
   # Credit: https://github.com/jarednorman/plugsnag/blob/master/lib/plugsnag/basic_error_report_builder.ex
   defp format_ip(ip) do
     ip
