@@ -34,8 +34,7 @@ defmodule BoomNotifier do
   end
 
   def validate_notifiers(notifier, options) do
-    if Code.ensure_loaded?(notifier) &&
-         function_exported?(notifier, :validate_config, 1) do
+    if Code.ensure_loaded?(notifier) && function_exported?(notifier, :validate_config, 1) do
       case notifier.validate_config(options) do
         {:error, message} ->
           Logger.error(
@@ -66,14 +65,16 @@ defmodule BoomNotifier do
       )
 
       def handle_errors(conn, error) do
-        {error_kind, error_info} = ErrorInfo.build(error, conn)
+        settings = unquote(config)
+
+        {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
+
+        {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
 
         ErrorStorage.add_errors(error_kind, error_info)
 
         if ErrorStorage.send_notification?(error_kind) do
           occurrences = ErrorStorage.get_errors(error_kind)
-
-          settings = unquote(config)
 
           # Triggers the notification in each notifier
           walkthrough_notifiers(settings, fn notifier, options ->

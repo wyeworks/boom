@@ -12,9 +12,26 @@
       <li>Client IP: <%= error.request.client_ip %></li>
     </ul>
   <% end %>
+  <ul style="list-style-type: none;">
+    <li>Occurred on: <%= error.timestamp %></li>
+  </ul>
+  <%= if error.data do %>
     <ul style="list-style-type: none;">
-      <li>Occurred on: <%= error.timestamp %></li>
+      <li>
+        Data:
+        <ul style="list-style-type: none;">
+          <%= for {source, fields} <- error.data do %>
+            <%= source %>: 
+              <ul style="list-style-type: none;">
+                <%= for {k, v} <- fields do %>
+                  <li><%= k %>: <%= v %> </li>
+                <% end %>
+              </ul>
+          <% end %>
+        </ul>
+      </li>
     </ul>
+  <% end %>
   <ul style="list-style-type: none;">
     <%= for entry <- error.exception_stack_entries do %>
       <li>

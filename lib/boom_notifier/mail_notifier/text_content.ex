@@ -13,7 +13,8 @@ defmodule BoomNotifier.MailNotifier.TextContent do
         action: action,
         request: request,
         stack: stack,
-        timestamp: timestamp
+        timestamp: timestamp,
+        data: data
       }) do
     exception_summary =
       if controller && action do
@@ -24,7 +25,8 @@ defmodule BoomNotifier.MailNotifier.TextContent do
       exception_summary: exception_summary,
       request: request,
       exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
-      timestamp: format_timestamp(timestamp)
+      timestamp: format_timestamp(timestamp),
+      data: data
     }
   end
 

@@ -2,12 +2,19 @@ defmodule ErrorInfo do
   @moduledoc false
 
   # The ErrorInfo struct holds all the information about the exception.
-  # It includes the error message, the stacktrace and context information
+  # It includes the error message, the stacktrace, context information
   # (information about the request, the current controller and action,
-  # among other things).
+  # among other things) and custom data depending on the configuration.
 
   @enforce_keys [:reason, :stack, :timestamp]
-  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp]
+  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :data]
+
+  @type option ::
+          :logger
+          | [logger: [fields: list(atom())]]
+          | :assigns
+          | [assigns: [fields: list(atom())]]
+  @type custom_data_strategy_type :: :nothing | option | [option]
 
   @spec build(
           %{
@@ -15,9 +22,10 @@ defmodule ErrorInfo do
             required(:stack) => Exception.stacktrace(),
             optional(any()) => any()
           },
-          map()
+          map(),
+          custom_data_strategy_type
         ) :: {atom(), %ErrorInfo{}}
-  def build(%{reason: reason, stack: stack} = error, conn) do
+  def build(%{reason: reason, stack: stack} = error, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
     error_info = %ErrorInfo{
@@ -28,6 +36,7 @@ defmodule ErrorInfo do
       request: build_request_info(conn),
       timestamp: DateTime.utc_now(),
       name: error_name,
+      data: build_custom_data(conn, custom_data_strategy)
     }
 
     {error_type(error), error_info}
@@ -63,11 +72,42 @@ defmodule ErrorInfo do
       qs -> "#{base}?#{qs}"
     end
   end
-  
+
   # Credit: https://github.com/jarednorman/plugsnag/blob/master/lib/plugsnag/basic_error_report_builder.ex
   defp format_ip(ip) do
     ip
     |> Tuple.to_list()
     |> Enum.join(".")
   end
+
+  @spec build_custom_data(map(), custom_data_strategy_type) :: map()
+  defp build_custom_data(_conn, :nothing), do: %{}
+
+  defp build_custom_data(_conn, :logger),
+    do: %{logger: Enum.into(Logger.metadata(), %{})}
+
+  defp build_custom_data(_conn, logger: [fields: field_names]),
+    do: %{
+      logger:
+        Enum.reduce(field_names, %{}, fn field_name, acc ->
+          Map.put(acc, field_name, Logger.metadata()[field_name])
+        end)
+    }
+
+  defp build_custom_data(conn, :assigns),
+    do: %{assigns: conn.assigns()}
+
+  defp build_custom_data(conn, assigns: [fields: field_names]),
+    do: %{
+      assigns:
+        Enum.reduce(field_names, %{}, fn field_name, acc ->
+          Map.put(acc, field_name, conn.assigns[field_name])
+        end)
+    }
+
+  defp build_custom_data(conn, options),
+    do:
+      Enum.reduce(options, %{}, fn opt, acc ->
+        Map.merge(acc, build_custom_data(conn, opt))
+      end)
 end
