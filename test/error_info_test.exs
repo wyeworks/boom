@@ -171,7 +171,16 @@ defmodule ErrorInfoTest do
     assert DateTime.diff(DateTime.utc_now(), timestamp, :second) <= 1
   end
 
-  test "Error info includes assigns" do
+  test "Error info data is nil when strategy is :nothing" do
+    %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
+
+    {_error_kind, %ErrorInfo{data: data}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
+
+    assert nil == data
+  end
+
+  test "Error info data includes assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =
@@ -180,7 +189,7 @@ defmodule ErrorInfoTest do
     assert %{assigns: %{age: 32, name: "Davis"}} = data
   end
 
-  test "Error info includes filtered fields for assigns" do
+  test "Error info data includes filtered fields for assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =
@@ -191,7 +200,7 @@ defmodule ErrorInfoTest do
     assert %{assigns: %{name: "Davis"}} = data
   end
 
-  test "Error info includes logger" do
+  test "Error info data includes logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =
@@ -200,7 +209,7 @@ defmodule ErrorInfoTest do
     assert %{logger: %{age: 17, name: "Dennis"}} = data
   end
 
-  test "Error info includes filtered fields for logger" do
+  test "Error info data includes filtered fields for logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =
@@ -211,7 +220,7 @@ defmodule ErrorInfoTest do
     assert %{logger: %{name: "Dennis"}} = data
   end
 
-  test "Error info includes assigns and logger" do
+  test "Error info data includes assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =
@@ -226,7 +235,7 @@ defmodule ErrorInfoTest do
            } = data
   end
 
-  test "Error info includes filtered fields for assigns and logger" do
+  test "Error info data includes filtered fields for assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
     {_error_kind, %ErrorInfo{data: data}} =

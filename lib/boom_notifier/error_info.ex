@@ -81,7 +81,7 @@ defmodule ErrorInfo do
   end
 
   @spec build_custom_data(map(), custom_data_strategy_type) :: map()
-  defp build_custom_data(_conn, :nothing), do: %{}
+  defp build_custom_data(_conn, :nothing), do: nil
 
   defp build_custom_data(_conn, :logger),
     do: %{logger: Enum.into(Logger.metadata(), %{})}
