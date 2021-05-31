@@ -246,4 +246,16 @@ defmodule ErrorInfoTest do
 
     assert %{assigns: %{name: "Davis"}, logger: %{age: 17}} = metadata
   end
+
+  test "Error info metadata includes filtered equal fields for assigns and logger" do
+    %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
+
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
+        [assigns: [fields: [:name]]],
+        [logger: [fields: [:name]]]
+      ])
+
+    assert %{assigns: %{name: "Davis"}, logger: %{name: "Dennis"}} = metadata
+  end
 end

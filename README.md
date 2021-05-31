@@ -263,7 +263,22 @@ Logger.metadata(name: "John")
 ### Using both
 
 You can do any combination of the above settings to include data
-from both sources.
+from both sources. The names of the fields are independent for each 
+source, they will appear under the source namespace.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: [
+      [assigns: [fields: [:current_user]]],
+      [logger: [fields: [:request_id, :current_user]]]
+    ],
+    notifiers: [
+      # ...
+    ]
+```
 
 ## License
 BoomNotifier is released under the terms of the [MIT License](https://github.com/wyeworks/boom/blob/master/LICENSE).
