@@ -181,7 +181,7 @@ defmodule YourApp.Router do
     ]
 ```
 
-## Custom data
+## Custom data or Metadata
 By default, `BoomNotifier` will **not** include any custom data from your 
 requests.
 
@@ -190,7 +190,7 @@ you want to include in the notifications using the `:custom_data` option
 with one of the following values: `:assigns`, `:logger` or both.
 
 The included information will show up in your notification, in a new section 
-titled "Data".
+titled "Metadata".
 
 ### Assigns
 This option will include the data that is in the [connection](https://hexdocs.pm/plug/Plug.Conn.html)
@@ -223,8 +223,7 @@ defmodule YourApp.Router do
 Example of adding custom data to the connection:
 
 ```elixir
-conn
-|> assign(:name, "John")
+assign(conn, :name, "John")
 ```
 
 ### Logger

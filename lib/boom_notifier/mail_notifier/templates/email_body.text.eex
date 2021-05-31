@@ -13,9 +13,9 @@
       Client IP: <%= error.request.client_ip %>
   <% end %>
   Occurred on: <%= error.timestamp %>
-  <%= if error.data do %>
-    Data:
-    <%= for {source, fields} <- error.data do %>
+  <%= if error.metadata do %>
+    Metadata:
+    <%= for {source, fields} <- error.metadata do %>
       <%= source %>: 
         <%= for {k, v} <- fields do %>
           <%= k %>: <%= v %> 

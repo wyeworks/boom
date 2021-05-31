@@ -171,59 +171,59 @@ defmodule ErrorInfoTest do
     assert DateTime.diff(DateTime.utc_now(), timestamp, :second) <= 1
   end
 
-  test "Error info data is nil when strategy is :nothing" do
+  test "Error info metadata is nil when strategy is :nothing" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
 
-    assert nil == data
+    assert nil == metadata
   end
 
-  test "Error info data includes assigns" do
+  test "Error info metadata includes assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :assigns)
 
-    assert %{assigns: %{age: 32, name: "Davis"}} = data
+    assert %{assigns: %{age: 32, name: "Davis"}} = metadata
   end
 
-  test "Error info data includes filtered fields for assigns" do
+  test "Error info metadata includes filtered fields for assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn,
         assigns: [fields: [:name]]
       )
 
-    assert %{assigns: %{name: "Davis"}} = data
+    assert %{assigns: %{name: "Davis"}} = metadata
   end
 
-  test "Error info data includes logger" do
+  test "Error info metadata includes logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :logger)
 
-    assert %{logger: %{age: 17, name: "Dennis"}} = data
+    assert %{logger: %{age: 17, name: "Dennis"}} = metadata
   end
 
-  test "Error info data includes filtered fields for logger" do
+  test "Error info metadata includes filtered fields for logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn,
         logger: [fields: [:name]]
       )
 
-    assert %{logger: %{name: "Dennis"}} = data
+    assert %{logger: %{name: "Dennis"}} = metadata
   end
 
-  test "Error info data includes assigns and logger" do
+  test "Error info metadata includes assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
         :assigns,
         :logger
@@ -232,18 +232,18 @@ defmodule ErrorInfoTest do
     assert %{
              assigns: %{age: 32, name: "Davis"},
              logger: %{age: 17, name: "Dennis"}
-           } = data
+           } = metadata
   end
 
-  test "Error info data includes filtered fields for assigns and logger" do
+  test "Error info metadata includes filtered fields for assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{data: data}} =
+    {_error_kind, %ErrorInfo{metadata: metadata}} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
         [assigns: [fields: [:name]]],
         [logger: [fields: [:age]]]
       ])
 
-    assert %{assigns: %{name: "Davis"}, logger: %{age: 17}} = data
+    assert %{assigns: %{name: "Davis"}, logger: %{age: 17}} = metadata
   end
 end

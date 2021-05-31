@@ -7,7 +7,7 @@ defmodule ErrorInfo do
   # among other things) and custom data depending on the configuration.
 
   @enforce_keys [:reason, :stack, :timestamp]
-  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :data]
+  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :metadata]
 
   @type option ::
           :logger
@@ -36,7 +36,7 @@ defmodule ErrorInfo do
       request: build_request_info(conn),
       timestamp: DateTime.utc_now(),
       name: error_name,
-      data: build_custom_data(conn, custom_data_strategy)
+      metadata: build_custom_data(conn, custom_data_strategy)
     }
 
     {error_type(error), error_info}

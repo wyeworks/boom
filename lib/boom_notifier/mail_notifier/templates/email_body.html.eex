@@ -15,12 +15,12 @@
   <ul style="list-style-type: none;">
     <li>Occurred on: <%= error.timestamp %></li>
   </ul>
-  <%= if error.data do %>
+  <%= if error.metadata do %>
     <ul style="list-style-type: none;">
       <li>
-        Data:
+        Metadata:
         <ul style="list-style-type: none;">
-          <%= for {source, fields} <- error.data do %>
+          <%= for {source, fields} <- error.metadata do %>
             <%= source %>: 
               <ul style="list-style-type: none;">
                 <%= for {k, v} <- fields do %>

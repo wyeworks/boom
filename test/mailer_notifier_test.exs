@@ -241,7 +241,7 @@ defmodule MailerNotifierTest do
         custom_data_info = Enum.slice(body, 10..16)
 
         assert [
-                 "Data:",
+                 "Metadata:",
                  "assigns:",
                  "age: 32",
                  "name: Davis",

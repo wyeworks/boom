@@ -19,7 +19,7 @@ defmodule WebhookNotifierTest do
       scheme: "http",
       url: "http://www.example.com/"
     },
-    data: %{
+    metadata: %{
       assigns: %{
         name: "Davis",
         age: 32
@@ -92,7 +92,7 @@ defmodule WebhookNotifierTest do
           exception_stack_entries: [first_stack_entry | _] = exception_stack_entries,
           request: request,
           timestamp: timestamp,
-          data: data
+          metadata: metadata
         }
       ] = Jason.decode!(body, keys: :atoms)
 
@@ -102,7 +102,7 @@ defmodule WebhookNotifierTest do
       assert first_stack_entry =~ "WebhookNotifierTest.TestController.index/2"
 
       assert request == @expected_response.request
-      assert data == @expected_response.data
+      assert metadata == @expected_response.metadata
 
       {:ok, timestamp, _utc_offset} = DateTime.from_iso8601(timestamp)
       assert DateTime.diff(timestamp, DateTime.utc_now(), :second) <= 1
