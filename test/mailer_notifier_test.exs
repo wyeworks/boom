@@ -28,16 +28,28 @@ defmodule MailerNotifierTest do
         from: "me@example.com",
         to: "foo@example.com",
         subject: "BOOM error caught"
-      ]
+      ],
+      custom_data: [:assigns, :logger]
 
     pipeline :browser do
       plug(:accepts, ["html"])
+      plug(:save_custom_data)
     end
 
     scope "/" do
       pipe_through(:browser)
       get("/", TestController, :index)
     end
+
+    def save_custom_data(conn, _) do
+      conn
+      |> assign(:name, "Davis")
+      |> assign(:age, 32)
+    end
+  end
+
+  setup do
+    Logger.metadata(name: "Dennis", age: 17)
   end
 
   test "Raising an error on failure" do
@@ -136,7 +148,7 @@ defmodule MailerNotifierTest do
 
     receive do
       {:email_text_body, body} ->
-        first_stack_line = Enum.at(body, 10)
+        first_stack_line = Enum.at(body, 17)
 
         assert "test/mailer_notifier_test.exs:" <>
                  <<name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
@@ -152,7 +164,7 @@ defmodule MailerNotifierTest do
       {:email_html_body, body} ->
         [stacktrace_list | _] =
           Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
-          |> Enum.at(2)
+          |> Enum.at(4)
 
         [first_stack_line | _] =
           Regex.scan(~r/<li>(.)+?<\/li>/s, stacktrace_list)
@@ -218,5 +230,45 @@ defmodule MailerNotifierTest do
                to: nil,
                random_param: nil
              )
+  end
+
+  test "Custom data appears in email text body" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_text_body, body} ->
+        custom_data_info = Enum.slice(body, 10..16)
+
+        assert [
+                 "Metadata:",
+                 "assigns:",
+                 "age: 32",
+                 "name: Davis",
+                 "logger:",
+                 "age: 17",
+                 "name: Dennis"
+               ] = custom_data_info
+    end
+  end
+
+  test "Custom data appears in email HTML body" do
+    conn = conn(:get, "/")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_html_body, body} ->
+        custom_data_info =
+          Regex.scan(~r/<li>(.)+?<\/li>/, body)
+          |> Enum.map(&Enum.at(&1, 0))
+          |> Enum.slice(9..13)
+
+        assert [
+                 "<li>age: 32 </li>",
+                 "<li>name: Davis </li>",
+                 "<li>age: 17 </li>",
+                 "<li>name: Dennis </li>"
+               ] = custom_data_info
+    end
   end
 end

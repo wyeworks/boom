@@ -4,15 +4,24 @@
   <% end %>
   <%= if error.request do %>
     Request Information:
-    URL: <%= error.request.url %>
-    Path: <%= error.request.path %>
-    Method: <%= error.request.method %>
-    Port: <%= error.request.port %>
-    Scheme: <%= error.request.scheme %>
-    Query String: <%= error.request.query_string %>
-    Client IP: <%= error.request.client_ip %>
+      URL: <%= error.request.url %>
+      Path: <%= error.request.path %>
+      Method: <%= error.request.method %>
+      Port: <%= error.request.port %>
+      Scheme: <%= error.request.scheme %>
+      Query String: <%= error.request.query_string %>
+      Client IP: <%= error.request.client_ip %>
   <% end %>
-    Occurred on: <%= error.timestamp %>
+  Occurred on: <%= error.timestamp %>
+  <%= if error.metadata do %>
+    Metadata:
+    <%= for {source, fields} <- error.metadata do %>
+      <%= source %>: 
+        <%= for {k, v} <- fields do %>
+          <%= k %>: <%= v %> 
+        <% end %>
+    <% end %>
+  <% end %>
   <%= for entry <- error.exception_stack_entries do %>
     <%= entry %>
   <% end %>

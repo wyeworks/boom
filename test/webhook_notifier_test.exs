@@ -18,6 +18,16 @@ defmodule WebhookNotifierTest do
       query_string: "",
       scheme: "http",
       url: "http://www.example.com/"
+    },
+    metadata: %{
+      assigns: %{
+        name: "Davis",
+        age: 32
+      },
+      logger: %{
+        name: "Dennis",
+        age: 17
+      }
     }
   }
 
@@ -40,19 +50,28 @@ defmodule WebhookNotifierTest do
 
     use BoomNotifier,
       notifier: BoomNotifier.WebhookNotifier,
-      options: [url: "http://localhost:1234"]
+      options: [url: "http://localhost:1234"],
+      custom_data: [:assigns, :logger]
 
     pipeline :browser do
       plug(:accepts, ["html"])
+      plug(:save_custom_data)
     end
 
     scope "/" do
       pipe_through(:browser)
       get("/", TestController, :index)
     end
+
+    def save_custom_data(conn, _) do
+      conn
+      |> assign(:name, "Davis")
+      |> assign(:age, 32)
+    end
   end
 
   setup do
+    Logger.metadata(name: "Dennis", age: 17)
     bypass = Bypass.open(port: 1234)
     {:ok, bypass: bypass}
   end
@@ -72,7 +91,8 @@ defmodule WebhookNotifierTest do
           exception_summary: exception_summary,
           exception_stack_entries: [first_stack_entry | _] = exception_stack_entries,
           request: request,
-          timestamp: timestamp
+          timestamp: timestamp,
+          metadata: metadata
         }
       ] = Jason.decode!(body, keys: :atoms)
 
@@ -82,6 +102,7 @@ defmodule WebhookNotifierTest do
       assert first_stack_entry =~ "WebhookNotifierTest.TestController.index/2"
 
       assert request == @expected_response.request
+      assert metadata == @expected_response.metadata
 
       {:ok, timestamp, _utc_offset} = DateTime.from_iso8601(timestamp)
       assert DateTime.diff(timestamp, DateTime.utc_now(), :second) <= 1

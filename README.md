@@ -181,6 +181,105 @@ defmodule YourApp.Router do
     ]
 ```
 
+## Custom data or Metadata
+By default, `BoomNotifier` will **not** include any custom data from your 
+requests.
+
+However, there are different strategies to decide which information do
+you want to include in the notifications using the `:custom_data` option 
+with one of the following values: `:assigns`, `:logger` or both.
+
+The included information will show up in your notification, in a new section 
+titled "Metadata".
+
+### Assigns
+This option will include the data that is in the [connection](https://hexdocs.pm/plug/Plug.Conn.html)
+`assigns` field.
+
+You can also specify the fields you want to retrieve from `conn.assigns`.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: :assigns,
+    notifiers: [
+      # ...
+    ]
+```
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: [assigns: [fields: [:current_user, :session_data]]],
+    notifiers: [
+      # ...
+    ]
+```
+
+Example of adding custom data to the connection:
+
+```elixir
+assign(conn, :name, "John")
+```
+
+### Logger
+This option will include the data that is in the [Logger](https://hexdocs.pm/logger/Logger.html)
+`metadata` field.
+
+You can also specify the fields you want to retrieve from `Logger.metadata()`.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: :logger,
+    notifiers: [
+      # ...
+    ]
+```
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: [logger: [fields: [:request_id, :current_user]]],
+    notifiers: [
+      # ...
+    ]
+```
+
+Example of adding custom data to the logger:
+
+```elixir
+Logger.metadata(name: "John")
+```
+
+### Using both
+
+You can do any combination of the above settings to include data
+from both sources. The names of the fields are independent for each 
+source, they will appear under the source namespace.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    custom_data: [
+      [assigns: [fields: [:current_user]]],
+      [logger: [fields: [:request_id, :current_user]]]
+    ],
+    notifiers: [
+      # ...
+    ]
+```
+
 ## License
 BoomNotifier is released under the terms of the [MIT License](https://github.com/wyeworks/boom/blob/master/LICENSE).
 

@@ -53,7 +53,8 @@ defmodule BoomNotifier.WebhookNotifier do
          action: action,
          request: request,
          stack: stack,
-         timestamp: timestamp
+         timestamp: timestamp,
+         metadata: metadata
        }) do
     exception_summary =
       if controller && action do
@@ -64,7 +65,8 @@ defmodule BoomNotifier.WebhookNotifier do
       exception_summary: exception_summary,
       request: request,
       exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
-      timestamp: DateTime.to_iso8601(timestamp)
+      timestamp: DateTime.to_iso8601(timestamp),
+      metadata: metadata
     }
   end
 end

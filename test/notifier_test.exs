@@ -318,8 +318,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~
-             "Settings error: The following parameters are missing: [:notifier, :options]"
+           end) =~ "Settings error: The following parameters are missing: [:notifier, :options]"
 
     Code.compiler_options(ignore_module_conflict: false)
   end
@@ -338,7 +337,6 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~
-             "Settings error: :notifier parameter missing"
+           end) =~ "Settings error: :notifier parameter missing"
   end
 end
