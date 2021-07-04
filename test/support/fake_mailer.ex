@@ -6,11 +6,11 @@ defmodule Support.FakeMailer do
   # received in the test
 
   def deliver_later(email) do
-    send(self(), {:email_subject, email.subject})
-    send(self(), {:email_from, email.from})
-    send(self(), {:email_to, email.to})
-    send(self(), {:email_text_body, text_body_lines(email.text_body)})
-    send(self(), {:email_html_body, email.html_body})
+    send(email.to, {:email_subject, email.subject})
+    send(email.to, {:email_from, email.from})
+    send(email.to, {:email_to, email.to})
+    send(email.to, {:email_text_body, text_body_lines(email.text_body)})
+    send(email.to, {:email_html_body, email.html_body})
   end
 
   defp text_body_lines(body) do

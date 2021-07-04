@@ -1,9 +1,11 @@
 defmodule BoomNotifier do
   @moduledoc false
 
-  # Notify the exception to all the defined notifiers
+  # Responsible for sending a notification to each notifier every time an
+  # exception is raised.
 
   alias BoomNotifier.ErrorStorage
+  alias BoomNotifier.NotifierSenderServer
   require Logger
 
   def run_callback(settings, callback) do
@@ -54,7 +56,6 @@ defmodule BoomNotifier do
       use Plug.ErrorHandler
 
       import BoomNotifier
-      require Logger
 
       settings = unquote(config)
 
@@ -78,7 +79,7 @@ defmodule BoomNotifier do
 
           # Triggers the notification in each notifier
           walkthrough_notifiers(settings, fn notifier, options ->
-            notifier.notify(occurrences, options)
+            NotifierSenderServer.send(notifier, occurrences, options)
           end)
 
           {notification_trigger, _settings} =
@@ -86,22 +87,6 @@ defmodule BoomNotifier do
 
           ErrorStorage.clear_errors(notification_trigger, error_kind)
         end
-      rescue
-        e ->
-          error_info = Exception.format_banner(:error, e, __STACKTRACE__)
-
-          failing_notifier =
-            case __STACKTRACE__ do
-              [{module, function, arity, _} | _] ->
-                Exception.format_mfa(module, function, arity)
-
-              [first_stack_entry | _] ->
-                Exception.format_stacktrace_entry(first_stack_entry)
-            end
-
-          Logger.error(
-            "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
-          )
       end
     end
   end
