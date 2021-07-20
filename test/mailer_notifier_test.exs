@@ -74,10 +74,10 @@ defmodule MailerNotifierTest do
   test "Set email using proper from and to addresses" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
-    email_to = inspect(self())
+    email_to = self()
 
     assert_receive({:email_from, "me@example.com"}, @receive_timeout)
-    assert_receive({:email_to, email_to}, @receive_timeout)
+    assert_receive({:email_to, ^email_to}, @receive_timeout)
   end
 
   test "Exception summary is the first part of email text body" do
