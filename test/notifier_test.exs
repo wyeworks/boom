@@ -6,7 +6,7 @@ defmodule NotifierTest do
 
   doctest BoomNotifier
 
-  @receive_timeout 100
+  @receive_timeout 500
 
   defmodule FakeNotifier do
     @behaviour BoomNotifier.Notifier
