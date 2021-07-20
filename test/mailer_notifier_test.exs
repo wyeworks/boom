@@ -4,6 +4,8 @@ defmodule MailerNotifierTest do
 
   doctest BoomNotifier
 
+  @receive_timeout 500
+
   defmodule TestController do
     use Phoenix.Controller
     import Plug.Conn
@@ -26,7 +28,7 @@ defmodule MailerNotifierTest do
       options: [
         mailer: Support.FakeMailer,
         from: "me@example.com",
-        to: "foo@example.com",
+        to: self(),
         subject: "BOOM error caught"
       ],
       custom_data: [:assigns, :logger]
@@ -66,35 +68,42 @@ defmodule MailerNotifierTest do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
 
-    assert_received {:email_subject, "BOOM error caught: booom!"}
+    assert_receive({:email_subject, "BOOM error caught: booom!"}, @receive_timeout)
   end
 
   test "Set email using proper from and to addresses" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
+    email_to = self()
 
-    assert_received {:email_from, "me@example.com"}
-    assert_received {:email_to, "foo@example.com"}
+    assert_receive({:email_from, "me@example.com"}, @receive_timeout)
+    assert_receive({:email_to, ^email_to}, @receive_timeout)
   end
 
   test "Exception summary is the first part of email text body" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
 
-    assert_received {:email_text_body,
-                     [
-                       "TestException occurred while the request was processed by TestController#index"
-                       | _
-                     ]}
+    assert_receive(
+      {:email_text_body,
+       [
+         "TestException occurred while the request was processed by TestController#index"
+         | _
+       ]},
+      @receive_timeout
+    )
   end
 
   test "Exception summary is the first part of email HTML body" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
 
-    assert_received {:email_html_body,
-                     "\n  <p>TestException occurred while the request was processed by TestController#index</p>" <>
-                       _}
+    assert_receive(
+      {:email_html_body,
+       "\n  <p>TestException occurred while the request was processed by TestController#index</p>" <>
+         _},
+      @receive_timeout
+    )
   end
 
   test "Request information is part of the email text body" do
@@ -174,7 +183,7 @@ defmodule MailerNotifierTest do
           Regex.scan(~r/<span.*>(.+)<\/span>/, first_stack_line)
           |> Enum.map(&Enum.at(&1, 1))
 
-        assert "test/mailer_notifier_test.exs:16" = file
+        assert "test/mailer_notifier_test.exs:18" = file
         assert "Elixir.MailerNotifierTest.TestController.index/2" = exception
     end
   end
