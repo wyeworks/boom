@@ -38,9 +38,7 @@ defmodule BoomNotifier do
       case notifier.validate_config(options) do
         {:error, message} ->
           Logger.error(
-            "Notifier validation: #{message} in #{
-              notifier |> to_string() |> String.split(".") |> List.last()
-            }"
+            "Notifier validation: #{message} in #{notifier |> to_string() |> String.split(".") |> List.last()}"
           )
 
         _ ->
