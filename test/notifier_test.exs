@@ -290,7 +290,7 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
 
     assert capture_log(fn ->
-             assert_raise NotifierTest.TestException, "booom!", fn ->
+             assert_raise TestException, "booom!", fn ->
                PlugErrorWithFailingNotifier.call(conn, [])
              end
            end) =~
