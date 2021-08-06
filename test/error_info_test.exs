@@ -1,6 +1,8 @@
 defmodule ErrorInfoTest do
   use ExUnit.Case
-  use Phoenix.ConnTest
+
+  import Plug.Conn
+  import Phoenix.ConnTest
 
   defmodule TestController do
     use Phoenix.Controller
