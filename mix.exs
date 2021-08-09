@@ -59,7 +59,7 @@ defmodule BoomNotifier.MixProject do
   defp deps do
     [
       {:bamboo, "~> 2.0"},
-      {:bypass, "~> 1.0", only: :test},
+      {:bypass, "~> 2.1", only: :test},
       {:credo, "~> 1.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.23", only: :dev},
