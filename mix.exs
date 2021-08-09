@@ -58,7 +58,7 @@ defmodule BoomNotifier.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:bamboo, "~> 1.1"},
+      {:bamboo, "~> 2.0"},
       {:bypass, "~> 1.0", only: :test},
       {:credo, "~> 1.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
