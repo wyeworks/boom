@@ -293,10 +293,10 @@ defmodule NotifierTest do
              assert_raise TestException, "booom!", fn ->
                PlugErrorWithFailingNotifier.call(conn, [])
              end
+
+             Process.sleep(100)
            end) =~
              "An error occurred when sending a notification: ** (ArgumentError) invalid argument foo in NotifierTest.FailingNotifier.notify/2"
-
-    assert true
   end
 
   test "logs when parameter in options is missing" do
