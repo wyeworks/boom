@@ -8,7 +8,7 @@ defmodule BoomNotifier.Application do
 
     children = [
       supervisor(BoomNotifier.ErrorStorage, []),
-      {BoomNotifier.NotifierSenderServer, name: :boom_notifier_sender}
+      {BoomNotifier.NotifierSenderServer, nil}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_all)

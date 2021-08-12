@@ -8,12 +8,12 @@ defmodule BoomNotifier.NotifierSenderServer do
 
   # Client API
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def send(notifier, occurrences, options) do
-    GenServer.cast(:boom_notifier_sender, {:notify, notifier, occurrences, options})
+    GenServer.cast(__MODULE__, {:notify, notifier, occurrences, options})
   end
 
   # Server callbacks
