@@ -1,11 +1,11 @@
 defmodule Support.FakeMailer do
   @moduledoc false
 
-  # Overrides the `deliver_now` function.
+  # Overrides the `deliver_later!/1` function.
   # Instead of sending an email it puts the fields in a mailbox so they can be
   # received in the test
 
-  def deliver_later(email) do
+  def deliver_later!(email) do
     send(email.to, {:email_subject, email.subject})
     send(email.to, {:email_from, email.from})
     send(email.to, {:email_to, email.to})
