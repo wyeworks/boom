@@ -185,7 +185,7 @@ defmodule NotifierTest do
           body: [
             [
               "test/notifier_test.exs:" <>
-                <<name::binary-size(2),
+                <<_name::binary-size(2),
                   ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
               | _
             ]
@@ -207,7 +207,7 @@ defmodule NotifierTest do
           body: [
             [
               "test/notifier_test.exs:" <>
-                <<name::binary-size(2),
+                <<_name::binary-size(2),
                   ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
               | _
             ]

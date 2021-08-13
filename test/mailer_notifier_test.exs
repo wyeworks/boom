@@ -160,7 +160,7 @@ defmodule MailerNotifierTest do
         first_stack_line = Enum.at(body, 17)
 
         assert "test/mailer_notifier_test.exs:" <>
-                 <<name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
+                 <<_name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
                  first_stack_line
     end
   end
