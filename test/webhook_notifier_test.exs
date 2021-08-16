@@ -1,5 +1,5 @@
 defmodule WebhookNotifierTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   use Plug.Test
 
   doctest BoomNotifier
@@ -112,5 +112,8 @@ defmodule WebhookNotifierTest do
 
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
+
+    # Wait for the background request to be sent
+    Process.sleep(500)
   end
 end

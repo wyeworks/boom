@@ -6,7 +6,11 @@ defmodule BoomNotifier.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    children = [supervisor(BoomNotifier.ErrorStorage, [])]
-    Supervisor.start_link(children, strategy: :one_for_all)
+    children = [
+      supervisor(BoomNotifier.ErrorStorage, []),
+      BoomNotifier.NotifierSenderServer
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end

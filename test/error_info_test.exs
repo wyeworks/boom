@@ -30,7 +30,7 @@ defmodule ErrorInfoTest do
       options: [
         mailer: Support.FakeMailer,
         from: "me@example.com",
-        to: "foo@example.com",
+        to: self(),
         subject: "BOOM error caught"
       ]
 

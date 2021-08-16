@@ -6,13 +6,18 @@ defmodule NotifierTest do
 
   doctest BoomNotifier
 
+  @receive_timeout 500
+
   defmodule FakeNotifier do
     @behaviour BoomNotifier.Notifier
 
     @impl BoomNotifier.Notifier
     def notify(error_info_list, options) do
       [first_error | _] = error_info_list
+
       subject_prefix = Keyword.get(options, :subject)
+      to_respond_pid = Keyword.get(options, :sender_pid)
+
       subject = "#{subject_prefix}: #{first_error.reason}"
 
       body =
@@ -20,7 +25,7 @@ defmodule NotifierTest do
           Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
         end)
 
-      send(self(), %{exception: %{subject: subject, body: body}})
+      send(to_respond_pid, %{exception: %{subject: subject, body: body}})
     end
   end
 
@@ -59,7 +64,8 @@ defmodule NotifierTest do
     use BoomNotifier,
       notifier: FakeNotifier,
       options: [
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        sender_pid: self()
       ]
 
     def call(_conn, _opts) do
@@ -73,7 +79,8 @@ defmodule NotifierTest do
         [
           notifier: FakeNotifier,
           options: [
-            subject: "BOOM error caught"
+            subject: "BOOM error caught",
+            sender_pid: self()
           ]
         ]
       ]
@@ -87,7 +94,8 @@ defmodule NotifierTest do
     use BoomNotifier,
       notifier: FakeNotifier,
       options: [
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        sender_pid: self()
       ]
 
     def call(_conn, _opts) do
@@ -99,7 +107,8 @@ defmodule NotifierTest do
     use BoomNotifier,
       notifier: FakeNotifier,
       options: [
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        sender_pid: self()
       ]
 
     def call(_conn, _opts) do
@@ -112,7 +121,8 @@ defmodule NotifierTest do
       notifier: FakeNotifier,
       notification_trigger: :exponential,
       options: [
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        sender_pid: self()
       ]
 
     def call(_conn, _opts) do
@@ -125,7 +135,8 @@ defmodule NotifierTest do
       notifier: FakeNotifier,
       notification_trigger: [exponential: [limit: 3]],
       options: [
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        sender_pid: self()
       ]
 
     def call(_conn, _opts) do
@@ -167,63 +178,69 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
 
-    assert_received %{
-      exception: %{
-        subject: "BOOM error caught: booom!",
-        body: [
-          [
-            "test/notifier_test.exs:" <>
-              <<_name::binary-size(2),
-                ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
-            | _
+    assert_receive(
+      %{
+        exception: %{
+          subject: "BOOM error caught: booom!",
+          body: [
+            [
+              "test/notifier_test.exs:" <>
+                <<_name::binary-size(2),
+                  ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
+              | _
+            ]
           ]
-        ]
-      }
-    }
+        }
+      },
+      @receive_timeout
+    )
   end
 
   test "reports exception when options were passed to multiple notifiers" do
     conn = conn(:get, "/")
     catch_error(PlugErrorWithMultipleNotifiers.call(conn, []))
 
-    assert_received %{
-      exception: %{
-        subject: "BOOM error caught: booom!",
-        body: [
-          [
-            "test/notifier_test.exs:" <>
-              <<_name::binary-size(2),
-                ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
-            | _
+    assert_receive(
+      %{
+        exception: %{
+          subject: "BOOM error caught: booom!",
+          body: [
+            [
+              "test/notifier_test.exs:" <>
+                <<_name::binary-size(2),
+                  ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
+              | _
+            ]
           ]
-        ]
-      }
-    }
+        }
+      },
+      @receive_timeout
+    )
   end
 
   test "reports exit termination" do
     conn = conn(:get, "/")
     catch_exit(PlugExitTermination.call(conn, []))
 
-    assert_received %{exception: %{subject: "BOOM error caught: :shutdown"}}
+    assert_receive(%{exception: %{subject: "BOOM error caught: :shutdown"}}, @receive_timeout)
   end
 
   test "reports thrown error" do
     conn = conn(:get, "/")
     catch_throw(PlugThrown.call(conn, []))
 
-    assert_received %{exception: %{subject: "BOOM error caught: thrown error"}}
+    assert_receive(%{exception: %{subject: "BOOM error caught: thrown error"}}, @receive_timeout)
   end
 
   test "reports exception in groups when :notification_trigger setting is :exponential" do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
     catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
     assert exceptions == 0
@@ -233,21 +250,21 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    assert_received %{exception: _}
-
-    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
+
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
+    assert_receive(%{exception: _}, @receive_timeout)
 
     {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
     assert exceptions == 0
@@ -257,13 +274,13 @@ defmodule NotifierTest do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
-    assert_received %{exception: _}
+    assert_receive(%{exception: _}, @receive_timeout)
 
     {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
     assert exceptions == 0
@@ -276,10 +293,10 @@ defmodule NotifierTest do
              assert_raise TestException, "booom!", fn ->
                PlugErrorWithFailingNotifier.call(conn, [])
              end
+
+             Process.sleep(100)
            end) =~
              "An error occurred when sending a notification: ** (ArgumentError) invalid argument foo in NotifierTest.FailingNotifier.notify/2"
-
-    assert true
   end
 
   test "logs when parameter in options is missing" do
