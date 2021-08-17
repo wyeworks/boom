@@ -9,7 +9,6 @@ defmodule BoomNotifier.Application do
         id: BoomNotifier.ErrorStorage,
         start: {BoomNotifier.ErrorStorage, :start_link, []},
         restart: :permanent,
-        shutdown: :infinity,
         type: :supervisor,
         modules: [BoomNotifier.ErrorStorage]
       },
