@@ -5,11 +5,7 @@ defmodule BoomNotifier.Application do
 
   def start(_type, _args) do
     children = [
-      %{
-        id: BoomNotifier.ErrorStorage,
-        start: {BoomNotifier.ErrorStorage, :start_link, []},
-        type: :supervisor
-      },
+      BoomNotifier.ErrorStorage,
       BoomNotifier.NotifierSenderServer
     ]
 
