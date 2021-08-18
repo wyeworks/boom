@@ -4,10 +4,8 @@ defmodule BoomNotifier.Application do
   @moduledoc false
 
   def start(_type, _args) do
-    import Supervisor.Spec
-
     children = [
-      supervisor(BoomNotifier.ErrorStorage, []),
+      BoomNotifier.ErrorStorage,
       BoomNotifier.NotifierSenderServer
     ]
 

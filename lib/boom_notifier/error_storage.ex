@@ -4,7 +4,7 @@ defmodule BoomNotifier.ErrorStorage do
   # Keeps track of the errors grouped by type and a counter so the notifier
   # knows the next time it should be executed
 
-  use Agent
+  use Agent, start: {__MODULE__, :start_link, []}, type: :supervisor
 
   @spec start_link() :: Agent.on_start()
   def start_link do
