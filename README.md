@@ -175,7 +175,7 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-    notification_trigger: [exponential: limit: 100]
+    notification_trigger: [exponential: [limit: 100]]
     notifiers: [
       # ...
     ]
