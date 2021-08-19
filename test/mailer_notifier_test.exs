@@ -175,16 +175,21 @@ defmodule MailerNotifierTest do
           Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
           |> Enum.at(4)
 
-        [first_stack_line | _] =
+        stacktrace_list =
           Regex.scan(~r/<li>(.)+?<\/li>/s, stacktrace_list)
           |> Enum.map(&Enum.at(&1, 0))
 
-        [file, exception] =
-          Regex.scan(~r/<span.*>(.+)<\/span>/, first_stack_line)
-          |> Enum.map(&Enum.at(&1, 1))
-
-        assert "test/mailer_notifier_test.exs:18" = file
-        assert "Elixir.MailerNotifierTest.TestController.index/2" = exception
+        assert [
+                 "<li>test/mailer_notifier_test.exs:18: MailerNotifierTest.TestController.index/2</li>",
+                 "<li>test/mailer_notifier_test.exs:9: MailerNotifierTest.TestController.action/2</li>",
+                 "<li>test/mailer_notifier_test.exs:9: MailerNotifierTest.TestController.phoenix_controller_pipeline/2</li>",
+                 "<li>(phoenix 1.5.10) lib/phoenix/router.ex:352: Phoenix.Router.__call__/2</li>",
+                 "<li>lib/plug/error_handler.ex:80: MailerNotifierTest.TestRouter.call/2</li>",
+                 "<li>test/mailer_notifier_test.exs:170: MailerNotifierTest.\"test Exception stacktrace appears in email HTML body\"/1</li>",
+                 "<li>(ex_unit 1.12.2) lib/ex_unit/runner.ex:502: ExUnit.Runner.exec_test/1</li>",
+                 "<li>(stdlib 3.15.2) timer.erl:166: :timer.tc/1</li>",
+                 "<li>(ex_unit 1.12.2) lib/ex_unit/runner.ex:453: anonymous fn/4 in ExUnit.Runner.spawn_test_monitor/4</li>"
+               ] = stacktrace_list
     end
   end
 
@@ -270,7 +275,7 @@ defmodule MailerNotifierTest do
         custom_data_info =
           Regex.scan(~r/<li>(.)+?<\/li>/, body)
           |> Enum.map(&Enum.at(&1, 0))
-          |> Enum.slice(9..13)
+          |> Enum.slice(9..12)
 
         assert [
                  "<li>age: 32 </li>",
