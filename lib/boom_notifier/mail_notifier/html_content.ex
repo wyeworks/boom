@@ -2,9 +2,17 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
   @moduledoc false
 
   import BoomNotifier.Helpers
+  require EEx
+
+  EEx.function_from_file(
+    :def,
+    :email_body,
+    Path.join([Path.dirname(__ENV__.file), "templates", "email_body.html.eex"]),
+    [:errors]
+  )
 
   def build(errors) when is_list(errors) do
-    EEx.eval_file(template_path(), errors: Enum.map(errors, &build/1))
+    email_body(Enum.map(errors, &build/1))
   end
 
   def build(%ErrorInfo{
@@ -28,11 +36,6 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
       timestamp: format_timestamp(timestamp),
       metadata: metadata
     }
-  end
-
-  defp template_path do
-    current_folder_path = Path.dirname(__ENV__.file)
-    Path.join([current_folder_path, "templates", "email_body.html.eex"])
   end
 
   defp entry_to_map(entry) do
