@@ -34,10 +34,7 @@
   <% end %>
   <ul style="list-style-type: none;">
     <%= for entry <- error.exception_stack_entries do %>
-      <li>
-        <span><%= entry.file %>:<%= entry.line %></span>
-        <span style=\"float: right\"><%= entry.module %>.<%= entry.function %>/<%= entry.arity %></span>
-      </li>
+      <li><%= entry %></li>
     <% end %>
   </ul>
   <hr>

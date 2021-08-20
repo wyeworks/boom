@@ -32,21 +32,9 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
     %{
       exception_summary: exception_summary,
       request: request,
-      exception_stack_entries: Enum.map(stack, &entry_to_map/1),
+      exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
       timestamp: format_timestamp(timestamp),
       metadata: metadata
-    }
-  end
-
-  defp entry_to_map(entry) do
-    {module, function, arity, [file: file, line: line]} = entry
-
-    %{
-      module: module,
-      function: function,
-      arity: arity,
-      file: file,
-      line: line
     }
   end
 

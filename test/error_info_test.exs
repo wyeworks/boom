@@ -19,6 +19,14 @@ defmodule ErrorInfoTest do
     def create(_conn, _params) do
       raise TestException.exception([])
     end
+
+    def nil_access(_conn, _params) do
+      get_name(%{:full_name => nil})
+    end
+
+    defp get_name(person) do
+      person.full_name.name
+    end
   end
 
   defmodule TestRouter do
@@ -43,6 +51,7 @@ defmodule ErrorInfoTest do
       pipe_through(:browser)
       Phoenix.Router.get("/", TestController, :index)
       Phoenix.Router.post("/create", TestController, :create)
+      Phoenix.Router.get("/nil_access", TestController, :nil_access)
     end
 
     def save_custom_data(conn, _) do
@@ -153,6 +162,25 @@ defmodule ErrorInfoTest do
              2,
              [file: 'test/error_info_test.exs', line: _]
            } = hd(error_info_stack)
+
+    assert {
+             ExUnit.Runner,
+             _,
+             _,
+             [file: 'lib/ex_unit/runner.ex', line: _]
+           } = List.last(error_info_stack)
+
+    assert 10 = Enum.count(error_info_stack)
+  end
+
+  test "Error info includes stacktrace when entry doesn’t contain file and line info" do
+    %Plug.Conn.WrapperError{conn: conn, stack: stack} =
+      catch_error(get(build_conn(), "nil_access"))
+
+    {_error_kind, %ErrorInfo{stack: error_info_stack}} =
+      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
+
+    assert {nil, :name, [], []} = hd(error_info_stack)
 
     assert {
              ExUnit.Runner,

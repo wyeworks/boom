@@ -175,16 +175,17 @@ defmodule MailerNotifierTest do
           Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
           |> Enum.at(4)
 
-        [first_stack_line | _] =
+        [first_stack_line | stacktrace_list] =
           Regex.scan(~r/<li>(.)+?<\/li>/s, stacktrace_list)
           |> Enum.map(&Enum.at(&1, 0))
 
-        [file, exception] =
-          Regex.scan(~r/<span.*>(.+)<\/span>/, first_stack_line)
-          |> Enum.map(&Enum.at(&1, 1))
+        [second_stack_line | _] = stacktrace_list
 
-        assert "test/mailer_notifier_test.exs:18" = file
-        assert "Elixir.MailerNotifierTest.TestController.index/2" = exception
+        assert "<li>test/mailer_notifier_test.exs:18: MailerNotifierTest.TestController.index/2</li>" =
+                 first_stack_line
+
+        assert "<li>test/mailer_notifier_test.exs:9: MailerNotifierTest.TestController.action/2</li>" =
+                 second_stack_line
     end
   end
 
@@ -270,7 +271,7 @@ defmodule MailerNotifierTest do
         custom_data_info =
           Regex.scan(~r/<li>(.)+?<\/li>/, body)
           |> Enum.map(&Enum.at(&1, 0))
-          |> Enum.slice(9..13)
+          |> Enum.slice(9..12)
 
         assert [
                  "<li>age: 32 </li>",
