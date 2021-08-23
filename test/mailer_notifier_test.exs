@@ -40,7 +40,7 @@ defmodule MailerNotifierTest do
 
     scope "/" do
       pipe_through(:browser)
-      get("/", TestController, :index)
+      get("/", TestController, :index, log: false)
     end
 
     def save_custom_data(conn, _) do

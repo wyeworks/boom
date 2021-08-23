@@ -49,9 +49,9 @@ defmodule ErrorInfoTest do
 
     scope "/" do
       pipe_through(:browser)
-      Phoenix.Router.get("/", TestController, :index)
-      Phoenix.Router.post("/create", TestController, :create)
-      Phoenix.Router.get("/nil_access", TestController, :nil_access)
+      Phoenix.Router.get("/", TestController, :index, log: false)
+      Phoenix.Router.post("/create", TestController, :create, log: false)
+      Phoenix.Router.get("/nil_access", TestController, :nil_access, log: false)
     end
 
     def save_custom_data(conn, _) do
