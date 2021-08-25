@@ -25,12 +25,14 @@
   <%= if error.metadata do %>
     Metadata:
     <%= for {source, fields} <- error.metadata do %>
-      <%= source %>: 
+      <%= source %>:
         <%= for {k, v} <- fields do %>
-          <%= k %>: <%= v %> 
+          <%= k %>: <%= v %>
         <% end %>
     <% end %>
   <% end %>
+
+  Stack entries:
   <%= for entry <- error.exception_stack_entries do %>
     <%= entry %>
   <% end %>

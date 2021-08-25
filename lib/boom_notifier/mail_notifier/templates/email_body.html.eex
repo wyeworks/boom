@@ -1,16 +1,19 @@
 <%= for error <- errors do %>
   <p><%= error.exception_summary %></p>
+
   <%= if error.request do %>
-    <ul style="list-style-type: none;">
-      <li>Request Information:</li>
-      <li>URL: <%= error.request.url %></li>
-      <li>Path: <%= error.request.path %></li>
-      <li>Method: <%= error.request.method %></li>
-      <li>Port: <%= error.request.port %></li>
-      <li>Scheme: <%= error.request.scheme %></li>
-      <li>Query String: <%= error.request.query_string %></li>
-      <li>Client IP: <%= error.request.client_ip %></li>
-    </ul>
+    <div>
+      Request Information:
+      <ul style="list-style-type: none;">
+        <li>URL: <%= error.request.url %></li>
+        <li>Path: <%= error.request.path %></li>
+        <li>Method: <%= error.request.method %></li>
+        <li>Port: <%= error.request.port %></li>
+        <li>Scheme: <%= error.request.scheme %></li>
+        <li>Query String: <%= error.request.query_string %></li>
+        <li>Client IP: <%= error.request.client_ip %></li>
+      </ul>
+    </div>
   <% end %>
 
   <div>
@@ -30,26 +33,31 @@
   </div>
 
   <%= if error.metadata do %>
-    <ul style="list-style-type: none;">
-      <li>
-        Metadata:
-        <ul style="list-style-type: none;">
-          <%= for {source, fields} <- error.metadata do %>
-            <%= source %>: 
-              <ul style="list-style-type: none;">
-                <%= for {k, v} <- fields do %>
-                  <li><%= k %>: <%= v %> </li>
-                <% end %>
-              </ul>
-          <% end %>
-        </ul>
-      </li>
-    </ul>
+    <div>
+      Metadata:
+      <ul style="list-style-type: none;">
+        <li>
+          <ul style="list-style-type: none;">
+            <%= for {source, fields} <- error.metadata do %>
+              <%= source %>:
+                <ul style="list-style-type: none;">
+                  <%= for {k, v} <- fields do %>
+                    <li><%= k %>: <%= v %> </li>
+                  <% end %>
+                </ul>
+            <% end %>
+          </ul>
+        </li>
+      </ul>
+    </div>
   <% end %>
-  <ul style="list-style-type: none;">
-    <%= for entry <- error.exception_stack_entries do %>
-      <li><%= entry %></li>
-    <% end %>
-  </ul>
-  <hr>
+
+  <div>
+    Stack entries:
+    <ul style="list-style-type: none;">
+      <%= for entry <- error.exception_stack_entries do %>
+        <li><%= entry %></li>
+      <% end %>
+    </ul>
+  </div>
 <% end %>
