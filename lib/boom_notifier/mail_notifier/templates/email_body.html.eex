@@ -12,9 +12,23 @@
       <li>Client IP: <%= error.request.client_ip %></li>
     </ul>
   <% end %>
-  <ul style="list-style-type: none;">
-    <li>Occurred on: <%= error.timestamp %></li>
-  </ul>
+
+  <div>
+    <%= if error.accumulated_occurrences == 1 do %>
+      Occurred on:
+      <ul style="list-style-type: none;">
+        <li><%= error.first_occurrence %></li>
+      </ul>
+    <% else %>
+      Occurred on:
+      <ul style="list-style-type: none;">
+        <li>First occurrence: <%= error.first_occurrence %></li>
+        <li>Last occurrence: <%= error.last_occurrence %></li>
+        <li>Accumulated occurrences: <%= error.accumulated_occurrences %></li>
+      </ul>
+    <% end %>
+  </div>
+
   <%= if error.metadata do %>
     <ul style="list-style-type: none;">
       <li>

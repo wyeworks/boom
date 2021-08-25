@@ -21,8 +21,10 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
         action: action,
         request: request,
         stack: stack,
-        timestamp: timestamp,
-        metadata: metadata
+        metadata: metadata,
+        first_occurrence: first_occurrence,
+        last_occurrence: last_occurrence,
+        accumulated_occurrences: accumulated_occurrences
       }) do
     exception_summary =
       if controller && action do
@@ -33,8 +35,10 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
       exception_summary: exception_summary,
       request: request,
       exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
-      timestamp: format_timestamp(timestamp),
-      metadata: metadata
+      metadata: metadata,
+      first_occurrence: format_timestamp(first_occurrence),
+      last_occurrence: format_timestamp(last_occurrence),
+      accumulated_occurrences: accumulated_occurrences
     }
   end
 

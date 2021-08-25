@@ -68,22 +68,25 @@ defmodule BoomNotifier do
 
         {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
 
-        {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
+        # TODO remove error_kind
+        {_error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
 
-        ErrorStorage.add_errors(error_kind, error_info)
+        ErrorStorage.add_error(error_info)
 
-        if ErrorStorage.send_notification?(error_kind) do
-          occurrences = ErrorStorage.get_errors(error_kind)
+        if ErrorStorage.send_notification?(error_info) do
+          error_data = ErrorStorage.get_error_storage_item(error_info)
+          occurrence = Map.merge(error_info, error_data)
 
-          # Triggers the notification in each notifier
+          # Triggers the notification for each notifier
           walkthrough_notifiers(settings, fn notifier, options ->
-            NotifierSenderServer.send(notifier, occurrences, options)
+            # TODO remove occurrence list
+            NotifierSenderServer.send(notifier, [occurrence], options)
           end)
 
           {notification_trigger, _settings} =
             Keyword.pop(settings, :notification_trigger, :always)
 
-          ErrorStorage.clear_errors(notification_trigger, error_kind)
+          ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
         end
       end
     end

@@ -6,8 +6,19 @@ defmodule ErrorInfo do
   # (information about the request, the current controller and action,
   # among other things) and custom data depending on the configuration.
 
-  @enforce_keys [:reason, :stack, :timestamp]
-  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :metadata]
+  @enforce_keys [:reason, :stack]
+  defstruct [
+    :name,
+    :reason,
+    :stack,
+    :controller,
+    :action,
+    :request,
+    :metadata,
+    :accumulated_occurrences,
+    :first_occurrence,
+    :last_occurrence
+  ]
 
   @type option ::
           :logger
@@ -34,7 +45,6 @@ defmodule ErrorInfo do
       controller: get_in(conn.private, [:phoenix_controller]),
       action: get_in(conn.private, [:phoenix_action]),
       request: build_request_info(conn),
-      timestamp: DateTime.utc_now(),
       name: error_name,
       metadata: build_custom_data(conn, custom_data_strategy)
     }

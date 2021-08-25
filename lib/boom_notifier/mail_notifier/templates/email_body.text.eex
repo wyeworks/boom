@@ -12,7 +12,16 @@
       Query String: <%= error.request.query_string %>
       Client IP: <%= error.request.client_ip %>
   <% end %>
-  Occurred on: <%= error.timestamp %>
+
+  <%= if error.accumulated_occurrences == 1 do %>
+    Occurred on: <%= error.first_occurrence %>
+  <% else %>
+    Occurred on:
+      First occurrence: <%= error.first_occurrence %>
+      Last occurrence: <%= error.last_occurrence %>
+      Accumulated occurrences: <%= error.accumulated_occurrences %>
+  <% end %>
+
   <%= if error.metadata do %>
     Metadata:
     <%= for {source, fields} <- error.metadata do %>

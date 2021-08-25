@@ -192,15 +192,6 @@ defmodule ErrorInfoTest do
     assert 10 = Enum.count(error_info_stack)
   end
 
-  test "Error info includes timestamp" do
-    %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
-
-    {_error_kind, %ErrorInfo{timestamp: timestamp}} =
-      ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
-
-    assert DateTime.diff(DateTime.utc_now(), timestamp, :second) <= 1
-  end
-
   test "Error info metadata is nil when strategy is :nothing" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
