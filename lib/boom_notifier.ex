@@ -68,8 +68,7 @@ defmodule BoomNotifier do
 
         {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
 
-        # TODO remove error_kind
-        {_error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
+        error_info = ErrorInfo.build(error, conn, custom_data)
 
         ErrorStorage.add_error(error_info)
 

@@ -35,11 +35,11 @@ defmodule ErrorInfo do
           },
           map(),
           custom_data_strategy_type
-        ) :: {atom(), %ErrorInfo{}}
-  def build(%{reason: reason, stack: stack} = error, conn, custom_data_strategy) do
+        ) :: %ErrorInfo{}
+  def build(%{reason: reason, stack: stack}, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
-    error_info = %ErrorInfo{
+    %ErrorInfo{
       reason: error_reason,
       stack: stack,
       controller: get_in(conn.private, [:phoenix_controller]),
@@ -48,18 +48,12 @@ defmodule ErrorInfo do
       name: error_name,
       metadata: build_custom_data(conn, custom_data_strategy)
     }
-
-    {error_type(error), error_info}
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
   defp error_reason(%{message: reason}), do: {reason, "Error"}
   defp error_reason(reason) when is_binary(reason), do: error_reason(%{message: reason})
   defp error_reason(reason), do: error_reason(%{message: inspect(reason)})
-
-  defp error_type(%{reason: %name{}}), do: name
-  defp error_type(%{error: %{kind: kind}}), do: kind
-  defp error_type(_), do: :error
 
   defp build_request_info(conn) do
     %{
