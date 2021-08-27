@@ -48,6 +48,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
@@ -63,10 +64,7 @@ jobs:
 
     - name: Install dependencies
       if: steps.mix-cache.outputs.cache-hit != 'true'
-      run: |
-        mix local.rebar --force
-        mix local.hex --force
-        mix deps.get
+      run: mix deps.get
 
     - name: Retrieve PLT Cache
       uses: actions/cache@v1
