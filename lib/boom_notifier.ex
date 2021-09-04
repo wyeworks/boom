@@ -78,8 +78,7 @@ defmodule BoomNotifier do
 
           # Triggers the notification for each notifier
           walkthrough_notifiers(settings, fn notifier, options ->
-            # TODO remove occurrence list
-            NotifierSenderServer.send(notifier, [occurrence], options)
+            NotifierSenderServer.send(notifier, occurrence, options)
           end)
 
           {notification_trigger, _settings} =

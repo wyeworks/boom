@@ -1,63 +1,61 @@
-<%= for error <- errors do %>
-  <p><%= error.exception_summary %></p>
+<p><%= error.exception_summary %></p>
 
-  <%= if error.request do %>
-    <div>
-      Request Information:
-      <ul style="list-style-type: none;">
-        <li>URL: <%= error.request.url %></li>
-        <li>Path: <%= error.request.path %></li>
-        <li>Method: <%= error.request.method %></li>
-        <li>Port: <%= error.request.port %></li>
-        <li>Scheme: <%= error.request.scheme %></li>
-        <li>Query String: <%= error.request.query_string %></li>
-        <li>Client IP: <%= error.request.client_ip %></li>
-      </ul>
-    </div>
-  <% end %>
-
+<%= if error.request do %>
   <div>
-    <%= if error.accumulated_occurrences == 1 do %>
-      Occurred on:
-      <ul style="list-style-type: none;">
-        <li><%= error.first_occurrence %></li>
-      </ul>
-    <% else %>
-      Occurred on:
-      <ul style="list-style-type: none;">
-        <li>First occurrence: <%= error.first_occurrence %></li>
-        <li>Last occurrence: <%= error.last_occurrence %></li>
-        <li>Accumulated occurrences: <%= error.accumulated_occurrences %></li>
-      </ul>
-    <% end %>
-  </div>
-
-  <%= if error.metadata do %>
-    <div>
-      Metadata:
-      <ul style="list-style-type: none;">
-        <li>
-          <ul style="list-style-type: none;">
-            <%= for {source, fields} <- error.metadata do %>
-              <%= source %>:
-                <ul style="list-style-type: none;">
-                  <%= for {k, v} <- fields do %>
-                    <li><%= k %>: <%= v %> </li>
-                  <% end %>
-                </ul>
-            <% end %>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  <% end %>
-
-  <div>
-    Stack entries:
+    Request Information:
     <ul style="list-style-type: none;">
-      <%= for entry <- error.exception_stack_entries do %>
-        <li><%= entry %></li>
-      <% end %>
+      <li>URL: <%= error.request.url %></li>
+      <li>Path: <%= error.request.path %></li>
+      <li>Method: <%= error.request.method %></li>
+      <li>Port: <%= error.request.port %></li>
+      <li>Scheme: <%= error.request.scheme %></li>
+      <li>Query String: <%= error.request.query_string %></li>
+      <li>Client IP: <%= error.request.client_ip %></li>
     </ul>
   </div>
 <% end %>
+
+<div>
+  <%= if error.accumulated_occurrences == 1 do %>
+    Occurred on:
+    <ul style="list-style-type: none;">
+      <li><%= error.first_occurrence %></li>
+    </ul>
+  <% else %>
+    Occurred on:
+    <ul style="list-style-type: none;">
+      <li>First occurrence: <%= error.first_occurrence %></li>
+      <li>Last occurrence: <%= error.last_occurrence %></li>
+      <li>Accumulated occurrences: <%= error.accumulated_occurrences %></li>
+    </ul>
+  <% end %>
+</div>
+
+<%= if error.metadata do %>
+  <div>
+    Metadata:
+    <ul style="list-style-type: none;">
+      <li>
+        <ul style="list-style-type: none;">
+          <%= for {source, fields} <- error.metadata do %>
+            <%= source %>:
+              <ul style="list-style-type: none;">
+                <%= for {k, v} <- fields do %>
+                  <li><%= k %>: <%= v %> </li>
+                <% end %>
+              </ul>
+          <% end %>
+        </ul>
+      </li>
+    </ul>
+  </div>
+<% end %>
+
+<div>
+  Stack entries:
+  <ul style="list-style-type: none;">
+    <%= for entry <- error.exception_stack_entries do %>
+      <li><%= entry %></li>
+    <% end %>
+  </ul>
+</div>

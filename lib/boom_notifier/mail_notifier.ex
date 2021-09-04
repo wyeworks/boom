@@ -43,13 +43,13 @@ defmodule BoomNotifier.MailNotifier do
   end
 
   @impl BoomNotifier.Notifier
-  @spec notify(list(%ErrorInfo{}), options) :: no_return()
+  @spec notify(%ErrorInfo{}, options) :: no_return()
   def notify(error_info, options) do
     email =
       new_email()
       |> to(options[:to])
       |> from(options[:from])
-      |> subject("#{options[:subject]}: #{hd(error_info) |> Map.get(:reason)}")
+      |> subject("#{options[:subject]}: #{error_info |> Map.get(:reason)}")
       |> html_body(HTMLContent.build(error_info))
       |> text_body(TextContent.build(error_info))
 

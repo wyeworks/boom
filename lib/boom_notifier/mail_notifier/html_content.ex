@@ -8,12 +8,8 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
     :def,
     :email_body,
     Path.join([Path.dirname(__ENV__.file), "templates", "email_body.html.eex"]),
-    [:errors]
+    [:error]
   )
-
-  def build(errors) when is_list(errors) do
-    email_body(Enum.map(errors, &build/1))
-  end
 
   def build(%ErrorInfo{
         name: name,
@@ -40,6 +36,7 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
       last_occurrence: format_timestamp(last_occurrence),
       accumulated_occurrences: accumulated_occurrences
     }
+    |> email_body()
   end
 
   defp format_timestamp(timestamp) do

@@ -1,41 +1,37 @@
-<%= for error <- errors do %>
-  <%= if error.exception_summary do %>
-    <%= error.exception_summary %>
-  <% end %>
-  <%= if error.request do %>
-    Request Information:
-      URL: <%= error.request.url %>
-      Path: <%= error.request.path %>
-      Method: <%= error.request.method %>
-      Port: <%= error.request.port %>
-      Scheme: <%= error.request.scheme %>
-      Query String: <%= error.request.query_string %>
-      Client IP: <%= error.request.client_ip %>
-  <% end %>
+<%= if error.exception_summary do %>
+  <%= error.exception_summary %>
+<% end %>
+<%= if error.request do %>
+  Request Information:
+    URL: <%= error.request.url %>
+    Path: <%= error.request.path %>
+    Method: <%= error.request.method %>
+    Port: <%= error.request.port %>
+    Scheme: <%= error.request.scheme %>
+    Query String: <%= error.request.query_string %>
+    Client IP: <%= error.request.client_ip %>
+<% end %>
 
-  <%= if error.accumulated_occurrences == 1 do %>
-    Occurred on: <%= error.first_occurrence %>
-  <% else %>
-    Occurred on:
-      First occurrence: <%= error.first_occurrence %>
-      Last occurrence: <%= error.last_occurrence %>
-      Accumulated occurrences: <%= error.accumulated_occurrences %>
-  <% end %>
+<%= if error.accumulated_occurrences == 1 do %>
+  Occurred on: <%= error.first_occurrence %>
+<% else %>
+  Occurred on:
+    First occurrence: <%= error.first_occurrence %>
+    Last occurrence: <%= error.last_occurrence %>
+    Accumulated occurrences: <%= error.accumulated_occurrences %>
+<% end %>
 
-  <%= if error.metadata do %>
-    Metadata:
-    <%= for {source, fields} <- error.metadata do %>
-      <%= source %>:
-        <%= for {k, v} <- fields do %>
-          <%= k %>: <%= v %>
-        <% end %>
-    <% end %>
+<%= if error.metadata do %>
+  Metadata:
+  <%= for {source, fields} <- error.metadata do %>
+    <%= source %>:
+      <%= for {k, v} <- fields do %>
+        <%= k %>: <%= v %>
+      <% end %>
   <% end %>
+<% end %>
 
-  Stack entries:
-  <%= for entry <- error.exception_stack_entries do %>
-    <%= entry %>
-  <% end %>
-
-  ----------------------------------------
+Stack entries:
+<%= for entry <- error.exception_stack_entries do %>
+  <%= entry %>
 <% end %>
