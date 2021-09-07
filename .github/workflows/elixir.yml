@@ -49,6 +49,9 @@ jobs:
           - elixir: '1.12'
             otp: '24'
             lint: lint
+          - elixir: '1.12'
+            otp: '24'
+            deps: latest
 
     steps:
     - uses: actions/checkout@v2
@@ -59,11 +62,16 @@ jobs:
         otp-version: ${{ matrix.otp }}
 
     - name: Retrieve Mix Dependencies Cache
+      if: matrix.deps != 'latest'
       uses: actions/cache@v1
       id: mix-cache
       with:
         path: deps
         key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+
+    - name: Remove mix.lock
+      if: matrix.deps == 'latest'
+      run: rm mix.lock
 
     - name: Install dependencies
       if: steps.mix-cache.outputs.cache-hit != 'true'
