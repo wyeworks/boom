@@ -50,7 +50,10 @@ defmodule WebhookNotifierTest do
 
     use BoomNotifier,
       notifier: BoomNotifier.WebhookNotifier,
-      options: [url: "http://localhost:1234"],
+      options: [
+        url: "http://localhost:1234",
+        headers: [Authorization: "Bearer token123"]
+      ],
       custom_data: [:assigns, :logger]
 
     pipeline :browser do
@@ -84,6 +87,11 @@ defmodule WebhookNotifierTest do
   test "request is sent to webhook", %{bypass: bypass} do
     Bypass.expect(bypass, fn conn ->
       assert "POST" == conn.method
+
+      [{header_name, header_value} | _] = conn.req_headers
+      assert header_name == "authorization"
+      assert header_value == "Bearer token123"
+
       {:ok, body, _conn} = Plug.Conn.read_body(conn)
 
       [
