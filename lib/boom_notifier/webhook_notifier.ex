@@ -10,7 +10,8 @@ defmodule BoomNotifier.WebhookNotifier do
   use BoomNotifier,
     notifier: BoomNotifier.WebhookNotifier,
     options: [
-      url: "http://example.com"
+      url: "http://example.com",
+      headers: [Authorization: "Bearer token"]
     ]
 
   # ...
@@ -21,7 +22,7 @@ defmodule BoomNotifier.WebhookNotifier do
 
   import BoomNotifier.Helpers
 
-  @type options :: [{:url, String.t()}]
+  @type options :: [{:url, String.t()}, {:headers, Keyword.t()}]
 
   @impl BoomNotifier.Notifier
   def validate_config(options) do
@@ -34,13 +35,18 @@ defmodule BoomNotifier.WebhookNotifier do
 
   @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
-  def notify(errors_info, url: url) do
+  def notify(errors_info, options) do
     payload =
       errors_info
       |> format_errors()
       |> Jason.encode!()
 
-    HTTPoison.post!(url, payload, [{"Content-Type", "application/json"}])
+    headers =
+      options
+      |> Keyword.get(:headers, [])
+      |> Keyword.merge("Content-Type": "application/json")
+
+    HTTPoison.post!(options[:url], payload, headers)
   end
 
   defp format_errors(errors) when is_list(errors) do
