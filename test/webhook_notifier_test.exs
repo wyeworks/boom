@@ -73,6 +73,11 @@ defmodule WebhookNotifierTest do
     end
   end
 
+  def header_value(headers, header_name) do
+    Enum.find(headers, fn {header, _value} -> header == header_name end)
+    |> elem(1)
+  end
+
   setup do
     Logger.metadata(name: "Dennis", age: 17)
     bypass = Bypass.open(port: 1234)
@@ -88,9 +93,8 @@ defmodule WebhookNotifierTest do
     Bypass.expect(bypass, fn conn ->
       assert "POST" == conn.method
 
-      [{header_name, header_value} | _] = conn.req_headers
-      assert header_name == "authorization"
-      assert header_value == "Bearer token123"
+      assert header_value(conn.req_headers, "authorization") == "Bearer token123"
+      assert header_value(conn.req_headers, "content-type") == "application/json"
 
       {:ok, body, _conn} = Plug.Conn.read_body(conn)
 
