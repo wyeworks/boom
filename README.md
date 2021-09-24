@@ -29,7 +29,7 @@ end
 
 ## How to use it
 
-### Webkook notifier
+### Webhook notifier
 
 ```elixir
 defmodule YourApp.Router do
