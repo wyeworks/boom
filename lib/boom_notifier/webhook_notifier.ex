@@ -22,7 +22,8 @@ defmodule BoomNotifier.WebhookNotifier do
 
   import BoomNotifier.Helpers
 
-  @type options :: [{:url, String.t()}, {:headers, Keyword.t()}]
+  @type options ::
+          [{:url, String.t()}] | [{:url, String.t()}, {:headers, HTTPoison.Request.headers()}]
 
   @impl BoomNotifier.Notifier
   def validate_config(options) do
