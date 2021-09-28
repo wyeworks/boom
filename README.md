@@ -22,7 +22,7 @@ The package can be installed by adding `boom_notifier` to your list of dependenc
 ```elixir
 def deps do
   [
-    {:boom_notifier, "~> 0.4.1"}
+    {:boom_notifier, "~> 0.5.0"}
   ]
 end
 ```
