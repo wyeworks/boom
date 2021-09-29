@@ -59,14 +59,18 @@ defmodule BoomNotifier.MixProject do
   defp deps do
     [
       {:bamboo, "~> 2.0"},
-      {:bypass, "~> 2.1", only: :test},
-      {:credo, "~> 1.1", only: [:dev], runtime: false},
-      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.23", only: :dev},
       {:httpoison, "~> 1.5"},
       {:jason, "~> 1.2"},
+      {:plug_cowboy, "~> 1.0 or ~> 2.0"},
+
+      # Test dependencies
+      {:bypass, "~> 2.1", only: :test},
       {:phoenix, "~> 1.4", only: [:test]},
-      {:plug_cowboy, "~> 1.0 or ~> 2.0"}
+
+      # Dev dependencies
+      {:credo, "~> 1.1", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.23", only: :dev}
     ]
   end
 
