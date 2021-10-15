@@ -6,8 +6,8 @@
 ---
 
 This package allows your Phoenix application to send notifications whenever
-an exceptions is raised. By default it includes an email and a webhook
-notifier, but you can implement your custom ones.
+an exception is raised. By default it includes an email and a webhook
+notifier, but you can implement custom ones.
 
 It was inspired by the [ExceptionNotification](https://github.com/smartinez87/exception_notification)
 gem that provides a similar functionality for Rack/Rails applications.
@@ -280,6 +280,26 @@ defmodule YourApp.Router do
     notifiers: [
       # ...
     ]
+   # ...
+end
+```
+
+## Ignore exceptions
+By default, all exceptions are captured by Boom. The `:ignore_exceptions` setting is provided to ignore exceptions of a certain kind. Said exceptions will not generate any kind of notification from Boom.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    ignore_exceptions: [
+      HTTPoison.Error, MyApp.CustomException
+    ],
+    notifiers: [
+      # ...
+    ]
+   # ...
+end
 ```
 
 ## License
