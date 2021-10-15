@@ -400,5 +400,4 @@ defmodule NotifierTest do
       assert_receive(%{exception: _exception}, @receive_timeout)
     end
   end
-
 end
