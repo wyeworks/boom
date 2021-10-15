@@ -63,11 +63,23 @@ defmodule BoomNotifier do
         fn notifier, options -> validate_notifiers(notifier, options) end
       )
 
+      def handle_errors(conn, %{kind: :error, reason: %mod{}} = error) do
+        settings = unquote(config)
+        {ignored_exceptions, _settings} = Keyword.pop(settings, :ignore_exceptions, [])
+
+        unless Enum.member?(ignored_exceptions, mod) do
+          do_handle_errors(conn, settings, error)
+        end
+      end
+
       def handle_errors(conn, error) do
         settings = unquote(config)
 
-        {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
+        do_handle_errors(conn, settings, error)
+      end
 
+      defp do_handle_errors(conn, settings, error) do
+        {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
         {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
 
         ErrorStorage.add_errors(error_kind, error_info)

@@ -356,4 +356,48 @@ defmodule NotifierTest do
              end
            end) =~ "Settings error: :notifier parameter missing"
   end
+
+  describe "ignored exceptions" do
+    defmodule PlugErrorIgnoredException do
+      use BoomNotifier,
+        notifier: FakeNotifier,
+        options: [
+          subject: "BOOM error caught",
+          sender_pid: self()
+        ],
+        ignore_exceptions: [TestException]
+
+      def call(_conn, _opts) do
+        raise TestException.exception([])
+      end
+    end
+
+    defmodule PlugErrorTrackedException do
+      use BoomNotifier,
+        notifier: FakeNotifier,
+        options: [
+          subject: "BOOM error caught",
+          sender_pid: self()
+        ],
+        ignore_exceptions: [TestException]
+
+      def call(_conn, _opts) do
+        raise ArgumentError, message: "Wrong argument"
+      end
+    end
+
+    test "doesn't report exception when module is ignored" do
+      conn = conn(:get, "/")
+
+      catch_error(PlugErrorIgnoredException.call(conn, []))
+      refute_receive(%{exception: _exception}, @receive_timeout)
+    end
+
+    test "reports exception if module is not ignored" do
+      conn = conn(:get, "/")
+
+      catch_error(PlugErrorTrackedException.call(conn, []))
+      assert_receive(%{exception: _exception}, @receive_timeout)
+    end
+  end
 end
