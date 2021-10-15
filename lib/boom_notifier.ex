@@ -65,7 +65,7 @@ defmodule BoomNotifier do
 
       def handle_errors(conn, %{kind: :error, reason: %mod{}} = error) do
         settings = unquote(config)
-        ignored_exceptions = settings[:ignore_exceptions] || []
+        {ignored_exceptions, _settings} = Keyword.pop(settings, :ignore_exceptions, [])
 
         unless Enum.member?(ignored_exceptions, mod) do
           do_handle_errors(conn, settings, error)
