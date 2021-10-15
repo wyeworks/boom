@@ -33,8 +33,10 @@
     </ul>
   <% end %>
   <ul style="list-style-type: none;">
-    <%= for entry <- error.exception_stack_entries do %>
-      <li><%= entry %></li>
+    <%= for {app, module, function, arity, [file: file, line: line]} <- error.exception_stack_entries do %>
+      <li>
+        <%= app %> <%= Exception.format_file_line(file, line) %> <%= Exception.format_mfa(module, function, arity) %>
+      </li>
     <% end %>
   </ul>
   <hr>
