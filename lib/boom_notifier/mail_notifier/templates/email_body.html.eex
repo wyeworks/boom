@@ -32,7 +32,7 @@
       </li>
     </ul>
   <% end %>
-  <ul style="list-style-type: none;">
+  <ul style="list-style-type: none; font-family: mono;">
     <%= for entry <- error.exception_stack_entries do %>
       <li><%= entry %></li>
     <% end %>
