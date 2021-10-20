@@ -97,6 +97,10 @@ defmodule BoomNotifier do
 
           ErrorStorage.clear_errors(notification_trigger, error_kind)
         end
+        
+        if settings[:callback] do
+          settings[:callback].(conn, error)
+        end
       end
     end
   end
