@@ -25,6 +25,10 @@
   <%= for entry <- error.exception_stack_entries do %>
     <%= entry %>
   <% end %>
+  <%= if error.reason do %>
+    Reason:
+    <%= error.reason %>
+  <% end %>
 
   ----------------------------------------
 <% end %>

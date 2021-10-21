@@ -18,7 +18,20 @@ defmodule MailerNotifierTest do
       raise TestException.exception([])
     end
   end
+  
+  defmodule TestTemplateErrorController do
+    use Phoenix.Controller
+    import Plug.Conn
+    
+    defmodule TestTemplateErrorException do
+      defexception plug_status: 403, message: String.duplicate("a", 300)
+    end
 
+    def index(_conn, _params) do
+      raise TestTemplateErrorException.exception([])
+    end
+  end
+  
   defmodule TestRouter do
     use Phoenix.Router
     import Phoenix.Controller
@@ -29,7 +42,8 @@ defmodule MailerNotifierTest do
         mailer: Support.FakeMailer,
         from: "me@example.com",
         to: self(),
-        subject: "BOOM error caught"
+        subject: "BOOM error caught",
+        max_subject_length: 24
       ],
       custom_data: [:assigns, :logger]
 
@@ -41,6 +55,7 @@ defmodule MailerNotifierTest do
     scope "/" do
       pipe_through(:browser)
       get("/", TestController, :index, log: false)
+      get("/template_error", TestTemplateErrorController, :index, log: false)
     end
 
     def save_custom_data(conn, _) do
@@ -69,6 +84,13 @@ defmodule MailerNotifierTest do
     catch_error(TestRouter.call(conn, []))
 
     assert_receive({:email_subject, "BOOM error caught: booom!"}, @receive_timeout)
+  end
+  
+  test "Subject cannot be greater than 255 chars" do
+    conn = conn(:get, "/template_error")
+    catch_error(TestRouter.call(conn, []))
+    
+    assert_receive({:email_subject, "BOOM error caught: aaaaaa"}, @receive_timeout)
   end
 
   test "Set email using proper from and to addresses" do
@@ -124,6 +146,14 @@ defmodule MailerNotifierTest do
                  "Query String:",
                  "Client IP: 127.0.0.1"
                ] = request_info_lines
+        
+        reason_lines = Enum.take(body, -3)
+               
+        assert [
+          "Reason:",
+          "booom!",
+          "----------------------------------------"
+        ] = reason_lines
     end
   end
 
@@ -148,6 +178,8 @@ defmodule MailerNotifierTest do
                  "<li>Query String: </li>",
                  "<li>Client IP: 127.0.0.1</li>"
                ] = request_info_lines
+               
+        assert String.contains?(body, "Reason: <br />\n      booom!")
     end
   end
 
