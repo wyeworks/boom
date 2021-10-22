@@ -155,6 +155,22 @@ defmodule NotifierTest do
       raise TestException.exception([])
     end
   end
+  
+  defmodule CallbackNotifier do
+    use BoomNotifier,
+      notifier: FakeNotifier,
+      options: [
+        subject: "BOOM error caught",
+        sender_pid: self()
+      ],
+      callback: &CallbackNotifier.callback/2
+
+    def call(_conn, _opts) do
+      raise TestException.exception([])
+    end
+    
+    def callback(_conn, _assigns), do: send(self(), :callback_called)
+  end
 
   setup do
     Agent.update(:boom_notifier, fn _state -> %{} end)
@@ -355,6 +371,16 @@ defmodule NotifierTest do
                end
              end
            end) =~ "Settings error: :notifier parameter missing"
+  end
+  
+  test "calls a callback" do
+    conn = conn(:get, "/")
+    
+    assert_raise TestException, "booom!", fn ->
+      CallbackNotifier.call(conn, [])
+    end
+    
+    assert_receive(:callback_called, @receive_timeout)
   end
 
   describe "ignored exceptions" do
