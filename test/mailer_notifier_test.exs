@@ -18,11 +18,11 @@ defmodule MailerNotifierTest do
       raise TestException.exception([])
     end
   end
-  
+
   defmodule TestTemplateErrorController do
     use Phoenix.Controller
     import Plug.Conn
-    
+
     defmodule TestTemplateErrorException do
       defexception plug_status: 403, message: String.duplicate("a", 300)
     end
@@ -31,7 +31,7 @@ defmodule MailerNotifierTest do
       raise TestTemplateErrorException.exception([])
     end
   end
-  
+
   defmodule TestRouter do
     use Phoenix.Router
     import Phoenix.Controller
@@ -63,7 +63,7 @@ defmodule MailerNotifierTest do
       |> assign(:age, 32)
     end
   end
-  
+
   defmodule TestSubjectConfigRouter do
     use Phoenix.Router
 
@@ -102,20 +102,20 @@ defmodule MailerNotifierTest do
 
     assert_receive({:email_subject, "BOOM error caught: booom!"}, @receive_timeout)
   end
-  
+
   test "Subject cannot be greater than 25 chars" do
     conn = conn(:get, "/template_error")
     catch_error(TestSubjectConfigRouter.call(conn, []))
-    
+
     assert_receive({:email_subject, "BOOM error caught: aaaaaa"}, @receive_timeout)
   end
-  
+
   test "Subject should be truncated to 80 chars as default" do
     conn = conn(:get, "/template_error")
     catch_error(TestRouter.call(conn, []))
-    
+
     receive do
-      {:email_subject, subject} ->    
+      {:email_subject, subject} ->
         assert String.length(subject) == 80
     end
   end
@@ -199,7 +199,7 @@ defmodule MailerNotifierTest do
                ] = request_info_lines
     end
   end
-  
+
   test "reason appears in email text body" do
     conn = conn(:get, "/template_error")
     catch_error(TestRouter.call(conn, []))
@@ -207,15 +207,15 @@ defmodule MailerNotifierTest do
     receive do
       {:email_text_body, body} ->
         reason_lines = Enum.take(body, -3)
-        
+
         assert [
-          "Reason:",
-          String.duplicate("a", 300),
-          "----------------------------------------"
-        ] == reason_lines
+                 "Reason:",
+                 String.duplicate("a", 300),
+                 "----------------------------------------"
+               ] == reason_lines
     end
   end
-  
+
   test "reason appears in email HTML body" do
     conn = conn(:get, "/template_error")
     catch_error(TestRouter.call(conn, []))
@@ -225,7 +225,7 @@ defmodule MailerNotifierTest do
         assert String.contains?(body, "Reason: <br />\n      #{String.duplicate("a", 300)}")
     end
   end
-  
+
   test "Exception stacktrace appears in email text body" do
     conn = conn(:get, "/")
     catch_error(TestRouter.call(conn, []))
