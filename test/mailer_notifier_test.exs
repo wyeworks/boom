@@ -201,7 +201,7 @@ defmodule MailerNotifierTest do
   end
   
   test "reason appears in email text body" do
-    conn = conn(:get, "/")
+    conn = conn(:get, "/template_error")
     catch_error(TestRouter.call(conn, []))
 
     receive do
@@ -210,19 +210,19 @@ defmodule MailerNotifierTest do
         
         assert [
           "Reason:",
-          "booom!",
+          String.duplicate("a", 300),
           "----------------------------------------"
-        ] = reason_lines
+        ] == reason_lines
     end
   end
   
   test "reason appears in email HTML body" do
-    conn = conn(:get, "/")
+    conn = conn(:get, "/template_error")
     catch_error(TestRouter.call(conn, []))
 
     receive do
       {:email_html_body, body} ->
-        assert String.contains?(body, "Reason: <br />\n      booom!")
+        assert String.contains?(body, "Reason: <br />\n      #{String.duplicate("a", 300)}")
     end
   end
   
