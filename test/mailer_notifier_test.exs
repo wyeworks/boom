@@ -19,6 +19,19 @@ defmodule MailerNotifierTest do
     end
   end
 
+  defmodule TestTemplateErrorController do
+    use Phoenix.Controller
+    import Plug.Conn
+
+    defmodule TestTemplateErrorException do
+      defexception plug_status: 403, message: String.duplicate("a", 300)
+    end
+
+    def index(_conn, _params) do
+      raise TestTemplateErrorException.exception([])
+    end
+  end
+
   defmodule TestRouter do
     use Phoenix.Router
     import Phoenix.Controller
@@ -41,12 +54,31 @@ defmodule MailerNotifierTest do
     scope "/" do
       pipe_through(:browser)
       get("/", TestController, :index, log: false)
+      get("/template_error", TestTemplateErrorController, :index, log: false)
     end
 
     def save_custom_data(conn, _) do
       conn
       |> assign(:name, "Davis")
       |> assign(:age, 32)
+    end
+  end
+
+  defmodule TestSubjectConfigRouter do
+    use Phoenix.Router
+
+    use BoomNotifier,
+      notifier: BoomNotifier.MailNotifier,
+      options: [
+        mailer: Support.FakeMailer,
+        from: "me@example.com",
+        to: self(),
+        subject: "BOOM error caught",
+        max_subject_length: 25
+      ]
+
+    scope "/" do
+      get("/template_error", TestTemplateErrorController, :index, log: false)
     end
   end
 
@@ -69,6 +101,23 @@ defmodule MailerNotifierTest do
     catch_error(TestRouter.call(conn, []))
 
     assert_receive({:email_subject, "BOOM error caught: booom!"}, @receive_timeout)
+  end
+
+  test "Subject cannot be greater than 25 chars" do
+    conn = conn(:get, "/template_error")
+    catch_error(TestSubjectConfigRouter.call(conn, []))
+
+    assert_receive({:email_subject, "BOOM error caught: aaaaaa"}, @receive_timeout)
+  end
+
+  test "Subject should be truncated to 80 chars as default" do
+    conn = conn(:get, "/template_error")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_subject, subject} ->
+        assert String.length(subject) == 80
+    end
   end
 
   test "Set email using proper from and to addresses" do
@@ -148,6 +197,32 @@ defmodule MailerNotifierTest do
                  "<li>Query String: </li>",
                  "<li>Client IP: 127.0.0.1</li>"
                ] = request_info_lines
+    end
+  end
+
+  test "reason appears in email text body" do
+    conn = conn(:get, "/template_error")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_text_body, body} ->
+        reason_lines = Enum.take(body, -3)
+
+        assert [
+                 "Reason:",
+                 String.duplicate("a", 300),
+                 "----------------------------------------"
+               ] == reason_lines
+    end
+  end
+
+  test "reason appears in email HTML body" do
+    conn = conn(:get, "/template_error")
+    catch_error(TestRouter.call(conn, []))
+
+    receive do
+      {:email_html_body, body} ->
+        assert String.contains?(body, "Reason: <br />\n      #{String.duplicate("a", 300)}")
     end
   end
 

@@ -68,6 +68,8 @@ defmodule YourApp.Router do
 
 For the email to be sent, you need to define a valid mailer in the `options` keyword list. You can customize the `from`, `to` and `subject` attributes.
 
+`subject` will be truncated at 80 chars, if you want more add the option `max_subject_length`.
+
 ## Custom notifiers
 
 To create a custom notifier, you need to implement the `BoomNotifier.Notifier` behaviour:

@@ -21,7 +21,7 @@
         Metadata:
         <ul style="list-style-type: none;">
           <%= for {source, fields} <- error.metadata do %>
-            <%= source %>: 
+            <%= source %>:
               <ul style="list-style-type: none;">
                 <%= for {k, v} <- fields do %>
                   <li><%= k %>: <%= v %> </li>
@@ -37,5 +37,11 @@
       <li><%= entry %></li>
     <% end %>
   </ul>
+  <%= if error.reason do %>
+    <p>
+      Reason: <br />
+      <%= error.reason %>
+    </p>
+  <% end %>
   <hr>
 <% end %>
