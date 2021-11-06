@@ -44,24 +44,42 @@ defmodule BoomNotifier do
     end
   end
 
-  defmacro __using__(_config) do
-    quote location: :keep do
-      use Plug.ErrorHandler
+  defmacro __using__(_opts) do
+    quote do
+      @before_compile BoomNotifier
+    end
+  end
+
+  defmacro __before_compile__(_) do
+    quote do
+      defoverridable call: 2
 
       import BoomNotifier
 
       # Notifiers validation
       walkthrough_notifiers(fn notifier, options -> validate_notifiers(notifier, options) end)
 
-      def handle_errors(conn, %{kind: :error, reason: %mod{}} = error) do
-        ignored_exceptions = Config.ignore_exceptions()
+      def call(conn, opts) do
+        try do
+          super(conn, opts)
+        catch
+          kind, reason ->
+            stack = System.stacktrace()
+            error = %{kind: kind, reason: reason, stack: stack}
 
-        unless Enum.member?(ignored_exceptions, mod) do
-          do_handle_errors(conn, error)
+            case error do
+              %{kind: :error, reason: %mod{}} ->
+                ignored_exceptions = Config.ignore_exceptions()
+
+                unless Enum.member?(ignored_exceptions, mod) do
+                  do_handle_errors(conn, error)
+                end
+
+              _ ->
+                do_handle_errors(conn, error)
+            end
         end
       end
-
-      def handle_errors(conn, error), do: do_handle_errors(conn, error)
 
       defp do_handle_errors(conn, error) do
         custom_data = Config.custom_data()
@@ -78,8 +96,9 @@ defmodule BoomNotifier do
           end)
 
           notification_trigger = Config.notification_trigger()
-
           ErrorStorage.clear_errors(notification_trigger, error_kind)
+
+          :erlang.raise(error.kind, error.reason, error.stack)
         end
       end
     end
