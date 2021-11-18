@@ -7,6 +7,8 @@ defmodule BoomNotifier.Config do
   @ignore_exceptions_default []
   @notifiers_default []
   @notification_trigger_default :always
+  @notifier_default nil
+  @options_default []
 
   def custom_data do
     get_config(:custom_data, @custom_data_default)
@@ -22,6 +24,13 @@ defmodule BoomNotifier.Config do
 
   def notification_trigger do
     get_config(:notification_trigger, @notification_trigger_default)
+  end
+
+  def single_notifier_config do
+    [
+      notifier: get_config(:notifier, @notifier_default),
+      options: get_config(:options, @options_default)
+    ]
   end
 
   defp get_config(key, default) do

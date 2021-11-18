@@ -27,7 +27,13 @@ defmodule BoomNotifier do
   end
 
   def walkthrough_notifiers(callback) do
-    Config.notifiers() |> Enum.each(&run_callback(&1, callback))
+    case Config.notifiers() do
+      [] ->
+        run_callback(Config.single_notifier_config(), callback)
+
+      notifiers_settings when is_list(notifiers_settings) ->
+        Enum.each(notifiers_settings, &run_callback(&1, callback))
+    end
   end
 
   def validate_notifiers(notifier, options) do
@@ -64,8 +70,7 @@ defmodule BoomNotifier do
           super(conn, opts)
         catch
           kind, reason ->
-            stack = System.stacktrace()
-            error = %{kind: kind, reason: reason, stack: stack}
+            error = Exception.normalize(kind, reason, __STACKTRACE__)
 
             case error do
               %{kind: :error, reason: %mod{}} ->
