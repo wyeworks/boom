@@ -51,34 +51,39 @@ defmodule BoomNotifier do
 
   defmacro __using__(config) do
     quote location: :keep do
-      use Plug.ErrorHandler
-
       import BoomNotifier
 
-      settings = unquote(config)
+      error_handler_in_use = {:handle_errors, 2} in Module.definitions_in(__MODULE__)
+
+      unless error_handler_in_use do
+        use Plug.ErrorHandler
+
+        @impl Plug.ErrorHandler
+        def handle_errors(conn, error) do
+          notify_error(conn, error)
+        end
+      end
 
       # Notifiers validation
       walkthrough_notifiers(
-        settings,
+        unquote(config),
         fn notifier, options -> validate_notifiers(notifier, options) end
       )
 
-      def handle_errors(conn, %{kind: :error, reason: %mod{}} = error) do
+      def notify_error(conn, %{kind: :error, reason: %mod{}} = error) do
         settings = unquote(config)
         {ignored_exceptions, _settings} = Keyword.pop(settings, :ignore_exceptions, [])
 
         unless Enum.member?(ignored_exceptions, mod) do
-          do_handle_errors(conn, settings, error)
+          do_notify_error(conn, settings, error)
         end
       end
 
-      def handle_errors(conn, error) do
-        settings = unquote(config)
-
-        do_handle_errors(conn, settings, error)
+      def notify_error(conn, error) do
+        do_notify_error(conn, unquote(config), error)
       end
 
-      defp do_handle_errors(conn, settings, error) do
+      defp do_notify_error(conn, settings, error) do
         {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
         {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
 
