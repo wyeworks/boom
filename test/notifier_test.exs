@@ -400,4 +400,36 @@ defmodule NotifierTest do
       assert_receive(%{exception: _exception}, @receive_timeout)
     end
   end
+
+  describe "custom callback" do
+    defmodule PlugErrorWithCallback do
+      use Plug.ErrorHandler
+
+      def handle_errors(conn, error) do
+        send(self(), :before_callback)
+        notify_error(conn, error)
+        send(self(), :after_callback)
+      end
+
+      use BoomNotifier,
+        notifier: FakeNotifier,
+        options: [
+          sender_pid: self()
+        ]
+
+      def call(_conn, _opts) do
+        raise TestException.exception([])
+      end
+    end
+
+    test "sends the notification when handle_errors/2 is defined" do
+      conn = conn(:get, "/")
+
+      catch_error(PlugErrorWithCallback.call(conn, []))
+
+      assert_received :before_callback
+      assert_receive(%{exception: _exception}, @receive_timeout)
+      assert_received :after_callback
+    end
+  end
 end
