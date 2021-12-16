@@ -34,7 +34,7 @@ defmodule ErrorInfoTest do
     import Phoenix.Controller
 
     use BoomNotifier,
-      notifier: BoomNotifier.MailNotifier,
+      notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
         mailer: Support.FakeMailer,
         from: "me@example.com",
