@@ -52,6 +52,7 @@ defmodule MailerNotifierTest do
 
   for {name, mail_notifier_module} <- notifiers do
     describe name do
+      # Disable "redefining module" warnings, we have intent.
       Code.put_compiler_option(:ignore_module_conflict, true)
 
       defmodule TestRouter do
@@ -105,6 +106,9 @@ defmodule MailerNotifierTest do
           get("/template_error", TestTemplateErrorController, :index, log: false)
         end
       end
+
+      # Finished with any intentional redefinition.
+      Code.put_compiler_option(:ignore_module_conflict, false)
 
       setup do
         Logger.metadata(name: "Dennis", age: 17)
@@ -381,7 +385,5 @@ defmodule MailerNotifierTest do
         end
       end
     end
-
-    Code.put_compiler_option(:ignore_module_conflict, false)
   end
 end
