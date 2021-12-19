@@ -59,6 +59,7 @@ defmodule BoomNotifier.MixProject do
   defp deps do
     [
       {:bamboo, "~> 2.0"},
+      {:swoosh, "~> 1.5"},
       {:httpoison, "~> 1.5"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 1.0 or ~> 2.0"},
