@@ -15,7 +15,7 @@ defmodule Support.SwooshFakeMailer do
   # could be used to check for specific mail.
 
   def deliver!(email) do
-    # Swoosh uses a {name, address} tuple for to and from. 
+    # Swoosh uses a {name, address} tuple for to and from.
     # The `name` will default to `""` when not specified in the email creation,
     # as is the case in our tests, so extract just the address sections.
     # Note: tests only currently support one recipient.
