@@ -24,6 +24,7 @@ defmodule BoomNotifier.MailNotifier.Swoosh do
 
   import Swoosh.Email
 
+  alias BoomNotifier.MailNotifier
   alias BoomNotifier.MailNotifier.HTMLContent
   alias BoomNotifier.MailNotifier.TextContent
 
@@ -32,33 +33,28 @@ defmodule BoomNotifier.MailNotifier.Swoosh do
   @type options :: [option]
 
   @impl BoomNotifier.Notifier
-  def validate_config(options) do
-    missing_keys = Enum.reject([:mailer, :from, :to, :subject], &Keyword.has_key?(options, &1))
-
-    case missing_keys do
-      [] -> :ok
-      [missing_key] -> {:error, "#{inspect(missing_key)} parameter is missing"}
-      _ -> {:error, "The following parameters are missing: #{inspect(missing_keys)}"}
-    end
-  end
+  defdelegate validate_config(options), to: MailNotifier
 
   @impl BoomNotifier.Notifier
   @spec notify(list(%ErrorInfo{}), options) :: no_return()
   def notify(error_info, options) do
-    max_subject_length = options[:max_subject_length] || 80
-
     # Note, unlike Bamboo, Swoosh will raise while creating the mail if it is
     # invalid (has a bad recipient, etc).
     # To consumers of this function, the behaviour is identical to Bamboo's
     # `deliver_later!` because we dispatch the mail in a task.
+
+    subject =
+      MailNotifier.build_subject(
+        options[:subject],
+        error_info,
+        options[:max_subject_length] || 80
+      )
+
     email =
       new()
       |> to(options[:to])
       |> from(options[:from])
-      |> subject(
-        "#{options[:subject]}: #{hd(error_info) |> Map.get(:reason)}"
-        |> String.slice(0..(max_subject_length - 1))
-      )
+      |> subject(subject)
       |> html_body(HTMLContent.build(error_info))
       |> text_body(TextContent.build(error_info))
 
