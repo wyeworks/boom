@@ -70,6 +70,29 @@ For the email to be sent, you need to define a valid mailer in the `options` key
 
 `subject` will be truncated at 80 chars, if you want more add the option `max_subject_length`.
 
+## Setup when `handle_errors/2` is already being used
+
+If you are using or want to use your own implementation of `handle_errors/2` for the` Plug.ErrorHandler` module, be sure to include the usage of `BoomNotifier` after
+that.
+
+In addition, you will have to add the `notify_error/2` callback that `BoomNotifier` provides within your implementation of `handle_errors/2`.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use Plug.ErrorHandler
+
+  def handle_errors(conn, error) do
+    # ...
+    notify_error(conn, error)
+    # ...
+  end
+
+  use BoomNotifier,
+    ...
+```
+
 ## Custom notifiers
 
 To create a custom notifier, you need to implement the `BoomNotifier.Notifier` behaviour:
@@ -133,6 +156,7 @@ defmodule YourApp.Router do
 ```
 
 ## Notification Trigger
+
 By default, `BoomNotifier` will send a notification every time an exception is
 raised.
 
@@ -141,6 +165,7 @@ notifications using the `:notification_trigger` option with one of the
 following values: `:always` and `:exponential`.
 
 ### Always
+
 This option is the default one. It will trigger a notification for every
 exception.
 
@@ -156,10 +181,11 @@ defmodule YourApp.Router do
 ```
 
 ### Exponential
+
 It uses a formula of `log2(errors_count)` to determine whether to send a
 notification, based on the accumulated error count for each specific
 exception. This makes the notifier only send a notification when the count
-is: 1, 2, 4, 8, 16, 32, 64, 128, ..., (2**n).
+is: 1, 2, 4, 8, 16, 32, 64, 128, ..., (2\*\*n).
 
 You can also set an optional max value.
 
@@ -186,17 +212,19 @@ defmodule YourApp.Router do
 ```
 
 ## Custom data or Metadata
-By default, `BoomNotifier` will **not** include any custom data from your 
+
+By default, `BoomNotifier` will **not** include any custom data from your
 requests.
 
 However, there are different strategies to decide which information do
-you want to include in the notifications using the `:custom_data` option 
+you want to include in the notifications using the `:custom_data` option
 with one of the following values: `:assigns`, `:logger` or both.
 
-The included information will show up in your notification, in a new section 
+The included information will show up in your notification, in a new section
 titled "Metadata".
 
 ### Assigns
+
 This option will include the data that is in the [connection](https://hexdocs.pm/plug/Plug.Conn.html)
 `assigns` field.
 
@@ -231,6 +259,7 @@ assign(conn, :name, "John")
 ```
 
 ### Logger
+
 This option will include the data that is in the [Logger](https://hexdocs.pm/logger/Logger.html)
 `metadata` field.
 
@@ -267,7 +296,7 @@ Logger.metadata(name: "John")
 ### Using both
 
 You can do any combination of the above settings to include data
-from both sources. The names of the fields are independent for each 
+from both sources. The names of the fields are independent for each
 source, they will appear under the source namespace.
 
 ```elixir
@@ -287,6 +316,7 @@ end
 ```
 
 ## Ignore exceptions
+
 By default, all exceptions are captured by Boom. The `:ignore_exceptions` setting is provided to ignore exceptions of a certain kind. Said exceptions will not generate any kind of notification from Boom.
 
 ```elixir
@@ -305,7 +335,9 @@ end
 ```
 
 ## License
+
 BoomNotifier is released under the terms of the [MIT License](https://github.com/wyeworks/boom/blob/master/LICENSE).
 
 ## Credits
+
 The authors of this project are [Ignacio](https://github.com/iaguirre88) and [Jorge](https://github.com/jmbejar). It is sponsored and maintained by [Wyeworks](https://www.wyeworks.com).
