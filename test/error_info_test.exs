@@ -160,8 +160,11 @@ defmodule ErrorInfoTest do
              ErrorInfoTest.TestController,
              :index,
              2,
-             [file: 'test/error_info_test.exs', line: _]
+             error_info
            } = hd(error_info_stack)
+
+    assert 'test/error_info_test.exs' = Keyword.fetch!(error_info, :file)
+    assert 16 = Keyword.fetch!(error_info, :line)
 
     assert {
              ExUnit.Runner,
