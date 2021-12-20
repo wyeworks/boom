@@ -393,7 +393,7 @@ defmodule MailerNotifierTest do
                    mailer: nil,
                    from: nil,
                    to: nil,
-                   subject: nil,
+                   subject: "boom mail",
                    max_subject_length: "not a number"
                  )
 
@@ -402,7 +402,7 @@ defmodule MailerNotifierTest do
                    mailer: nil,
                    from: nil,
                    to: nil,
-                   subject: nil,
+                   subject: "boom mail",
                    max_subject_length: -1
                  )
       end

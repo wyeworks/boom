@@ -30,6 +30,15 @@ defmodule BoomNotifier.MailNotifier do
     end
   end
 
+  defp validate_config_values([{:subject, val} | rest])
+       when is_binary(val) do
+    validate_config_values(rest)
+  end
+
+  defp validate_config_values([{:subject, val} | _rest]) do
+    {:error, ":subject must be a string, got #{inspect(val)}"}
+  end
+
   defp validate_config_values([{:max_subject_length, val} | rest])
        when is_integer(val) and val > 0 do
     validate_config_values(rest)
