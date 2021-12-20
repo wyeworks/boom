@@ -46,11 +46,11 @@ defmodule MailerNotifierTest do
   #       since we are redefining the router modules for each notifier.
 
   notifiers = [
-    {"Bamboo", BoomNotifier.MailNotifier.Bamboo},
-    {"Swoosh", BoomNotifier.MailNotifier.Swoosh}
+    {"Bamboo", BoomNotifier.MailNotifier.Bamboo, Support.BambooFakeMailer},
+    {"Swoosh", BoomNotifier.MailNotifier.Swoosh, Support.SwooshFakeMailer}
   ]
 
-  for {name, mail_notifier_module} <- notifiers do
+  for {name, mail_notifier_module, fake_mailer_module} <- notifiers do
     describe name do
       # Disable "redefining module" warnings, we have intent.
       :elixir_config.put(:ignore_module_conflict, true)
@@ -60,10 +60,11 @@ defmodule MailerNotifierTest do
         import Phoenix.Controller
 
         @mail_notifier_module mail_notifier_module
+        @fake_mailer_module fake_mailer_module
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
-            mailer: Support.FakeMailer,
+            mailer: @fake_mailer_module,
             from: "me@example.com",
             to: self(),
             subject: "BOOM error caught"
@@ -92,10 +93,11 @@ defmodule MailerNotifierTest do
         use Phoenix.Router
 
         @mail_notifier_module mail_notifier_module
+        @fake_mailer_module fake_mailer_module
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
-            mailer: Support.FakeMailer,
+            mailer: @fake_mailer_module,
             from: "me@example.com",
             to: self(),
             subject: "BOOM error caught",

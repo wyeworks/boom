@@ -1,4 +1,4 @@
-defmodule Support.FakeMailer do
+defmodule Support.SwooshFakeMailer do
   @moduledoc false
 
   defimpl Swoosh.Email.Recipient, for: PID do
@@ -35,18 +35,6 @@ defmodule Support.FakeMailer do
     send(pid, {:email_to, pid})
     send(pid, {:email_text_body, text_body_lines(email.text_body)})
     send(pid, {:email_html_body, email.html_body})
-  end
-
-  # Overrides the Bamboo `deliver_later!/1` function.
-  # Instead of sending an email it puts the fields in a mailbox so they can be
-  # received in the test
-
-  def deliver_later!(email) do
-    send(email.to, {:email_subject, email.subject})
-    send(email.to, {:email_from, email.from})
-    send(email.to, {:email_to, email.to})
-    send(email.to, {:email_text_body, text_body_lines(email.text_body)})
-    send(email.to, {:email_html_body, email.html_body})
   end
 
   defp text_body_lines(body) do
