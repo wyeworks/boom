@@ -6,11 +6,16 @@ defmodule Support.BambooFakeMailer do
   # received in the test
 
   def deliver_later!(email) do
-    send(email.to, {:email_subject, email.subject})
-    send(email.to, {:email_from, email.from})
-    send(email.to, {:email_to, email.to})
-    send(email.to, {:email_text_body, text_body_lines(email.text_body)})
-    send(email.to, {:email_html_body, email.html_body})
+    # Since to addresses must be of the correct type, we send the PID through
+    # as a string. Convert it back into a true pid() for mailbox delivery.
+    "#PID" <> pid_string = email.to
+    pid = :erlang.list_to_pid('#{pid_string}')
+
+    send(pid, {:email_subject, email.subject})
+    send(pid, {:email_from, email.from})
+    send(pid, {:email_to, email.to})
+    send(pid, {:email_text_body, text_body_lines(email.text_body)})
+    send(pid, {:email_html_body, email.html_body})
   end
 
   defp text_body_lines(body) do

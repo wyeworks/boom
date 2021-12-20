@@ -1,14 +1,6 @@
 defmodule Support.SwooshFakeMailer do
   @moduledoc false
 
-  defimpl Swoosh.Email.Recipient, for: PID do
-    # Swoosh wont accept a raw PID in the `to` field, smudge it into the
-    # correct format for unpacking in `deliver!/1`.
-    def format(pid) do
-      {inspect(pid), pid}
-    end
-  end
-
   # Overrides the Swoosh `deliver!/1` function.
   #
   # Instead of sending an email it puts the fields in a mailbox so they can be
@@ -23,12 +15,16 @@ defmodule Support.SwooshFakeMailer do
   # could be used to check for specific mail.
 
   def deliver!(email) do
-    # Swoosh uses a {name, address} tuple for to and from. from `name` will
-    # default to `""` when not specified in the email creation.
-    # In the tests, we do not care about the name.
-    #
-    # note tests only currently support one recipient.
-    %{to: [{_pid_name, pid}], from: {_, from_addr}} = email
+    # Swoosh uses a {name, address} tuple for to and from. 
+    # The `name` will default to `""` when not specified in the email creation,
+    # as is the case in our tests, so extract just the address sections.
+    # Note: tests only currently support one recipient.
+
+    %{to: [{_name, "#PID" <> pid_string}], from: {_, from_addr}} = email
+
+    # Since to addresses must be of the correct type, we send the PID through
+    # as a string. Convert it back into a true pid() for mailbox delivery.
+    pid = :erlang.list_to_pid('#{pid_string}')
 
     send(pid, {:email_subject, email.subject})
     send(pid, {:email_from, from_addr})

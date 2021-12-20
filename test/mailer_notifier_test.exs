@@ -2,7 +2,7 @@ defmodule MailerNotifierTest do
   use ExUnit.Case
   use Plug.Test
 
-  alias BoomNotifier.MailNotifier.Bamboo
+  alias BoomNotifier.MailNotifier
 
   doctest BoomNotifier
 
@@ -66,7 +66,7 @@ defmodule MailerNotifierTest do
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: self(),
+            to: inspect(self()),
             subject: "BOOM error caught"
           ],
           custom_data: [:assigns, :logger]
@@ -99,7 +99,7 @@ defmodule MailerNotifierTest do
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: self(),
+            to: inspect(self()),
             subject: "BOOM error caught",
             max_subject_length: 25
           ]
@@ -232,6 +232,7 @@ defmodule MailerNotifierTest do
 
       test "reason appears in email text body" do
         conn = conn(:get, "/template_error")
+
         catch_error(TestRouter.call(conn, []))
 
         receive do
@@ -363,49 +364,97 @@ defmodule MailerNotifierTest do
                    ] = custom_data_info
         end
       end
+    end
+  end
 
-      test "validates return {:error, message} when required params are not present" do
-        assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
-                 Bamboo.validate_config(random_param: nil)
+  describe "MailNotifier.validate_config" do
+    setup do
+      options = [
+        mailer: Support.BambooFakeMailer,
+        from: "boom@mailer",
+        to: "user@mail",
+        subject: "boom mail",
+        max_subject_length: 80
+      ]
 
-        assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
-                 Bamboo.validate_config(mailer: nil, random_param: nil)
+      [options: options]
+    end
 
-        assert {:error, "The following parameters are missing: [:to, :subject]"} ==
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   random_param: nil
-                 )
+    test "returns :ok for good config", %{options: opts} do
+      assert :ok = MailNotifier.validate_config(opts)
+    end
 
-        assert {:error, ":subject parameter is missing"} ==
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   to: nil,
-                   random_param: nil
-                 )
+    test "returns {:error, message} when required params are not present" do
+      assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
+               MailNotifier.validate_config(random_param: nil)
+
+      assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
+               MailNotifier.validate_config(mailer: nil, random_param: nil)
+
+      assert {:error, "The following parameters are missing: [:to, :subject]"} ==
+               MailNotifier.validate_config(
+                 mailer: nil,
+                 from: nil,
+                 random_param: nil
+               )
+
+      assert {:error, ":subject parameter is missing"} ==
+               MailNotifier.validate_config(
+                 mailer: nil,
+                 from: nil,
+                 to: nil,
+                 random_param: nil
+               )
+    end
+
+    test "returns {:error, message} when option value is incorrect type", %{options: opts} do
+      bad_addresses = [nil, 1, :"my@mail.com", {nil, nil}, {nil}]
+
+      bad_option_values = %{
+        from: bad_addresses,
+        # :to can be a list of addresses or one
+        to: List.flatten(for addr <- bad_addresses, do: [addr, [addr, addr]]),
+        subject: [nil, 1],
+        mailer: [nil, :"Elixir.BoomNotifier.MailerNotifier.BadModule"],
+        max_subject_length: [nil, -1, "19"]
+      }
+
+      for {key, bad_values} <- bad_option_values, val <- bad_values do
+        # Options with bad value should return {:error, message}.
+        # For nicer errors we will call match? directly and generate a more
+        # descriptive assertion message. We wont match {:error, message} on
+        # the first call, even though we do later to check the message value
+        # because the failure ":ok did not match right side" is unhelpful when
+        # debugging tests.
+
+        result = MailNotifier.validate_config(Keyword.put(opts, key, val))
+
+        assert(
+          match?({:error, _message}, result),
+          "expected #{key}: #{inspect(val)} to return {:error, message}"
+        )
+
+        {:error, message} = result
+        assert String.starts_with?(message, ":#{key}")
       end
+    end
 
-      test "validates returns {:error, message} when param values are incorrect types" do
-        assert {:error, ":max_subject_length must be non-negative integer" <> _} =
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   to: nil,
-                   subject: "boom mail",
-                   max_subject_length: "not a number"
-                 )
+    test ":from option can accept an address or {name, address}", %{options: opts} do
+      assert :ok = MailNotifier.validate_config(Keyword.put(opts, :from, "boom@mail"))
+      assert :ok = MailNotifier.validate_config(Keyword.put(opts, :from, {"Boom", "boom@mail"}))
+    end
 
-        assert {:error, ":max_subject_length must be non-negative integer" <> _} =
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   to: nil,
-                   subject: "boom mail",
-                   max_subject_length: -1
-                 )
-      end
+    test ":to option can accept an address or {name, address}, or list", %{options: opts} do
+      assert :ok = MailNotifier.validate_config(Keyword.put(opts, :to, "esme@mail"))
+      assert :ok = MailNotifier.validate_config(Keyword.put(opts, :to, {"Esme", "esme@mail"}))
+
+      assert :ok =
+               MailNotifier.validate_config(Keyword.put(opts, :to, ["esme@mail", "obeto@mail"]))
+
+      assert :ok =
+               MailNotifier.validate_config(
+                 Keyword.put(opts, :to, [{"Esmerelda", "esme@mail"}, "obeto@mail"])
+               )
     end
   end
 end

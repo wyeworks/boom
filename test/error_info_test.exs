@@ -38,7 +38,7 @@ defmodule ErrorInfoTest do
       options: [
         mailer: Support.BambooFakeMailer,
         from: "me@example.com",
-        to: self(),
+        to: inspect(self()),
         subject: "BOOM error caught"
       ]
 
