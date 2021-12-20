@@ -65,6 +65,10 @@ defmodule BoomNotifier.MailNotifier do
     end
   end
 
+  #
+  # :to option
+  #
+
   defp validate_config_values([{:to, val} | rest]) when is_list(val) do
     # to: can be a single address or a list of addresses
     case Enum.all?(val, &valid_address?/1) do
@@ -77,23 +81,19 @@ defmodule BoomNotifier.MailNotifier do
     end
   end
 
-  #
-  # :to option
-  #
-
   defp validate_config_values([{:to, val} | rest]) do
-    # delegate to to-is-list check
+    # delegate to ":to as list" check
     validate_config_values([{:to, [val]} | rest])
-  end
-
-  defp validate_config_values([{:subject, val} | rest])
-       when is_binary(val) do
-    validate_config_values(rest)
   end
 
   #
   # :subject option
   #
+
+  defp validate_config_values([{:subject, val} | rest])
+       when is_binary(val) do
+    validate_config_values(rest)
+  end
 
   defp validate_config_values([{:subject, val} | _rest]) do
     {:error, ":subject must be a string, got #{inspect(val)}"}
