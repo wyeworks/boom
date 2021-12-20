@@ -53,7 +53,7 @@ defmodule MailerNotifierTest do
   for {name, mail_notifier_module} <- notifiers do
     describe name do
       # Disable "redefining module" warnings, we have intent.
-      Code.put_compiler_option(:ignore_module_conflict, true)
+      :elixir_config.put(:ignore_module_conflict, true)
 
       defmodule TestRouter do
         use Phoenix.Router
@@ -108,7 +108,7 @@ defmodule MailerNotifierTest do
       end
 
       # Finished with any intentional redefinition.
-      Code.put_compiler_option(:ignore_module_conflict, false)
+      :elixir_config.put(:ignore_module_conflict, false)
 
       setup do
         Logger.metadata(name: "Dennis", age: 17)
