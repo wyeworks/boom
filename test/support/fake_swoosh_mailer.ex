@@ -20,7 +20,11 @@ defmodule Support.SwooshFakeMailer do
     # as is the case in our tests, so extract just the address sections.
     # Note: tests only currently support one recipient.
 
-    %{to: [{_name, "#PID" <> pid_string}], from: {_, from_addr}} = email
+    # this crashes OTP 21, specifically getting the from_addr via tuple match,
+    # so get from_addr via elem/2 separately...
+    # %{to: [{_name, "#PID" <> pid_string}], from: {_, from}} = email
+    %{to: [{_name, "#PID" <> pid_string}], from: from} = email
+    from_addr = elem(from, 1)
 
     # Since to addresses must be of the correct type, we send the PID through
     # as a string. Convert it back into a true pid() for mailbox delivery.
