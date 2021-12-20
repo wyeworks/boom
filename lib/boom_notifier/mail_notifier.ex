@@ -43,7 +43,7 @@ defmodule BoomNotifier.MailNotifier do
   end
 
   @impl BoomNotifier.Notifier
-  @spec notify(list(%ErrorInfo{}), options) :: no_return()
+  @spec notify(list(ErrorInfo.t()), options) :: no_return()
   def notify(error_info, options) do
     max_subject_length = options[:max_subject_length] || 80
 

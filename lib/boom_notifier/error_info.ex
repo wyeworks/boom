@@ -9,6 +9,8 @@ defmodule ErrorInfo do
   @enforce_keys [:reason, :stack, :timestamp]
   defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :metadata]
 
+  @type t :: %ErrorInfo{}
+
   @type option ::
           :logger
           | [logger: [fields: list(atom())]]
@@ -24,7 +26,7 @@ defmodule ErrorInfo do
           },
           map(),
           custom_data_strategy_type
-        ) :: {atom(), %ErrorInfo{}}
+        ) :: {atom(), ErrorInfo.t()}
   def build(%{reason: reason, stack: stack} = error, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
