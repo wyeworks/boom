@@ -324,29 +324,6 @@ defmodule MailerNotifierTest do
         end
       end
 
-      test "validates return {:error, message} when required params are not present" do
-        assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
-                 Bamboo.validate_config(random_param: nil)
-
-        assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
-                 Bamboo.validate_config(mailer: nil, random_param: nil)
-
-        assert {:error, "The following parameters are missing: [:to, :subject]"} ==
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   random_param: nil
-                 )
-
-        assert {:error, ":subject parameter is missing"} ==
-                 Bamboo.validate_config(
-                   mailer: nil,
-                   from: nil,
-                   to: nil,
-                   random_param: nil
-                 )
-      end
-
       test "Custom data appears in email text body" do
         conn = conn(:get, "/")
         catch_error(TestRouter.call(conn, []))
@@ -385,6 +362,49 @@ defmodule MailerNotifierTest do
                      "<li>name: Dennis </li>"
                    ] = custom_data_info
         end
+      end
+
+      test "validates return {:error, message} when required params are not present" do
+        assert {:error, "The following parameters are missing: [:mailer, :from, :to, :subject]"} ==
+                 Bamboo.validate_config(random_param: nil)
+
+        assert {:error, "The following parameters are missing: [:from, :to, :subject]"} ==
+                 Bamboo.validate_config(mailer: nil, random_param: nil)
+
+        assert {:error, "The following parameters are missing: [:to, :subject]"} ==
+                 Bamboo.validate_config(
+                   mailer: nil,
+                   from: nil,
+                   random_param: nil
+                 )
+
+        assert {:error, ":subject parameter is missing"} ==
+                 Bamboo.validate_config(
+                   mailer: nil,
+                   from: nil,
+                   to: nil,
+                   random_param: nil
+                 )
+      end
+
+      test "validates returns {:error, message} when param values are incorrect types" do
+        assert {:error, ":max_subject_length must be non-negative integer" <> _} =
+                 Bamboo.validate_config(
+                   mailer: nil,
+                   from: nil,
+                   to: nil,
+                   subject: nil,
+                   max_subject_length: "not a number"
+                 )
+
+        assert {:error, ":max_subject_length must be non-negative integer" <> _} =
+                 Bamboo.validate_config(
+                   mailer: nil,
+                   from: nil,
+                   to: nil,
+                   subject: nil,
+                   max_subject_length: -1
+                 )
       end
     end
   end
