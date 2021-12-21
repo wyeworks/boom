@@ -55,7 +55,7 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-      notifier: BoomNotifier.MailNotifier,
+      notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
         mailer: YourApp.Mailer,
         from: "me@example.com",

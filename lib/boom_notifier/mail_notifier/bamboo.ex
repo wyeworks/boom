@@ -1,4 +1,4 @@
-defmodule BoomNotifier.MailNotifier do
+defmodule BoomNotifier.MailNotifier.Bamboo do
   @moduledoc """
   Send exception notification by email using `Bamboo`.
 
@@ -8,7 +8,7 @@ defmodule BoomNotifier.MailNotifier do
   use Phoenix.Router
 
   use BoomNotifier,
-      notifier: BoomNotifier.MailNotifier,
+      notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
         mailer: YourApp.Mailer,
         from: "me@example.com",
