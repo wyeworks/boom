@@ -136,7 +136,9 @@
           </td>
         </tr>
       <% end %>
-      <hr />
+      <tr class="padded">
+        <td><hr class="separator" /></td>
+      </tr>
     <% end %>
   </table>
 </div>
