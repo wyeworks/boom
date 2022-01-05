@@ -132,30 +132,31 @@ defmodule MailerNotifierTest do
       assert_receive({:email_to, ^email_to}, @receive_timeout)
     end
 
-    test "Exception summary is the first part of email text body" do
+    test "Exception summary is included in the email's text body" do
       conn = conn(:get, "/")
       catch_error(TestRouter.call(conn, []))
 
       assert_receive(
-        {:email_text_body,
-         [
-           "TestException occurred while the request was processed by TestController#index"
-           | _
-         ]},
+        {:email_text_body, text_body},
         @receive_timeout
       )
+
+      assert "TestException occurred while the request was processed by TestController#index" in text_body
     end
 
-    test "Exception summary is the first part of email HTML body" do
+    test "Exception summary is included in the email's HTML body" do
       conn = conn(:get, "/")
       catch_error(TestRouter.call(conn, []))
 
       assert_receive(
-        {:email_html_body,
-         "\n  <p>TestException occurred while the request was processed by TestController#index</p>" <>
-           _},
+        {:email_html_body, html_body},
         @receive_timeout
       )
+
+      assert String.contains?(
+               html_body,
+               "TestException occurred while the request was processed by TestController#index"
+             )
     end
 
     test "Request information is part of the email text body" do
@@ -189,16 +190,17 @@ defmodule MailerNotifierTest do
             Regex.scan(~r/<li>(.)+?<\/li>/, body)
             |> Enum.map(&Enum.at(&1, 0))
             |> Enum.take(8)
+            |> Enum.map(&remove_markup/1)
 
           assert [
-                   "<li>Request Information:</li>",
-                   "<li>URL: http://www.example.com/</li>",
-                   "<li>Path: /</li>",
-                   "<li>Method: GET</li>",
-                   "<li>Port: 80</li>",
-                   "<li>Scheme: http</li>",
-                   "<li>Query String: </li>",
-                   "<li>Client IP: 127.0.0.1</li>"
+                   "URL: http://www.example.com/",
+                   "Path: /",
+                   "Method: GET",
+                   "Port: 80",
+                   "Scheme: http",
+                   "Query String: ",
+                   "Client IP: 127.0.0.1",
+                   "Occurred on: " <> _timestamp
                  ] = request_info_lines
       end
     end
@@ -225,7 +227,7 @@ defmodule MailerNotifierTest do
 
       receive do
         {:email_html_body, body} ->
-          assert String.contains?(body, "Reason: <br />\n      #{String.duplicate("a", 300)}")
+          assert String.contains?(body, ["Reason:", String.duplicate("a", 300)])
       end
     end
 
@@ -251,7 +253,7 @@ defmodule MailerNotifierTest do
         {:email_html_body, body} ->
           [stacktrace_list | _] =
             Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
-            |> Enum.at(4)
+            |> Enum.at(3)
 
           [first_stack_line | stacktrace_list] =
             Regex.scan(~r/<li>(.)+?<\/li>/s, stacktrace_list)
@@ -287,13 +289,15 @@ defmodule MailerNotifierTest do
         {:email_html_body, body} ->
           [timestamp_list | _] =
             Regex.scan(~r/<ul.+?>(.)+?<\/ul>/s, body)
-            |> Enum.at(1)
+            |> Enum.at(0)
 
-          [timestamp_line | _] =
-            Regex.scan(~r/<li>(.)+?<\/li>/s, timestamp_list)
-            |> Enum.map(&Enum.at(&1, 0))
+          [timestamp_line] =
+            Regex.scan(~r/<li>.+?<\/li>/s, timestamp_list)
+            |> List.last()
 
-          assert timestamp_line =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
+          clean_timestamp = remove_markup(timestamp_line)
+
+          assert clean_timestamp =~ ~r/Occurred on: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
       end
     end
 
@@ -347,9 +351,9 @@ defmodule MailerNotifierTest do
       receive do
         {:email_html_body, body} ->
           custom_data_info =
-            Regex.scan(~r/<li>(.)+?<\/li>/, body)
+            Regex.scan(~r/<li>.+?<\/li>/, body)
             |> Enum.map(&Enum.at(&1, 0))
-            |> Enum.slice(9..12)
+            |> Enum.slice(8..11)
 
           assert [
                    "<li>age: 32 </li>",
@@ -358,6 +362,10 @@ defmodule MailerNotifierTest do
                    "<li>name: Dennis </li>"
                  ] = custom_data_info
       end
+    end
+
+    def remove_markup(string) do
+      String.replace(string, ~r/<.+>/U, "")
     end
   end
 end
