@@ -93,6 +93,31 @@ defmodule YourApp.Router do
     ...
 ```
 
+## Manually notify of exception
+
+If your controller action manually handles an error, the notifier will never be run.
+
+To manually notify of an error you can use `BoomNotifier` in your controller and call the `manual_notify_error/2` callback:
+
+```elixir
+defmodule MyController do
+  use BoomNotifier
+
+  def some_action(conn, _params) do
+    try do
+      # ...
+    rescue
+      error ->
+        # ...
+        manual_notify_error(conn, error)
+        # ...
+    end
+  end
+
+  ,
+    ...
+```
+
 ## Custom notifiers
 
 To create a custom notifier, you need to implement the `BoomNotifier.Notifier` behaviour:

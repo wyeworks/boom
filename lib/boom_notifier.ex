@@ -55,8 +55,9 @@ defmodule BoomNotifier do
       import BoomNotifier
 
       error_handler_in_use = {:handle_errors, 2} in Module.definitions_in(__MODULE__)
+      is_router = __MODULE__ |> to_string() |> String.split(".") |> List.last() == "Router"
 
-      unless error_handler_in_use do
+      if is_router and not error_handler_in_use do
         use Plug.ErrorHandler
 
         @impl Plug.ErrorHandler
@@ -76,6 +77,20 @@ defmodule BoomNotifier do
 
       def notify_error(conn, error) do
         do_notify_error(conn, error)
+      end
+
+      def manual_notify_error(conn, error) do
+        {_error_kind, error_info} =
+          ErrorInfo.build(%{kind: :error, reason: error, stack: []}, conn, Config.custom_data())
+
+        # Triggers the notification in each notifier
+        walkthrough_notifiers(fn notifier, options ->
+          NotifierSenderServer.send(
+            notifier,
+            [error_info],
+            options
+          )
+        end)
       end
 
       defp do_notify_error(conn, error) do
