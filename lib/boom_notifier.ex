@@ -4,6 +4,7 @@ defmodule BoomNotifier do
   # Responsible for sending a notification to each notifier every time an
   # exception is raised.
 
+  alias BoomNotifier.Config
   alias BoomNotifier.ErrorStorage
   alias BoomNotifier.NotifierSenderServer
   require Logger
@@ -25,10 +26,10 @@ defmodule BoomNotifier do
     end
   end
 
-  def walkthrough_notifiers(settings, callback) do
-    case Keyword.get(settings, :notifiers) do
-      nil ->
-        run_callback(settings, callback)
+  def walkthrough_notifiers(callback) do
+    case Config.notifiers() do
+      [] ->
+        run_callback(Config.single_notifier_config(), callback)
 
       notifiers_settings when is_list(notifiers_settings) ->
         Enum.each(notifiers_settings, &run_callback(&1, callback))
@@ -49,7 +50,7 @@ defmodule BoomNotifier do
     end
   end
 
-  defmacro __using__(config) do
+  defmacro __using__(_config) do
     quote location: :keep do
       import BoomNotifier
 
@@ -65,27 +66,20 @@ defmodule BoomNotifier do
       end
 
       # Notifiers validation
-      walkthrough_notifiers(
-        unquote(config),
-        fn notifier, options -> validate_notifiers(notifier, options) end
-      )
+      walkthrough_notifiers(fn notifier, options -> validate_notifiers(notifier, options) end)
 
       def notify_error(conn, %{kind: :error, reason: %mod{}} = error) do
-        settings = unquote(config)
-        {ignored_exceptions, _settings} = Keyword.pop(settings, :ignore_exceptions, [])
-
-        unless Enum.member?(ignored_exceptions, mod) do
-          do_notify_error(conn, settings, error)
+        unless Enum.member?(Config.ignore_exceptions(), mod) do
+          do_notify_error(conn, error)
         end
       end
 
       def notify_error(conn, error) do
-        do_notify_error(conn, unquote(config), error)
+        do_notify_error(conn, error)
       end
 
-      defp do_notify_error(conn, settings, error) do
-        {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
-        {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
+      defp do_notify_error(conn, error) do
+        {error_kind, error_info} = ErrorInfo.build(error, conn, Config.custom_data())
 
         ErrorStorage.add_errors(error_kind, error_info)
 
@@ -93,12 +87,11 @@ defmodule BoomNotifier do
           occurrences = ErrorStorage.get_errors(error_kind)
 
           # Triggers the notification in each notifier
-          walkthrough_notifiers(settings, fn notifier, options ->
+          walkthrough_notifiers(fn notifier, options ->
             NotifierSenderServer.send(notifier, occurrences, options)
           end)
 
-          {notification_trigger, _settings} =
-            Keyword.pop(settings, :notification_trigger, :always)
+          notification_trigger = Config.notification_trigger()
 
           ErrorStorage.clear_errors(notification_trigger, error_kind)
         end
