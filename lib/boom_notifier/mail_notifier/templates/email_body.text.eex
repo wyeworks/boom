@@ -11,14 +11,14 @@
       Scheme: <%= error.request.scheme %>
       Query String: <%= error.request.query_string %>
       Client IP: <%= error.request.client_ip %>
+      Occurred on: <%= error.timestamp %>
   <% end %>
-  Occurred on: <%= error.timestamp %>
   <%= if error.metadata do %>
     Metadata:
     <%= for {source, fields} <- error.metadata do %>
-      <%= source %>: 
+      <%= source %>:
         <%= for {k, v} <- fields do %>
-          <%= k %>: <%= v %> 
+          <%= k %>: <%= v %>
         <% end %>
     <% end %>
   <% end %>
