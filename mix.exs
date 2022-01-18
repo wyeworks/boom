@@ -12,7 +12,9 @@ defmodule BoomNotifier.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: [
-        plt_add_apps: [:eex],
+        # include swoosh and bamboo here as they are optional deps
+        # and will be missed in plt generation otherwise.
+        plt_add_apps: [:eex, :swoosh, :bamboo],
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
