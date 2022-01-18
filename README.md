@@ -50,12 +50,16 @@ Optionally, you could also add `headers` to the request as another keyword list.
 
 ### Email notifier
 
+BoomNotifier has built in support for both [Bamboo](https://github.com/thoughtbot/bamboo) and [Swoosh](https://github.com/swoosh/swoosh).
+
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
       notifier: BoomNotifier.MailNotifier.Bamboo,
+      # or to use Swoosh
+      # notifier: BoomNotifier.MailNotifier.Swoosh,
       options: [
         mailer: YourApp.Mailer,
         from: "me@example.com",

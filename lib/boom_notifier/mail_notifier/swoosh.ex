@@ -1,7 +1,7 @@
-if Code.ensure_loaded?(Bamboo) do
-  defmodule BoomNotifier.MailNotifier.Bamboo do
+if Code.ensure_loaded?(Swoosh) do
+  defmodule BoomNotifier.MailNotifier.Swoosh do
     @moduledoc """
-    Send exception notification by email using `Bamboo`.
+    Send exception notification by email using `Swoosh`.
 
     ## Usage
     ```elixir
@@ -9,7 +9,7 @@ if Code.ensure_loaded?(Bamboo) do
     use Phoenix.Router
 
     use BoomNotifier,
-        notifier: BoomNotifier.MailNotifier.Bamboo,
+        notifier: BoomNotifier.MailNotifier.Swoosh,
         options: [
           mailer: YourApp.Mailer,
           from: "me@example.com",
@@ -23,7 +23,7 @@ if Code.ensure_loaded?(Bamboo) do
 
     @behaviour BoomNotifier.Notifier
 
-    import Bamboo.Email
+    import Swoosh.Email
 
     alias BoomNotifier.MailNotifier
     alias BoomNotifier.MailNotifier.HTMLContent
@@ -39,6 +39,11 @@ if Code.ensure_loaded?(Bamboo) do
     @impl BoomNotifier.Notifier
     @spec notify(list(%ErrorInfo{}), options) :: no_return()
     def notify(error_info, options) do
+      # Note, unlike Bamboo, Swoosh will raise while creating the mail if it is
+      # invalid (has a bad recipient, etc).
+      # To consumers of this function, the behaviour is identical to Bamboo's
+      # `deliver_later!` because we dispatch the mail in a task.
+
       subject =
         MailNotifier.build_subject(
           options[:subject],
@@ -47,14 +52,21 @@ if Code.ensure_loaded?(Bamboo) do
         )
 
       email =
-        new_email()
+        new()
         |> to(options[:to])
         |> from(options[:from])
         |> subject(subject)
         |> html_body(HTMLContent.build(error_info))
         |> text_body(TextContent.build(error_info))
 
-      options[:mailer].deliver_later!(email)
+      # Swoosh does not provide async send, but it recommends using Elixir tasks.
+      # This is actually identical to Bamboo, Bamboo just wraps the boiler plate.
+      Task.start(fn ->
+        options[:mailer].deliver!(email)
+      end)
+
+      # return email to mirror bamboo deliver_later!
+      email
     end
   end
 end
