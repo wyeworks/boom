@@ -5,8 +5,11 @@
 ### Additions
 
 *  Add Swoosh support for email notifications ([#74])
-*  Facelift html emails ([#75])
 *  Provide callback when ErrorHandler is already in use ([#69])
+
+### Fixes/Enhancements
+
+*  Facelift html emails ([#75])
 
 ### Breaking changes
 * Now you should set the email delivery library you want to use in the
