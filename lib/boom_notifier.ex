@@ -20,7 +20,7 @@ defmodule BoomNotifier do
 
       _ ->
         Logger.error(
-          "Boom Notifier Router error: The following parameters are missing: #{inspect(missing_keys)}"
+          "(BoomNotifier) The following parameters are missing: #{inspect(missing_keys)}"
         )
     end
   end
