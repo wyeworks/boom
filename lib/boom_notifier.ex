@@ -16,7 +16,7 @@ defmodule BoomNotifier do
         callback.(settings[:notifier], settings[:options])
 
       [missing_key] ->
-        Logger.error("Boom Notifier Router error: #{inspect(missing_key)} parameter missing")
+        Logger.error("(BoomNotifier) #{inspect(missing_key)} parameter is missing")
 
       _ ->
         Logger.error(
