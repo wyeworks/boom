@@ -5,7 +5,8 @@ import Config
 config :example_app, ExampleAppWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "yhLrVTlGNoZH8MpSvKBt1Y51HeCijQzdo3UhVOv6w+RZSjDU2WXqvXX5l3FntgtM",
-  server: true
+  server: true,
+  debug_errors: true
 
 # Print only warnings and errors during test
 config :logger, level: :warn
