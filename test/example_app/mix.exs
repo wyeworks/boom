@@ -45,7 +45,8 @@ defmodule ExampleApp.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:wallaby, "~> 0.29.1", only: :test}
+      {:wallaby, "~> 0.29.1", only: :test},
+      {:boom_notifier, path: "../../."}
     ]
   end
 

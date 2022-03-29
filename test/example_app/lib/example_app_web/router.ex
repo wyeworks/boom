@@ -1,6 +1,15 @@
 defmodule ExampleAppWeb.Router do
   use ExampleAppWeb, :router
 
+  use BoomNotifier,
+    notifier: BoomNotifier.MailNotifier.Swoosh,
+    options: [
+      mailer: ExampleApp.Mailer,
+      from: "me@example.com",
+      to: "foo@example.com",
+      subject: "BOOM error caught"
+    ]
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -20,20 +29,10 @@ defmodule ExampleAppWeb.Router do
     get "/", PageController, :index
   end
 
+  forward "/mailbox", Plug.Swoosh.MailboxPreview
+
   # Other scopes may use custom stacks.
   # scope "/api", ExampleAppWeb do
   #   pipe_through :api
   # end
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
-    scope "/dev" do
-      pipe_through :browser
-
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
-  end
 end
