@@ -9,7 +9,7 @@ config :example_app, ExampleAppWeb.Endpoint,
   debug_errors: true
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, backends: []
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
