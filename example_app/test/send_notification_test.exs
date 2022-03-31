@@ -5,12 +5,16 @@ defmodule ExampleAppWeb.SendNotificationTest do
   feature "Sends notification on error", %{session: session} do
     # raise the exception
     session
-    |> visit("/")
+    |> visit("raise-exception")
+    |> visit("ignore-exception")
+
+    # we expect only one email since the one from the second route it's ignored
+    expected_emails = 1
 
     session
     |> visit("/mailbox")
     |> find(Query.css(".list-group"))
-    |> find(Query.css(".list-group-item", count: 1), fn item ->
+    |> find(Query.css(".list-group-item", count: expected_emails), fn item ->
       link = Wallaby.Element.attr(item, "href")
 
       # click on the email to see its info
@@ -72,7 +76,7 @@ defmodule ExampleAppWeb.SendNotificationTest do
             %{expected_notifications: 8, expected_emails: 5}
           ] do
       session
-      |> visit("/")
+      |> visit("/raise-exception")
 
       items =
         session
