@@ -3,6 +3,7 @@ defmodule ExampleAppWeb.Router do
 
   use BoomNotifier,
     notifier: BoomNotifier.MailNotifier.Swoosh,
+    notification_trigger: [exponential: [limit: 8]],
     options: [
       mailer: ExampleApp.Mailer,
       from: "me@example.com",
