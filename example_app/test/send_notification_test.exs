@@ -24,10 +24,24 @@ defmodule ExampleAppWeb.SendNotificationTest do
       |> assert_text("me@example.com")
 
       # check email content
-      session
-      |> find(Query.css(".body"))
-      |> assert_text(
+      email_body =
+        session
+        |> find(Query.css(".body-text"))
+
+      assert_text(
+        email_body,
         "RuntimeError occurred while the request was processed by PageController#index"
+      )
+
+      # includes metadata
+      assert_text(
+        email_body,
+        "assign_metadata: test_assign_metadata"
+      )
+
+      assert_text(
+        email_body,
+        "logger_metadata: test_assign_metadata"
       )
     end)
 

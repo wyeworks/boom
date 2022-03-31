@@ -4,6 +4,7 @@ defmodule ExampleAppWeb.Router do
   use BoomNotifier,
     notifier: BoomNotifier.MailNotifier.Swoosh,
     notification_trigger: [exponential: [limit: 8]],
+    custom_data: [:assigns, :logger],
     options: [
       mailer: ExampleApp.Mailer,
       from: "me@example.com",
@@ -18,6 +19,12 @@ defmodule ExampleAppWeb.Router do
     plug :put_root_layout, {ExampleAppWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :save_custom_data
+  end
+
+  def save_custom_data(conn, _) do
+    Logger.metadata(logger_metadata: "test_assign_metadata")
+    assign(conn, :assign_metadata, "test_assign_metadata")
   end
 
   pipeline :api do
@@ -31,9 +38,4 @@ defmodule ExampleAppWeb.Router do
   end
 
   forward "/mailbox", Plug.Swoosh.MailboxPreview
-
-  # Other scopes may use custom stacks.
-  # scope "/api", ExampleAppWeb do
-  #   pipe_through :api
-  # end
 end
