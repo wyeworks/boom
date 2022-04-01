@@ -93,12 +93,6 @@ jobs:
         mix dialyzer --plt
       if: ${{ matrix.lint }}
 
-    - name: Install example app dependencies
-      run: |
-        cd example_app
-        mix deps.get
-      if: ${{ matrix.lint }}
-
     - name: Check quality
       run: |
         mix format --check-formatted
@@ -109,3 +103,7 @@ jobs:
 
     - name: Run tests
       run: mix test
+
+    - name: Run e2e test
+      run: mix e2e
+      if: ${{ matrix.lint }}

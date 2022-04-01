@@ -19,7 +19,7 @@ defmodule BoomNotifier.MixProject do
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
       aliases: [
-        quality: ["format", "credo --strict", "dialyzer", "e2e"],
+        quality: ["format", "credo --strict", "dialyzer"],
         e2e: ["cmd mix end_to_end_test"]
       ],
       docs: docs(),
