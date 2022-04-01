@@ -5,7 +5,7 @@ defmodule ExampleAppWeb.Router do
     notifier: BoomNotifier.MailNotifier.Swoosh,
     notification_trigger: [exponential: [limit: 8]],
     custom_data: [:assigns, :logger],
-    ignore_exceptions: [ArithmeticError],
+    ignore_exceptions: [IgnoreExceptionError],
     options: [
       mailer: ExampleApp.Mailer,
       from: "me@example.com",
@@ -36,6 +36,7 @@ defmodule ExampleAppWeb.Router do
     pipe_through :browser
 
     get "/raise-exception", PageController, :index
+    get "/group-exception", PageController, :group_exception
     get "/ignore-exception", PageController, :ignore_exception
   end
 

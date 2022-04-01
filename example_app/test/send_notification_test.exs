@@ -2,32 +2,29 @@ defmodule ExampleAppWeb.SendNotificationTest do
   use ExUnit.Case, async: true
   use Wallaby.Feature
 
+  def select_email(session, item), do: visit(session, Wallaby.Element.attr(item, "href"))
+
+  def clear_message_queue(session),
+    do: click(session, Query.button("Delete Message Queue"))
+
   feature "Sends notification on error", %{session: session} do
-    # raise the exception
     session
     |> visit("raise-exception")
-    |> visit("ignore-exception")
-
-    # we expect only one email since the one from the second route it's ignored
-    expected_emails = 1
+    |> assert_text("RuntimeError at GET /raise-exception")
 
     session
     |> visit("/mailbox")
     |> find(Query.css(".list-group"))
-    |> find(Query.css(".list-group-item", count: expected_emails), fn item ->
-      link = Wallaby.Element.attr(item, "href")
+    |> find(Query.css(".list-group-item", count: 1), fn item ->
+      select_email(session, item)
 
-      # click on the email to see its info
-      session
-      |> visit(link)
-
-      # check email metadata
+      # checks email info
       session
       |> find(Query.css(".header-content"))
       |> assert_text("BOOM error caught: Boom")
       |> assert_text("me@example.com")
 
-      # check email content
+      # checks email content
       email_body =
         session
         |> find(Query.css(".body-text"))
@@ -49,9 +46,13 @@ defmodule ExampleAppWeb.SendNotificationTest do
       )
     end)
 
-    # check notifications are being grouped
+    clear_message_queue(session)
+  end
+
+  feature "Sends notification in groups", %{session: session} do
     for %{expected_notifications: expected_notifications, expected_emails: expected_emails} <-
           [
+            %{expected_notifications: 1, expected_emails: 1},
             %{expected_notifications: 1, expected_emails: 1},
             %{expected_notifications: 2, expected_emails: 2},
             %{expected_notifications: 2, expected_emails: 2},
@@ -76,7 +77,8 @@ defmodule ExampleAppWeb.SendNotificationTest do
             %{expected_notifications: 8, expected_emails: 5}
           ] do
       session
-      |> visit("/raise-exception")
+      |> visit("/group-exception")
+      |> assert_text("GroupExceptionError at GET /group-exception")
 
       items =
         session
@@ -85,12 +87,8 @@ defmodule ExampleAppWeb.SendNotificationTest do
         |> find(Query.css(".list-group-item", count: expected_emails))
 
       item = if expected_emails == 1, do: items, else: List.first(items)
-      link = Wallaby.Element.attr(item, "href")
 
-      # click on the email to see its info
-      email_page =
-        session
-        |> visit(link)
+      email_page = select_email(session, item)
 
       email_body_sections =
         text(email_page, Query.css(".body-text"))
@@ -98,5 +96,18 @@ defmodule ExampleAppWeb.SendNotificationTest do
 
       assert(length(email_body_sections) - 1 == expected_notifications)
     end
+
+    clear_message_queue(session)
+  end
+
+  feature "Ignores certain errors", %{session: session} do
+    session
+    |> visit("ignore-exception")
+    |> assert_text("IgnoreExceptionError at GET /ignore-exception")
+
+    session
+    |> visit("/mailbox")
+    |> find(Query.css(".list-group"))
+    |> assert_text("Empty mailbox...")
   end
 end
