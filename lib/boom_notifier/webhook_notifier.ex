@@ -35,7 +35,7 @@ defmodule BoomNotifier.WebhookNotifier do
   end
 
   @impl BoomNotifier.Notifier
-  @spec notify(list(%ErrorInfo{}), options) :: no_return()
+  @spec notify(list(ErrorInfo.t()), options) :: no_return()
   def notify(errors_info, options) do
     payload =
       errors_info

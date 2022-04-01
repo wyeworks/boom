@@ -6,16 +6,15 @@ defmodule BoomNotifier.MailNotifier do
   """
   @spec validate_config(keyword(String.t())) :: :ok | {:error, String.t()}
   def validate_config(options) do
-    with :ok <- validate_required_config_keys(options),
-         :ok <- validate_config_values(options) do
-      :ok
+    with :ok <- validate_required_config_keys(options) do
+      validate_config_values(options)
     end
   end
 
   @doc """
   Creates mail subject line from a subject prefix and error reason message.
   """
-  @spec build_subject(String.t(), list(%ErrorInfo{}), non_neg_integer()) :: String.t()
+  @spec build_subject(String.t(), list(ErrorInfo.t()), non_neg_integer()) :: String.t()
   def build_subject(prefix, [%ErrorInfo{reason: reason} | _], max_length) do
     String.slice("#{prefix}: #{reason}", 0..(max_length - 1))
   end
