@@ -37,7 +37,7 @@ if Code.ensure_loaded?(Bamboo) do
     defdelegate validate_config(options), to: MailNotifier
 
     @impl BoomNotifier.Notifier
-    @spec notify(list(%ErrorInfo{}), options) :: no_return()
+    @spec notify(list(ErrorInfo.t()), options) :: no_return()
     def notify(error_info, options) do
       subject =
         MailNotifier.build_subject(

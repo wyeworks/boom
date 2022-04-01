@@ -11,7 +11,7 @@ defmodule BoomNotifier.ErrorStorage do
     Agent.start_link(fn -> %{} end, name: :boom_notifier)
   end
 
-  @spec add_errors(atom(), %ErrorInfo{}) :: :ok
+  @spec add_errors(atom(), ErrorInfo.t()) :: :ok
   def add_errors(error_kind, error_info) do
     Agent.update(
       :boom_notifier,
@@ -21,7 +21,7 @@ defmodule BoomNotifier.ErrorStorage do
     )
   end
 
-  @spec get_errors(atom()) :: list(%ErrorInfo{})
+  @spec get_errors(atom()) :: list(ErrorInfo.t())
   def get_errors(error_kind) do
     Agent.get(:boom_notifier, fn state -> state end)
     |> Map.get(error_kind)
