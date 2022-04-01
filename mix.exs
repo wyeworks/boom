@@ -6,13 +6,15 @@ defmodule BoomNotifier.MixProject do
   def project do
     [
       app: :boom_notifier,
-      version: "0.6.0",
+      version: "0.7.0",
       elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: [
-        plt_add_apps: [:eex],
+        # include swoosh and bamboo here as they are optional deps
+        # and will be missed in plt generation otherwise.
+        plt_add_apps: [:eex, :swoosh, :bamboo],
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
@@ -58,10 +60,13 @@ defmodule BoomNotifier.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:bamboo, "~> 2.0"},
       {:httpoison, "~> 1.5"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 1.0 or ~> 2.0"},
+
+      # Delivery service is an end-user choice
+      {:bamboo, "~> 2.0", optional: true},
+      {:swoosh, "~> 1.5", optional: true},
 
       # Test dependencies
       {:bypass, "~> 2.1", only: :test},

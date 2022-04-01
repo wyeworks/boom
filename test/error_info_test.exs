@@ -34,11 +34,11 @@ defmodule ErrorInfoTest do
     import Phoenix.Controller
 
     use BoomNotifier,
-      notifier: BoomNotifier.MailNotifier,
+      notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
-        mailer: Support.FakeMailer,
+        mailer: Support.BambooFakeMailer,
         from: "me@example.com",
-        to: self(),
+        to: inspect(self()),
         subject: "BOOM error caught"
       ]
 
