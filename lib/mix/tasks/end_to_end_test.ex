@@ -5,7 +5,7 @@ defmodule Mix.Tasks.EndToEndTest do
 
   @impl Mix.Task
   def run(_) do
-    exit_status = Mix.shell().cmd("cd example_app && mix test")
+    exit_status = Mix.shell().cmd("cd example_app && mix deps.get && mix test")
     exit({:shutdown, exit_status})
   end
 end
