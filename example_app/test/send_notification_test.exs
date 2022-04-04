@@ -4,13 +4,23 @@ defmodule ExampleAppWeb.SendNotificationTest do
 
   def select_email(session, item), do: visit(session, Wallaby.Element.attr(item, "href"))
 
-  def clear_message_queue(session),
-    do: click(session, Query.button("Delete Message Queue"))
+  def clear_message_queue(session) do
+    mailbox_page = visit(session, "/mailbox")
+    clear_emails_button_query = Query.button("Delete Message Queue")
+
+    if has?(mailbox_page, clear_emails_button_query),
+      do: click(mailbox_page, clear_emails_button_query)
+  end
+
+  setup %{session: session} do
+    clear_message_queue(session)
+    :ok
+  end
 
   feature "Sends notification on error", %{session: session} do
     session
     |> visit("raise-exception")
-    |> assert_text("RuntimeError at GET /raise-exception")
+    |> assert_text("CustomExceptionError at GET /raise-exception")
 
     session
     |> visit("/mailbox")
@@ -21,7 +31,7 @@ defmodule ExampleAppWeb.SendNotificationTest do
       # checks email info
       session
       |> find(Query.css(".header-content"))
-      |> assert_text("BOOM error caught: Boom")
+      |> assert_text("BOOM error caught: custom exception error")
       |> assert_text("me@example.com")
 
       # checks email content
@@ -31,7 +41,7 @@ defmodule ExampleAppWeb.SendNotificationTest do
 
       assert_text(
         email_body,
-        "RuntimeError occurred while the request was processed by PageController#index"
+        "CustomExceptionError occurred while the request was processed by PageController#index"
       )
 
       # includes metadata
@@ -45,8 +55,6 @@ defmodule ExampleAppWeb.SendNotificationTest do
         "logger_metadata: test_assign_metadata"
       )
     end)
-
-    clear_message_queue(session)
   end
 
   feature "Sends notification in groups", %{session: session} do
@@ -96,8 +104,26 @@ defmodule ExampleAppWeb.SendNotificationTest do
 
       assert(length(email_body_sections) - 1 == expected_notifications)
     end
+  end
 
-    clear_message_queue(session)
+  feature "Errors were sent to a custom notifier too", %{session: session} do
+    session
+    |> visit("custom-notifier-exception")
+
+    # exception is sent to the custom notifier
+    session
+    |> visit("/check-custom-notifier")
+    |> assert_has(
+      Query.css(".error",
+        text: "name: CustomNotifierExceptionError, reason: \"custom notifier exception error\""
+      )
+    )
+
+    # exception is sent to the mail notifier
+    session
+    |> visit("/mailbox")
+    |> find(Query.css(".list-group"))
+    |> assert_text("BOOM error caught: custom notifier exception error")
   end
 
   feature "Ignores certain errors", %{session: session} do

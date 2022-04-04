@@ -2,15 +2,23 @@ defmodule ExampleAppWeb.Router do
   use ExampleAppWeb, :router
 
   use BoomNotifier,
-    notifier: BoomNotifier.MailNotifier.Swoosh,
     notification_trigger: [exponential: [limit: 8]],
     custom_data: [:assigns, :logger],
     ignore_exceptions: [IgnoreExceptionError],
-    options: [
-      mailer: ExampleApp.Mailer,
-      from: "me@example.com",
-      to: "foo@example.com",
-      subject: "BOOM error caught"
+    notifiers: [
+      [
+        notifier: BoomNotifier.MailNotifier.Swoosh,
+        options: [
+          mailer: ExampleApp.Mailer,
+          from: "me@example.com",
+          to: "foo@example.com",
+          subject: "BOOM error caught"
+        ]
+      ],
+      [
+        notifier: ExampleApp.CustomNotifier,
+        options: nil
+      ]
     ]
 
   pipeline :browser do
@@ -38,6 +46,8 @@ defmodule ExampleAppWeb.Router do
     get "/raise-exception", PageController, :index
     get "/group-exception", PageController, :group_exception
     get "/ignore-exception", PageController, :ignore_exception
+    get "/custom-notifier-exception", PageController, :custom_notifier_exception
+    get "/check-custom-notifier", PageController, :check_custom_notifier
   end
 
   forward "/mailbox", Plug.Swoosh.MailboxPreview
