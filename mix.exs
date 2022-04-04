@@ -14,12 +14,13 @@ defmodule BoomNotifier.MixProject do
       dialyzer: [
         # include swoosh and bamboo here as they are optional deps
         # and will be missed in plt generation otherwise.
-        plt_add_apps: [:eex, :swoosh, :bamboo],
+        plt_add_apps: [:eex, :swoosh, :bamboo, :mix],
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
       aliases: [
-        quality: ["format", "credo --strict", "dialyzer"]
+        quality: ["format", "credo --strict", "dialyzer"],
+        e2e: ["cmd mix end_to_end_test"]
       ],
       docs: docs(),
       description: description(),
