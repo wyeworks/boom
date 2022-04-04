@@ -100,9 +100,9 @@ defmodule ExampleAppWeb.SendNotificationTest do
 
       email_body_sections =
         text(email_page, Query.css(".body-text"))
-        |> String.split("----------------------------------------")
+        |> String.split("----------------------------------------", trim: true)
 
-      assert(length(email_body_sections) - 1 == expected_notifications)
+      assert(length(email_body_sections) == expected_notifications)
     end
   end
 
