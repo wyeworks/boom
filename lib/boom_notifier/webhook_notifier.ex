@@ -35,11 +35,11 @@ defmodule BoomNotifier.WebhookNotifier do
   end
 
   @impl BoomNotifier.Notifier
-  @spec notify(list(ErrorInfo.t()), options) :: no_return()
-  def notify(errors_info, options) do
+  @spec notify(ErrorInfo.t(), options) :: no_return()
+  def notify(error_info, options) do
     payload =
-      errors_info
-      |> format_errors()
+      error_info
+      |> format_error()
       |> Jason.encode!()
 
     headers =
@@ -48,10 +48,6 @@ defmodule BoomNotifier.WebhookNotifier do
       |> Keyword.merge("Content-Type": "application/json")
 
     HTTPoison.post!(options[:url], payload, headers)
-  end
-
-  defp format_errors(errors) when is_list(errors) do
-    Enum.map(errors, &format_error/1)
   end
 
   defp format_error(%ErrorInfo{

@@ -71,73 +71,68 @@
         <hr class="separator" />
       </td>
     </tr>
-    <%= for error <- errors do %>
-      <tr>
-        <td class="padded">
-          <h2 class="bold margin-b-slim">Message:</h2>
-          <p class="margin-l">
-            <%= error.exception_summary %>
-          </p>
-        </td>
-      </tr>
+    <tr>
+      <td class="padded">
+        <h2 class="bold margin-b-slim">Message:</h2>
+        <p class="margin-l">
+          <%= error.exception_summary %>
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td class="padded">
+        <h2 class="bold margin-b-slim">
+          Request Information:
+        </h2>
+        <%= if error.request do %>
+          <ul class="info-list padded spaced">
+            <li><span class="underline">URL:</span> <%= error.request.url %></li>
+            <li><span class="underline">Path:</span> <%= error.request.path %></li>
+            <li><span class="underline">Method:</span> <%= error.request.method %></li>
+            <li><span class="underline">Port:</span> <%= error.request.port %></li>
+            <li><span class="underline">Scheme:</span> <%= error.request.scheme %></li>
+            <li><span class="underline">Query String:</span> <%= error.request.query_string %></li>
+            <li><span class="underline">Client IP:</span> <%= error.request.client_ip %></li>
+            <li><span class="underline">Occurred on:</span> <%= error.timestamp %></li>
+          </ul>
+        <% end %>
+      </td>
+    </tr>
+    <%= if error.metadata do %>
       <tr>
         <td class="padded">
           <h2 class="bold margin-b-slim">
-            Request Information:
+            Metadata:
           </h2>
-          <%= if error.request do %>
-            <ul class="info-list padded spaced">
-              <li><span class="underline">URL:</span> <%= error.request.url %></li>
-              <li><span class="underline">Path:</span> <%= error.request.path %></li>
-              <li><span class="underline">Method:</span> <%= error.request.method %></li>
-              <li><span class="underline">Port:</span> <%= error.request.port %></li>
-              <li><span class="underline">Scheme:</span> <%= error.request.scheme %></li>
-              <li><span class="underline">Query String:</span> <%= error.request.query_string %></li>
-              <li><span class="underline">Client IP:</span> <%= error.request.client_ip %></li>
-              <li><span class="underline">Occurred on:</span> <%= error.timestamp %></li>
-            </ul>
-          <% end %>
-        </td>
-      </tr>
-      <%= if error.metadata do %>
-        <tr>
-          <td class="padded">
-            <h2 class="bold margin-b-slim">
-              Metadata:
-            </h2>
-            <ul class="info-list padded spaced">
-              <%= for {source, fields} <- error.metadata do %>
-                <%= source %>:
-                <ul class="info-sublist">
-                  <%= for {k, v} <- fields do %>
-                    <li><%= k %>: <%= v %> </li>
-                  <% end %>
-                </ul>
-              <% end %>
-            </ul>
-          </td>
-        </tr>
-      <% end %>
-      <tr>
-        <td class="padded">
-          <h2 class="bold margin-b-slim">Stacktrace:</h2>
-          <ul class="info-sublist mono padded-slim spaced">
-            <%= for entry <- error.exception_stack_entries do %>
-              <li><%= entry %></li>
+          <ul class="info-list padded spaced">
+            <%= for {source, fields} <- error.metadata do %>
+              <%= source %>:
+              <ul class="info-sublist">
+                <%= for {k, v} <- fields do %>
+                  <li><%= k %>: <%= v %> </li>
+                <% end %>
+              </ul>
             <% end %>
           </ul>
         </td>
       </tr>
-      <%= if error.reason do %>
-        <tr>
-          <td class="padded">
-            <h2>Reason: </h2>
-            <p><%=  error.reason %></p>
-          </td>
-        </tr>
-      <% end %>
-      <tr class="padded">
-        <td><hr class="separator" /></td>
+    <% end %>
+    <tr>
+      <td class="padded">
+        <h2 class="bold margin-b-slim">Stacktrace:</h2>
+        <ul class="info-sublist mono padded-slim spaced">
+          <%= for entry <- error.exception_stack_entries do %>
+            <li><%= entry %></li>
+          <% end %>
+        </ul>
+      </td>
+    </tr>
+    <%= if error.reason do %>
+      <tr>
+        <td class="padded">
+          <h2>Reason: </h2>
+          <p><%=  error.reason %></p>
+        </td>
       </tr>
     <% end %>
   </table>

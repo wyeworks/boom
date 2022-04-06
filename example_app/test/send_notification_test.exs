@@ -88,21 +88,10 @@ defmodule ExampleAppWeb.SendNotificationTest do
       |> visit("/group-exception")
       |> assert_text("GroupExceptionError at GET /group-exception")
 
-      items =
-        session
-        |> visit("/mailbox")
-        |> find(Query.css(".list-group"))
-        |> find(Query.css(".list-group-item", count: expected_emails))
-
-      item = if expected_emails == 1, do: items, else: List.first(items)
-
-      email_page = select_email(session, item)
-
-      email_body_sections =
-        text(email_page, Query.css(".body-text"))
-        |> String.split("----------------------------------------", trim: true)
-
-      assert(length(email_body_sections) == expected_notifications)
+      session
+      |> visit("/mailbox")
+      |> find(Query.css(".list-group"))
+      |> find(Query.css(".list-group-item", count: expected_emails))
     end
   end
 
@@ -115,7 +104,7 @@ defmodule ExampleAppWeb.SendNotificationTest do
     |> visit("/check-custom-notifier")
     |> assert_has(
       Query.css(".error",
-        text: "name: CustomNotifierExceptionError, reason: \"custom notifier exception error\""
+        text: "name: CustomNotifierExceptionError"
       )
     )
 

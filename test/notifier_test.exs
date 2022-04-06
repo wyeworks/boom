@@ -12,18 +12,12 @@ defmodule NotifierTest do
     @behaviour BoomNotifier.Notifier
 
     @impl BoomNotifier.Notifier
-    def notify(error_info_list, options) do
-      [first_error | _] = error_info_list
-
+    def notify(error_info, options) do
       subject_prefix = Keyword.get(options, :subject)
       to_respond_pid = Keyword.get(options, :sender_pid)
 
-      subject = "#{subject_prefix}: #{first_error.reason}"
-
-      body =
-        Enum.map(error_info_list, fn error_info ->
-          Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
-        end)
+      subject = "#{subject_prefix}: #{error_info.reason}"
+      body = Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
 
       send(to_respond_pid, %{exception: %{subject: subject, body: body}})
     end
@@ -183,12 +177,10 @@ defmodule NotifierTest do
         exception: %{
           subject: "BOOM error caught: booom!",
           body: [
-            [
-              "test/notifier_test.exs:" <>
-                <<_name::binary-size(2),
-                  ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
-              | _
-            ]
+            "test/notifier_test.exs:" <>
+              <<_name::binary-size(2),
+                ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
+            | _
           ]
         }
       },
@@ -205,12 +197,10 @@ defmodule NotifierTest do
         exception: %{
           subject: "BOOM error caught: booom!",
           body: [
-            [
-              "test/notifier_test.exs:" <>
-                <<_name::binary-size(2),
-                  ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
-              | _
-            ]
+            "test/notifier_test.exs:" <>
+              <<_name::binary-size(2),
+                ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
+            | _
           ]
         }
       },

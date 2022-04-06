@@ -90,9 +90,8 @@ defmodule BoomNotifier do
         ErrorStorage.store_error(error_info)
 
         if ErrorStorage.send_notification?(error_info) do
-          notification_data = [
+          notification_data =
             Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
-          ]
 
           # Triggers the notification in each notifier
           walkthrough_notifiers(settings, fn notifier, options ->
