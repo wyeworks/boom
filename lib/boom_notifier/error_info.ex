@@ -7,7 +7,17 @@ defmodule ErrorInfo do
   # among other things) and custom data depending on the configuration.
 
   @enforce_keys [:reason, :stack, :timestamp]
-  defstruct [:name, :reason, :stack, :controller, :action, :request, :timestamp, :metadata]
+  defstruct [
+    :name,
+    :reason,
+    :stack,
+    :controller,
+    :action,
+    :request,
+    :timestamp,
+    :metadata,
+    :occurrences
+  ]
 
   @type t :: %ErrorInfo{}
 
