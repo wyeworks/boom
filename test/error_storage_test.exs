@@ -1,11 +1,17 @@
 defmodule ErrorStorageTest do
   use ExUnit.Case, async: true
+  alias BoomNotifier.ErrorStorage
 
-  @error_info "Some error information"
-  @error_kind :error_kind
+  @timestamp DateTime.utc_now()
+
+  @error_info %ErrorInfo{
+    reason: "Some error information",
+    stack: ["line 1"],
+    timestamp: @timestamp
+  }
 
   setup_all do
-    BoomNotifier.ErrorStorage.start_link()
+    ErrorStorage.start_link()
     :ok
   end
 
@@ -13,158 +19,241 @@ defmodule ErrorStorageTest do
     Agent.update(:boom_notifier, fn _ -> %{} end)
   end
 
-  describe "add_errors/2" do
-    test "appends the error to its proper error kind" do
-      BoomNotifier.ErrorStorage.add_errors(@error_kind, @error_info)
+  describe "store_error/1" do
+    test "groups errors by type" do
+      another_timestamp = DateTime.utc_now()
 
-      assert %{@error_kind => {1, [@error_info]}} ==
-               Agent.get(:boom_notifier, fn state -> state end)
-
-      BoomNotifier.ErrorStorage.add_errors(@error_kind, @error_info)
-
-      assert %{@error_kind => {1, [@error_info, @error_info]}} ==
-               Agent.get(:boom_notifier, fn state -> state end)
-
-      BoomNotifier.ErrorStorage.add_errors(:another_error_kind, "Another error information")
-
-      assert %{
-        @error_kind => {1, [@error_info, @error_info]},
-        :another_error_kind => {1, ["Another error information"]}
+      another_error_info = %ErrorInfo{
+        reason: "Another error information",
+        stack: ["line 2"],
+        timestamp: another_timestamp
       }
+
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.store_error(another_error_info)
+
+      [error_stat_1, error_stat_2] =
+        Agent.get(:boom_notifier, fn state -> state end)
+        |> Map.values()
+
+      assert error_stat_1 == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 2,
+               first_occurrence: @timestamp,
+               last_occurrence: @timestamp
+             }
+
+      assert error_stat_2 == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 1,
+               first_occurrence: another_timestamp,
+               last_occurrence: another_timestamp
+             }
     end
   end
 
-  describe "get_errors/1" do
+  describe "get_error_stats/1" do
     test "returns the errors for the proper error kind" do
-      Agent.update(:boom_notifier, fn _ ->
-        %{
-          @error_kind => {1, [@error_info, @error_info]},
-          :another_error_kind => {1, ["another_error"]}
-        }
-      end)
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.store_error(@error_info)
 
-      assert [@error_info, @error_info] == BoomNotifier.ErrorStorage.get_errors(@error_kind)
-      assert ["another_error"] == BoomNotifier.ErrorStorage.get_errors(:another_error_kind)
+      assert ErrorStorage.get_error_stats(@error_info) ==
+               %ErrorStorage{
+                 __max_storage_capacity__: 1,
+                 accumulated_occurrences: 2,
+                 first_occurrence: @timestamp,
+                 last_occurrence: @timestamp
+               }
+
+      another_timestamp = DateTime.utc_now()
+
+      another_error_info = %ErrorInfo{
+        reason: "Another error information",
+        stack: ["line 2"],
+        timestamp: another_timestamp
+      }
+
+      ErrorStorage.store_error(another_error_info)
+
+      assert ErrorStorage.get_error_stats(another_error_info) ==
+               %ErrorStorage{
+                 __max_storage_capacity__: 1,
+                 accumulated_occurrences: 1,
+                 first_occurrence: another_timestamp,
+                 last_occurrence: another_timestamp
+               }
     end
 
-    test "returns nil if error kind does not exist" do
-      assert nil == BoomNotifier.ErrorStorage.get_errors(:wrong_error_kind)
+    test "returns nil if error info does not exist" do
+      assert ErrorStorage.get_error_stats(@error_info) == nil
     end
   end
 
   describe "send_notification?/1" do
     test "returns false when count is smaller than the error length" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {2, [@error_info]}} end)
-      assert false == BoomNotifier.ErrorStorage.send_notification?(@error_kind)
+      # increase the max capacity to 2
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
+      ErrorStorage.store_error(@error_info)
+
+      refute ErrorStorage.send_notification?(@error_info)
     end
 
     test "returns true when error length is greater or equal than count" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {2, [@error_info, @error_info]}} end)
-      assert true == BoomNotifier.ErrorStorage.send_notification?(@error_kind)
+      # creates the error key
+      ErrorStorage.store_error(@error_info)
+      # increase the max capacity to 2
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.store_error(@error_info)
+
+      another_error_info = %ErrorInfo{
+        reason: "Another error information",
+        stack: ["line 2"],
+        timestamp: @timestamp
+      }
+
+      # creates the error key
+      ErrorStorage.store_error(another_error_info)
+      # increase the max capacity to 2
+      ErrorStorage.reset_accumulated_errors(:exponential, another_error_info)
+      ErrorStorage.store_error(another_error_info)
+      ErrorStorage.store_error(another_error_info)
+      ErrorStorage.store_error(another_error_info)
+
+      assert ErrorStorage.send_notification?(@error_info)
+      assert ErrorStorage.send_notification?(another_error_info)
     end
 
     test "returns false when error kind does not exist" do
-      assert false == BoomNotifier.ErrorStorage.send_notification?(:wrong_error_kind)
+      refute ErrorStorage.send_notification?(%{})
     end
   end
 
-  describe "clear_errors/2" do
-    test "flushes error list" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {2, [@error_info, @error_info]}} end)
-      BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-
-      {_count, errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
-      assert errors == []
-
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {2, [@error_info, @error_info]}} end)
-      BoomNotifier.ErrorStorage.clear_errors(:always, @error_kind)
-
-      {_count, errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
-      assert errors == []
-    end
-
+  describe "reset_accumulated_errors/2" do
     test "increases the counter when notification trigger is :exponential" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
+      ErrorStorage.store_error(@error_info)
 
-      BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 2,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      assert counter === 2
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 4,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      assert counter === 4
-
-      BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
-
-      assert counter === 8
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 8,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
     end
 
     test "increases the counter when notification trigger is :exponential and :limit is set" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
+      ErrorStorage.store_error(@error_info)
 
-      BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
+      ErrorStorage.reset_accumulated_errors([exponential: [limit: 5]], @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 2,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      assert counter === 2
+      ErrorStorage.reset_accumulated_errors([exponential: [limit: 5]], @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 4,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      ErrorStorage.reset_accumulated_errors([exponential: [limit: 5]], @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      assert counter === 4
-
-      BoomNotifier.ErrorStorage.clear_errors([exponential: [limit: 5]], @error_kind)
-
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
-
-      assert counter === 5
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 5,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
     end
 
     test "does not increase the counter when notification_trigger is :always" do
-      Agent.update(:boom_notifier, fn _ -> %{@error_kind => {1, []}} end)
-      BoomNotifier.ErrorStorage.clear_errors(:always, @error_kind)
+      ErrorStorage.store_error(@error_info)
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      ErrorStorage.reset_accumulated_errors(:always, @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      assert counter === 1
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      BoomNotifier.ErrorStorage.clear_errors(:always, @error_kind)
+      ErrorStorage.reset_accumulated_errors(:always, @error_info)
+      [error_stat] = Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
-      {counter, _errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
+      assert error_stat == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
 
-      assert counter === 1
+      ErrorStorage.reset_accumulated_errors(:always, @error_info)
     end
 
-    test "updates the proper error counter" do
-      Agent.update(:boom_notifier, fn _ ->
-        %{@error_kind => {1, ["error1", "error2"]}, :another_error_kind => {1, ["another_error"]}}
-      end)
+    test "updates the proper error max capacity" do
+      another_error_info = %ErrorInfo{
+        reason: "Another error information",
+        stack: ["line 2"],
+        timestamp: @timestamp
+      }
 
-      BoomNotifier.ErrorStorage.clear_errors(:exponential, @error_kind)
-      {counter, errors} = Agent.get(:boom_notifier, fn state -> state end) |> Map.get(@error_kind)
-      assert counter == 2
-      assert errors == []
+      ErrorStorage.store_error(@error_info)
+      ErrorStorage.store_error(another_error_info)
 
-      {counter, errors} =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.get(:another_error_kind)
+      ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
 
-      assert counter == 1
-      assert errors == ["another_error"]
+      [error_stat_1, error_stat_2] =
+        Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
+
+      assert error_stat_1 == %ErrorStorage{
+               __max_storage_capacity__: 2,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
+             }
+
+      assert error_stat_2 == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 1,
+               first_occurrence: @timestamp,
+               last_occurrence: @timestamp
+             }
     end
   end
 end
