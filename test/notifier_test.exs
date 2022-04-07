@@ -335,7 +335,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~ "Settings error: The following parameters are missing: [:notifier, :options]"
+           end) =~ "(BoomNotifier) The following parameters are missing: [:notifier, :options]"
 
     :elixir_config.put(:ignore_module_conflict, false)
   end
@@ -354,7 +354,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~ "Settings error: :notifier parameter missing"
+           end) =~ "(BoomNotifier) :notifier parameter is missing"
   end
 
   describe "ignored exceptions" do
