@@ -28,3 +28,10 @@
   Reason:
   <%= error.reason %>
 <% end %>
+
+<%= if error.occurrences.accumulated_occurrences > 1 do %>
+  Occurrences:
+    Errors: <%= error.occurrences.accumulated_occurrences %>
+    First occurrence: <%= error.occurrences.first_occurrence %>
+    Last occurrence: <%= error.occurrences.last_occurrence %>
+<% end %>

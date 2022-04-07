@@ -131,7 +131,20 @@
       <tr>
         <td class="padded">
           <h2>Reason: </h2>
-          <p><%=  error.reason %></p>
+          <p><%= error.reason %></p>
+        </td>
+      </tr>
+    <% end %>
+
+    <%= if error.occurrences.accumulated_occurrences > 1 do %>
+      <tr>
+        <td class="padded">
+          <h2>Occurrences: </h2>
+          <ul>
+            <li>Errors: <%= error.occurrences.accumulated_occurrences %></li>
+            <li>First occurrence: <%= error.occurrences.first_occurrence %></li>
+            <li>Last occurrence: <%= error.occurrences.last_occurrence %></li>
+          </ul>
         </td>
       </tr>
     <% end %>
