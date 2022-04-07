@@ -1,5 +1,7 @@
 defmodule ErrorStorageTest do
   use ExUnit.Case, async: true
+
+  alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
 
   @timestamp DateTime.utc_now()
@@ -39,16 +41,16 @@ defmodule ErrorStorageTest do
 
       assert error_stat_1 == %ErrorStorage{
                __max_storage_capacity__: 1,
-               accumulated_occurrences: 2,
-               first_occurrence: @timestamp,
-               last_occurrence: @timestamp
+               accumulated_occurrences: 1,
+               first_occurrence: another_timestamp,
+               last_occurrence: another_timestamp
              }
 
       assert error_stat_2 == %ErrorStorage{
                __max_storage_capacity__: 1,
-               accumulated_occurrences: 1,
-               first_occurrence: another_timestamp,
-               last_occurrence: another_timestamp
+               accumulated_occurrences: 2,
+               first_occurrence: @timestamp,
+               last_occurrence: @timestamp
              }
     end
   end
@@ -242,17 +244,17 @@ defmodule ErrorStorageTest do
         Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
 
       assert error_stat_1 == %ErrorStorage{
-               __max_storage_capacity__: 2,
-               accumulated_occurrences: 0,
-               first_occurrence: nil,
-               last_occurrence: nil
-             }
-
-      assert error_stat_2 == %ErrorStorage{
                __max_storage_capacity__: 1,
                accumulated_occurrences: 1,
                first_occurrence: @timestamp,
                last_occurrence: @timestamp
+             }
+
+      assert error_stat_2 == %ErrorStorage{
+               __max_storage_capacity__: 2,
+               accumulated_occurrences: 0,
+               first_occurrence: nil,
+               last_occurrence: nil
              }
     end
   end

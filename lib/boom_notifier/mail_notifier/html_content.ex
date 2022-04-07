@@ -2,6 +2,7 @@ defmodule BoomNotifier.MailNotifier.HTMLContent do
   @moduledoc false
 
   import BoomNotifier.Helpers
+  alias BoomNotifier.ErrorInfo
   require EEx
 
   EEx.function_from_file(

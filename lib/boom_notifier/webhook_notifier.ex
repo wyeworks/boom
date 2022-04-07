@@ -27,6 +27,7 @@ defmodule BoomNotifier.WebhookNotifier do
   @behaviour BoomNotifier.Notifier
 
   import BoomNotifier.Helpers
+  alias BoomNotifier.ErrorInfo
 
   @type options ::
           [{:url, String.t()}] | [{:url, String.t()}, {:headers, HTTPoison.Request.headers()}]

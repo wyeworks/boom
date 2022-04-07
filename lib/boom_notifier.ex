@@ -4,6 +4,7 @@ defmodule BoomNotifier do
   # Responsible for sending a notification to each notifier every time an
   # exception is raised.
 
+  alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
   alias BoomNotifier.NotifierSenderServer
   require Logger

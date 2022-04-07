@@ -25,6 +25,7 @@ if Code.ensure_loaded?(Bamboo) do
 
     import Bamboo.Email
 
+    alias BoomNotifier.ErrorInfo
     alias BoomNotifier.MailNotifier
     alias BoomNotifier.MailNotifier.HTMLContent
     alias BoomNotifier.MailNotifier.TextContent

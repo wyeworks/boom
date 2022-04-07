@@ -4,6 +4,8 @@ defmodule BoomNotifier.ErrorStorage do
   # Keeps track of the errors grouped by type and a counter so the notifier
   # knows the next time it should be executed
 
+  alias BoomNotifier.ErrorInfo
+
   @enforce_keys [:accumulated_occurrences, :first_occurrence, :last_occurrence]
   defstruct [
     :accumulated_occurrences,

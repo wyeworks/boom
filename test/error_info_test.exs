@@ -3,6 +3,7 @@ defmodule ErrorInfoTest do
 
   import Plug.Conn
   import Phoenix.ConnTest
+  alias BoomNotifier.ErrorInfo
 
   defmodule TestController do
     use Phoenix.Controller
@@ -164,7 +165,7 @@ defmodule ErrorInfoTest do
            } = hd(error_info_stack)
 
     assert 'test/error_info_test.exs' = Keyword.fetch!(error_info, :file)
-    assert 16 = Keyword.fetch!(error_info, :line)
+    assert 17 = Keyword.fetch!(error_info, :line)
 
     assert {
              ExUnit.Runner,

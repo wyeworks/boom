@@ -1,6 +1,8 @@
 defmodule BoomNotifier.MailNotifier do
   @moduledoc false
 
+  alias BoomNotifier.ErrorInfo
+
   @doc """
   Checks given mail notifier config contains all required keys.
   """

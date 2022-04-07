@@ -25,6 +25,7 @@ if Code.ensure_loaded?(Swoosh) do
 
     import Swoosh.Email
 
+    alias BoomNotifier.ErrorInfo
     alias BoomNotifier.MailNotifier
     alias BoomNotifier.MailNotifier.HTMLContent
     alias BoomNotifier.MailNotifier.TextContent

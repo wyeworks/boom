@@ -1,4 +1,4 @@
-defmodule ErrorInfo do
+defmodule BoomNotifier.ErrorInfo do
   @moduledoc false
 
   # The ErrorInfo struct holds all the information about the exception.
@@ -19,7 +19,7 @@ defmodule ErrorInfo do
     :occurrences
   ]
 
-  @type t :: %ErrorInfo{}
+  @type t :: %__MODULE__{}
 
   @type option ::
           :logger
@@ -36,11 +36,11 @@ defmodule ErrorInfo do
           },
           map(),
           custom_data_strategy_type
-        ) :: {atom(), ErrorInfo.t()}
+        ) :: {atom(), __MODULE__.t()}
   def build(%{reason: reason, stack: stack} = error, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
-    error_info = %ErrorInfo{
+    error_info = %__MODULE__{
       reason: error_reason,
       stack: stack,
       controller: get_in(conn.private, [:phoenix_controller]),
