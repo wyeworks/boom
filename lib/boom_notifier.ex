@@ -86,7 +86,7 @@ defmodule BoomNotifier do
 
       defp do_notify_error(conn, settings, error) do
         {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
-        {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
+        error_info = ErrorInfo.build(error, conn, custom_data)
 
         ErrorStorage.store_error(error_info)
 
