@@ -162,6 +162,6 @@ defmodule BoomNotifier.ErrorStorage do
     accumulated_occurrences = Map.get(error_storage_item, :accumulated_occurrences)
     max_storage_capacity = Map.get(error_storage_item, :__max_storage_capacity__)
 
-    if accumulated_occurrences >= max_storage_capacity, do: true, else: false
+    accumulated_occurrences >= max_storage_capacity
   end
 end
