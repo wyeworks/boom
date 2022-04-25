@@ -24,7 +24,8 @@ defmodule BoomNotifier.MixProject do
       ],
       docs: docs(),
       description: description(),
-      package: package()
+      package: package(),
+      test_paths: ["test/unit"]
     ]
   end
 

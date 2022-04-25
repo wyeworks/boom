@@ -184,7 +184,7 @@ defmodule NotifierTest do
           subject: "BOOM error caught: booom!",
           body: [
             [
-              "test/notifier_test.exs:" <>
+              "test/unit/notifier_test.exs:" <>
                 <<_name::binary-size(2),
                   ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
               | _
@@ -206,7 +206,7 @@ defmodule NotifierTest do
           subject: "BOOM error caught: booom!",
           body: [
             [
-              "test/notifier_test.exs:" <>
+              "test/unit/notifier_test.exs:" <>
                 <<_name::binary-size(2),
                   ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
               | _
