@@ -58,31 +58,31 @@ defmodule ExampleAppWeb.SendNotificationTest do
   end
 
   feature "Sends notification in groups", %{session: session} do
-    for %{expected_notifications: expected_notifications, expected_emails: expected_emails} <-
+    for %{accumulated_occurrences: accumulated_occurrences, expected_emails: expected_emails} <-
           [
-            %{expected_notifications: 1, expected_emails: 1},
-            %{expected_notifications: 1, expected_emails: 1},
-            %{expected_notifications: 2, expected_emails: 2},
-            %{expected_notifications: 2, expected_emails: 2},
-            %{expected_notifications: 2, expected_emails: 2},
-            %{expected_notifications: 2, expected_emails: 2},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 4, expected_emails: 3},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 4},
-            %{expected_notifications: 8, expected_emails: 5}
+            %{accumulated_occurrences: 1, expected_emails: 1},
+            %{accumulated_occurrences: 1, expected_emails: 1},
+            %{accumulated_occurrences: 2, expected_emails: 2},
+            %{accumulated_occurrences: 2, expected_emails: 2},
+            %{accumulated_occurrences: 2, expected_emails: 2},
+            %{accumulated_occurrences: 2, expected_emails: 2},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 4, expected_emails: 3},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 4},
+            %{accumulated_occurrences: 8, expected_emails: 5}
           ] do
       session
       |> visit("/group-exception")
@@ -94,15 +94,14 @@ defmodule ExampleAppWeb.SendNotificationTest do
         |> find(Query.css(".list-group"))
         |> find(Query.css(".list-group-item", count: expected_emails))
 
-      item = if expected_emails == 1, do: items, else: List.first(items)
+      if expected_emails > 1 do
+        item = List.first(items)
+        email = select_email(session, item)
 
-      email_page = select_email(session, item)
-
-      email_body_sections =
-        text(email_page, Query.css(".body-text"))
-        |> String.split("----------------------------------------", trim: true)
-
-      assert(length(email_body_sections) == expected_notifications)
+        email
+        |> find(Query.css(".body-text"))
+        |> assert_text("Errors: #{accumulated_occurrences}")
+      end
     end
   end
 
@@ -115,7 +114,7 @@ defmodule ExampleAppWeb.SendNotificationTest do
     |> visit("/check-custom-notifier")
     |> assert_has(
       Query.css(".error",
-        text: "name: CustomNotifierExceptionError, reason: \"custom notifier exception error\""
+        text: "name: CustomNotifierExceptionError"
       )
     )
 

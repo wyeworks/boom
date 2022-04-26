@@ -25,6 +25,7 @@ if Code.ensure_loaded?(Swoosh) do
 
     import Swoosh.Email
 
+    alias BoomNotifier.ErrorInfo
     alias BoomNotifier.MailNotifier
     alias BoomNotifier.MailNotifier.HTMLContent
     alias BoomNotifier.MailNotifier.TextContent
@@ -37,7 +38,7 @@ if Code.ensure_loaded?(Swoosh) do
     defdelegate validate_config(options), to: MailNotifier
 
     @impl BoomNotifier.Notifier
-    @spec notify(list(ErrorInfo.t()), options) :: no_return()
+    @spec notify(ErrorInfo.t(), options) :: no_return()
     def notify(error_info, options) do
       # Note, unlike Bamboo, Swoosh will raise while creating the mail if it is
       # invalid (has a bad recipient, etc).

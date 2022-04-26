@@ -38,7 +38,7 @@ defmodule ExampleAppWeb.PageController do
   end
 
   def check_custom_notifier(conn, _params) do
-    errors = ExampleApp.MemoryErrorStorage.get_error()
-    render(conn, "check_custom_notifier.html", errors: errors)
+    error = ExampleApp.MemoryErrorStorage.get_error()
+    render(conn, "check_custom_notifier.html", error: error)
   end
 end

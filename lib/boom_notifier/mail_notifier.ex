@@ -1,6 +1,8 @@
 defmodule BoomNotifier.MailNotifier do
   @moduledoc false
 
+  alias BoomNotifier.ErrorInfo
+
   @doc """
   Checks given mail notifier config contains all required keys.
   """
@@ -14,8 +16,8 @@ defmodule BoomNotifier.MailNotifier do
   @doc """
   Creates mail subject line from a subject prefix and error reason message.
   """
-  @spec build_subject(String.t(), list(ErrorInfo.t()), non_neg_integer()) :: String.t()
-  def build_subject(prefix, [%ErrorInfo{reason: reason} | _], max_length) do
+  @spec build_subject(String.t(), ErrorInfo.t(), non_neg_integer()) :: String.t()
+  def build_subject(prefix, %ErrorInfo{reason: reason}, max_length) do
     String.slice("#{prefix}: #{reason}", 0..(max_length - 1))
   end
 

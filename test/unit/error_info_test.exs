@@ -3,6 +3,7 @@ defmodule ErrorInfoTest do
 
   import Plug.Conn
   import Phoenix.ConnTest
+  alias BoomNotifier.ErrorInfo
 
   defmodule TestController do
     use Phoenix.Controller
@@ -76,49 +77,44 @@ defmodule ErrorInfoTest do
   test "Generic error without exception name" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
     error = %{reason: "Boom", stack: []}
-    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn, :nothing)
+    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build(error, conn, :nothing)
 
     assert "Error" = name
     assert "Boom" = reason
-    assert :error = error_kind
   end
 
   test "Error without exception name but message" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
     error = %{reason: %{message: "Boom"}, stack: []}
-    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn, :nothing)
+    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build(error, conn, :nothing)
 
     assert "Error" = name
     assert "Boom" = reason
-    assert :error = error_kind
   end
 
   test "Error with exception name" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
 
     error = %{reason: %TestException{message: "Boom"}, stack: []}
-
-    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn, :nothing)
+    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build(error, conn, :nothing)
 
     assert ErrorInfoTest.TestException = name
     assert "Boom" = reason
-    assert ErrorInfoTest.TestException = error_kind
   end
 
   test "Error without exception reason but error and kind" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
     error = %{error: %{kind: :error_kind}, reason: %{message: "Boom"}, stack: []}
-    {error_kind, %ErrorInfo{name: name, reason: reason}} = ErrorInfo.build(error, conn, :nothing)
+    %ErrorInfo{name: name, reason: reason} = ErrorInfo.build(error, conn, :nothing)
 
     assert "Error" = name
     assert "Boom" = reason
-    assert :error_kind = error_kind
   end
 
   test "Error info includes action" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{action: action}} =
+    %ErrorInfo{action: action} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn, :nothing)
 
     assert :index = action
@@ -127,7 +123,7 @@ defmodule ErrorInfoTest do
   test "Error info includes controller" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{controller: controller}} =
+    %ErrorInfo{controller: controller} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn, :nothing)
 
     assert TestController = controller
@@ -136,7 +132,7 @@ defmodule ErrorInfoTest do
   test "Error info includes request info" do
     %Plug.Conn.WrapperError{conn: conn} = catch_error(post(build_conn(), "/create?foo=bar"))
 
-    {_error_kind, %ErrorInfo{request: request}} =
+    %ErrorInfo{request: request} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: []}, conn, :nothing)
 
     assert %{
@@ -153,7 +149,7 @@ defmodule ErrorInfoTest do
   test "Error info includes stacktrace" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{stack: error_info_stack}} =
+    %ErrorInfo{stack: error_info_stack} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
 
     assert {
@@ -164,7 +160,7 @@ defmodule ErrorInfoTest do
            } = hd(error_info_stack)
 
     assert 'test/unit/error_info_test.exs' = Keyword.fetch!(error_info, :file)
-    assert 16 = Keyword.fetch!(error_info, :line)
+    assert 17 = Keyword.fetch!(error_info, :line)
 
     assert {
              ExUnit.Runner,
@@ -180,7 +176,7 @@ defmodule ErrorInfoTest do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} =
       catch_error(get(build_conn(), "nil_access"))
 
-    {_error_kind, %ErrorInfo{stack: error_info_stack}} =
+    %ErrorInfo{stack: error_info_stack} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
 
     assert {nil, :name, [], []} = hd(error_info_stack)
@@ -198,7 +194,7 @@ defmodule ErrorInfoTest do
   test "Error info includes timestamp" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{timestamp: timestamp}} =
+    %ErrorInfo{timestamp: timestamp} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
 
     assert DateTime.diff(DateTime.utc_now(), timestamp, :second) <= 1
@@ -207,7 +203,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata is nil when strategy is :nothing" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :nothing)
 
     assert nil == metadata
@@ -216,7 +212,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :assigns)
 
     assert %{assigns: %{age: 32, name: "Davis"}} = metadata
@@ -225,7 +221,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes filtered fields for assigns" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn,
         assigns: [fields: [:name]]
       )
@@ -236,7 +232,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, :logger)
 
     assert %{logger: %{age: 17, name: "Dennis"}} = metadata
@@ -245,7 +241,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes filtered fields for logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn,
         logger: [fields: [:name]]
       )
@@ -256,7 +252,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
         :assigns,
         :logger
@@ -271,7 +267,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes filtered fields for assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
         [assigns: [fields: [:name]]],
         [logger: [fields: [:age]]]
@@ -283,7 +279,7 @@ defmodule ErrorInfoTest do
   test "Error info metadata includes filtered equal fields for assigns and logger" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} = catch_error(get(build_conn(), :index))
 
-    {_error_kind, %ErrorInfo{metadata: metadata}} =
+    %ErrorInfo{metadata: metadata} =
       ErrorInfo.build(%{reason: %TestException{message: "Boom"}, stack: stack}, conn, [
         [assigns: [fields: [:name]]],
         [logger: [fields: [:name]]]

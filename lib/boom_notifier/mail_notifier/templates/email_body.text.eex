@@ -1,34 +1,37 @@
-<%= for error <- errors do %>
-  <%= if error.exception_summary do %>
-    <%= error.exception_summary %>
+<%= if error.exception_summary do %>
+  <%= error.exception_summary %>
+<% end %>
+<%= if error.request do %>
+  Request Information:
+    URL: <%= error.request.url %>
+    Path: <%= error.request.path %>
+    Method: <%= error.request.method %>
+    Port: <%= error.request.port %>
+    Scheme: <%= error.request.scheme %>
+    Query String: <%= error.request.query_string %>
+    Client IP: <%= error.request.client_ip %>
+    Occurred on: <%= error.timestamp %>
+<% end %>
+<%= if error.metadata do %>
+  Metadata:
+  <%= for {source, fields} <- error.metadata do %>
+    <%= source %>:
+      <%= for {k, v} <- fields do %>
+        <%= k %>: <%= v %>
+      <% end %>
   <% end %>
-  <%= if error.request do %>
-    Request Information:
-      URL: <%= error.request.url %>
-      Path: <%= error.request.path %>
-      Method: <%= error.request.method %>
-      Port: <%= error.request.port %>
-      Scheme: <%= error.request.scheme %>
-      Query String: <%= error.request.query_string %>
-      Client IP: <%= error.request.client_ip %>
-      Occurred on: <%= error.timestamp %>
-  <% end %>
-  <%= if error.metadata do %>
-    Metadata:
-    <%= for {source, fields} <- error.metadata do %>
-      <%= source %>:
-        <%= for {k, v} <- fields do %>
-          <%= k %>: <%= v %>
-        <% end %>
-    <% end %>
-  <% end %>
-  <%= for entry <- error.exception_stack_entries do %>
-    <%= entry %>
-  <% end %>
-  <%= if error.reason do %>
-    Reason:
-    <%= error.reason %>
-  <% end %>
+<% end %>
+<%= for entry <- error.exception_stack_entries do %>
+  <%= entry %>
+<% end %>
+<%= if error.reason do %>
+  Reason:
+  <%= error.reason %>
+<% end %>
 
-  ----------------------------------------
+<%= if error.occurrences.accumulated_occurrences > 1 do %>
+  Occurrences:
+    Errors: <%= error.occurrences.accumulated_occurrences %>
+    First occurrence: <%= error.occurrences.first_occurrence %>
+    Last occurrence: <%= error.occurrences.last_occurrence %>
 <% end %>

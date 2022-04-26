@@ -238,12 +238,11 @@ defmodule MailerNotifierTest do
 
         receive do
           {:email_text_body, body} ->
-            reason_lines = Enum.take(body, -3)
+            reason_lines = Enum.take(body, -2)
 
             assert [
                      "Reason:",
-                     String.duplicate("a", 300),
-                     "----------------------------------------"
+                     String.duplicate("a", 300)
                    ] == reason_lines
         end
       end

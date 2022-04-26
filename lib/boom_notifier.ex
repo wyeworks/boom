@@ -4,6 +4,7 @@ defmodule BoomNotifier do
   # Responsible for sending a notification to each notifier every time an
   # exception is raised.
 
+  alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
   alias BoomNotifier.NotifierSenderServer
   require Logger
@@ -85,22 +86,23 @@ defmodule BoomNotifier do
 
       defp do_notify_error(conn, settings, error) do
         {custom_data, _settings} = Keyword.pop(settings, :custom_data, :nothing)
-        {error_kind, error_info} = ErrorInfo.build(error, conn, custom_data)
+        error_info = ErrorInfo.build(error, conn, custom_data)
 
-        ErrorStorage.add_errors(error_kind, error_info)
+        ErrorStorage.store_error(error_info)
 
-        if ErrorStorage.send_notification?(error_kind) do
-          occurrences = ErrorStorage.get_errors(error_kind)
+        if ErrorStorage.send_notification?(error_info) do
+          notification_data =
+            Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
 
           # Triggers the notification in each notifier
           walkthrough_notifiers(settings, fn notifier, options ->
-            NotifierSenderServer.send(notifier, occurrences, options)
+            NotifierSenderServer.send(notifier, notification_data, options)
           end)
 
           {notification_trigger, _settings} =
             Keyword.pop(settings, :notification_trigger, :always)
 
-          ErrorStorage.clear_errors(notification_trigger, error_kind)
+          ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
         end
       end
     end

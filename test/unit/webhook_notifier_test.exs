@@ -98,15 +98,13 @@ defmodule WebhookNotifierTest do
 
       {:ok, body, _conn} = Plug.Conn.read_body(conn)
 
-      [
-        %{
-          exception_summary: exception_summary,
-          exception_stack_entries: [first_stack_entry | _] = exception_stack_entries,
-          request: request,
-          timestamp: timestamp,
-          metadata: metadata
-        }
-      ] = Jason.decode!(body, keys: :atoms)
+      %{
+        exception_summary: exception_summary,
+        exception_stack_entries: [first_stack_entry | _] = exception_stack_entries,
+        request: request,
+        timestamp: timestamp,
+        metadata: metadata
+      } = Jason.decode!(body, keys: :atoms)
 
       assert exception_summary == @expected_response.exception_summary
 

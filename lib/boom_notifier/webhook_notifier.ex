@@ -1,3 +1,9 @@
+require Protocol
+
+Protocol.derive(Jason.Encoder, BoomNotifier.ErrorStorage,
+  only: [:accumulated_occurrences, :first_occurrence, :last_occurrence]
+)
+
 defmodule BoomNotifier.WebhookNotifier do
   @moduledoc """
   Send exception notification as a json using `HTTPoison`.
@@ -21,6 +27,7 @@ defmodule BoomNotifier.WebhookNotifier do
   @behaviour BoomNotifier.Notifier
 
   import BoomNotifier.Helpers
+  alias BoomNotifier.ErrorInfo
 
   @type options ::
           [{:url, String.t()}] | [{:url, String.t()}, {:headers, HTTPoison.Request.headers()}]
@@ -35,11 +42,11 @@ defmodule BoomNotifier.WebhookNotifier do
   end
 
   @impl BoomNotifier.Notifier
-  @spec notify(list(ErrorInfo.t()), options) :: no_return()
-  def notify(errors_info, options) do
+  @spec notify(ErrorInfo.t(), options) :: no_return()
+  def notify(error_info, options) do
     payload =
-      errors_info
-      |> format_errors()
+      error_info
+      |> format_error()
       |> Jason.encode!()
 
     headers =
@@ -50,10 +57,6 @@ defmodule BoomNotifier.WebhookNotifier do
     HTTPoison.post!(options[:url], payload, headers)
   end
 
-  defp format_errors(errors) when is_list(errors) do
-    Enum.map(errors, &format_error/1)
-  end
-
   defp format_error(%ErrorInfo{
          name: name,
          controller: controller,
@@ -61,7 +64,8 @@ defmodule BoomNotifier.WebhookNotifier do
          request: request,
          stack: stack,
          timestamp: timestamp,
-         metadata: metadata
+         metadata: metadata,
+         occurrences: occurrences
        }) do
     exception_summary =
       if controller && action do
@@ -73,7 +77,8 @@ defmodule BoomNotifier.WebhookNotifier do
       request: request,
       exception_stack_entries: Enum.map(stack, &Exception.format_stacktrace_entry/1),
       timestamp: DateTime.to_iso8601(timestamp),
-      metadata: metadata
+      metadata: metadata,
+      occurrences: occurrences
     }
   end
 end
