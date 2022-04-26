@@ -265,7 +265,7 @@ defmodule MailerNotifierTest do
           {:email_text_body, body} ->
             first_stack_line = Enum.at(body, 17)
 
-            assert "test/mailer_notifier_test.exs:" <>
+            assert "test/unit/mailer_notifier_test.exs:" <>
                      <<_name::binary-size(2), ": MailerNotifierTest.TestController.index/2">> =
                      first_stack_line
         end
@@ -287,10 +287,10 @@ defmodule MailerNotifierTest do
 
             [second_stack_line | _] = stacktrace_list
 
-            assert "<li>test/mailer_notifier_test.exs:20: MailerNotifierTest.TestController.index/2</li>" =
+            assert "<li>test/unit/mailer_notifier_test.exs:20: MailerNotifierTest.TestController.index/2</li>" =
                      first_stack_line
 
-            assert "<li>test/mailer_notifier_test.exs:11: MailerNotifierTest.TestController.action/2</li>" =
+            assert "<li>test/unit/mailer_notifier_test.exs:11: MailerNotifierTest.TestController.action/2</li>" =
                      second_stack_line
         end
       end

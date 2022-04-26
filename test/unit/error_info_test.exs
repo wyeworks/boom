@@ -159,7 +159,7 @@ defmodule ErrorInfoTest do
              error_info
            } = hd(error_info_stack)
 
-    assert 'test/error_info_test.exs' = Keyword.fetch!(error_info, :file)
+    assert 'test/unit/error_info_test.exs' = Keyword.fetch!(error_info, :file)
     assert 17 = Keyword.fetch!(error_info, :line)
 
     assert {

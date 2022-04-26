@@ -177,7 +177,7 @@ defmodule NotifierTest do
         exception: %{
           subject: "BOOM error caught: booom!",
           body: [
-            "test/notifier_test.exs:" <>
+            "test/unit/notifier_test.exs:" <>
               <<_name::binary-size(2),
                 ": NotifierTest.PlugErrorWithSingleNotifier.\"call \(overridable 1\)\"/2\n">>
             | _
@@ -197,7 +197,7 @@ defmodule NotifierTest do
         exception: %{
           subject: "BOOM error caught: booom!",
           body: [
-            "test/notifier_test.exs:" <>
+            "test/unit/notifier_test.exs:" <>
               <<_name::binary-size(2),
                 ": NotifierTest.PlugErrorWithMultipleNotifiers.\"call \(overridable 1\)\"/2\n">>
             | _
@@ -325,7 +325,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~ "Settings error: The following parameters are missing: [:notifier, :options]"
+           end) =~ "(BoomNotifier) The following parameters are missing: [:notifier, :options]"
 
     :elixir_config.put(:ignore_module_conflict, false)
   end
@@ -344,7 +344,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~ "Settings error: :notifier parameter missing"
+           end) =~ "(BoomNotifier) :notifier parameter is missing"
   end
 
   describe "ignored exceptions" do
