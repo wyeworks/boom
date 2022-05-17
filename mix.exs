@@ -86,7 +86,13 @@ defmodule BoomNotifier.MixProject do
       main: "readme",
       source_url: @source_url,
       extras: [
-        "README.md"
+        "README.md",
+        "docs/notifiers/email.md": [title: "Email Notifier"],
+        "docs/notifiers/webhook.md": [title: "Webhook Notifier"],
+        "docs/notifiers/custom.md": [title: "Custom Notifier"]
+      ],
+      groups_for_extras: [
+        Notifiers: Path.wildcard("docs/notifiers/*.md")
       ]
     ]
   end
