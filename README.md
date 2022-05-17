@@ -6,8 +6,8 @@
 ---
 
 This package allows your Phoenix application to send notifications whenever
-an exception is raised. By default it includes an email and a webhook
-notifier, but you can implement custom ones.
+an exception is raised. By default it includes an email and a webhook notifier, 
+you can also implement custom ones, or use some of the independently realeased notifiers listed below.
 
 It was inspired by the [ExceptionNotification](https://github.com/smartinez87/exception_notification)
 gem that provides a similar functionality for Rack/Rails applications.
@@ -27,28 +27,11 @@ def deps do
 end
 ```
 
-## How to use it
+## Getting started
 
-### Webhook notifier
+This is an example for setting up an email notifier, you can see the full [list of available notifiers here](#notifiers).
 
-```elixir
-defmodule YourApp.Router do
-  use Phoenix.Router
-
-  use BoomNotifier,
-    notifier: BoomNotifier.WebhookNotifier,
-    options: [
-      url: "http://example.com",
-      headers: [Authorization: "Bearer token"]
-    ]
-
-  # ...
-```
-
-To configure it, you need to set the `url` in the `options` keyword list. A `POST` request with a `json` will be made to that webhook when an error ocurrs with the relevant information.
-Optionally, you could also add `headers` to the request as another keyword list.
-
-### Email notifier
+#### Email notifier
 
 BoomNotifier has built in support for both [Bamboo](https://github.com/thoughtbot/bamboo) and [Swoosh](https://github.com/swoosh/swoosh).
 
@@ -74,6 +57,42 @@ For the email to be sent, you need to define a valid mailer in the `options` key
 
 `subject` will be truncated at 80 chars, if you want more add the option `max_subject_length`.
 
+## Notifiers
+
+BoomNotifier uses notifiers to deliver notifications when errors occur in your applications. By default, 2 notifiers are available:
+
+* [Email notifier](docs/notifiers/email.md)
+* [Webhook notifier](docs/notifiers/webhook.md)
+
+You can also choose from these independetly-released notifiers:
+
+* [Slack notifier](https://github.com/wyeworks/boom_slack_notifier)
+
+On top of this, you can easily implement your own [custom notifier](docs/notifiers/custom.md).
+
+#### Multiple notifiers
+
+BoomNotifier allows you to setup multiple notifiers, like in the example below:
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    notifiers: [
+      [
+        notifier: BoomNotifier.WebhookNotifier,
+        options: [
+          url: "http://example.com",
+        ]
+      ],
+      [
+        notifier: CustomNotifier,
+        options: # ...
+      ]
+    ]
+```
+
 ## Setup when `handle_errors/2` is already being used
 
 If you are using or want to use your own implementation of `handle_errors/2` for the` Plug.ErrorHandler` module, be sure to include the usage of `BoomNotifier` after
@@ -95,87 +114,6 @@ defmodule YourApp.Router do
 
   use BoomNotifier,
     ...
-```
-
-## Custom notifiers
-
-To create a custom notifier, you need to implement the `BoomNotifier.Notifier` behaviour:
-
-```elixir
-@callback notify(%ErrorInfo{}, keyword(String.t())) :: no_return()
-```
-
-`ErrorInfo` is a struct that contains the following attributes:
-
-* `name`: the error name.
-* `reason`: the error reason.
-* `stack`: the error stacktrace.
-* `controller`: the controller where the exception occurred.
-* `action`: the action in the controller that failed.
-* `request`: the request information that caused the exception.
-* `timestamp`: the UTC time when the exception happened.
-* `metatadata`: assigns and logger metadata.
-* `occurrences`: aggregated information about the errors that are being
-  grouped.
-  * `accumulated_occurrences`: how many times an exception occurred before the
-  notification was sent.
-  * `first_occurrence`: collects the time when the first exception was raised.
-  * `last_occurrence`: collects the time when the last exception was raised.
-
-Then you can use that information in your `notify/2` implementation.
-
-```elixir
-defmodule CustomNotifier do
-  @behaviour BoomNotifier.Notifier
-
-  @impl BoomNotifier.Notifier
-  def notify(error, options) do
-    # ...
-    # ...
-    # ...
-  end
-```
-
-```elixir
-defmodule YourApp.Router do
-  use Phoenix.Router
-
-  use BoomNotifier,
-    notifier: CustomNotifier,
-    options: [
-      # ...
-    ]
-```
-
-You can also implement an optional callback `validate_config` that receives
-the `options` keyword list set in the notifier so the user can be warned
-during compilation if the attributes are not correct.
-
-```elixir
-@callback validate_config(keyword(String.t())) :: :ok | {:error, String.t()}
-```
-
-## Multiple notifiers
-
-BoomNotifier also supports a list of multiple notifiers like in the example below:
-
-```elixir
-defmodule YourApp.Router do
-  use Phoenix.Router
-
-  use BoomNotifier,
-    notifiers: [
-      [
-        notifier: BoomNotifier.WebhookNotifier,
-        options: [
-          url: "http://example.com",
-        ]
-      ],
-      [
-        notifier: CustomNotifier,
-        options: # ...
-      ]
-    ]
 ```
 
 ## Notification Trigger
