@@ -62,22 +62,22 @@ defmodule BoomNotifier.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.5"},
-      {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 1.0 or ~> 2.0"},
+      {:httpoison, "~> 1.8"},
+      {:jason, "~> 1.4"},
+      {:plug_cowboy, "~> 1.0 or ~> 2.5"},
 
       # Delivery service is an end-user choice
-      {:bamboo, "~> 2.0", optional: true},
-      {:swoosh, "~> 1.5", optional: true},
+      {:bamboo, "~> 2.2", optional: true},
+      {:swoosh, "~> 1.8", optional: true},
 
       # Test dependencies
       {:bypass, "~> 2.1", only: :test},
-      {:phoenix, "~> 1.4", only: [:test]},
+      {:phoenix, "~> 1.6", only: [:test]},
 
       # Dev dependencies
-      {:credo, "~> 1.6.1", only: [:dev], runtime: false},
-      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.23", only: :dev}
+      {:credo, "~> 1.6", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.2", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.29", only: :dev}
     ]
   end
 
