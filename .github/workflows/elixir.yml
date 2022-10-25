@@ -111,5 +111,5 @@ jobs:
       run: mix test
 
     - name: Run e2e test
+      if: matrix.deps == 'latest'
       run: mix e2e
-      if: ${{ matrix.lint }}
