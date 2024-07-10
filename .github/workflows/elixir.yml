@@ -44,9 +44,15 @@ jobs:
             otp: '23'
           - elixir: '1.13'
             otp: '24'
-            lint: lint
-          - elixir: '1.13'
+          - elixir: '1.14'
+            otp: '23'
+          - elixir: '1.14'
             otp: '24'
+          - elixir: '1.14'
+            otp: '25'
+            lint: lint
+          - elixir: '1.14'
+            otp: '25'
             deps: latest
 
     steps:
