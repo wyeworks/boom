@@ -159,14 +159,14 @@ defmodule ErrorInfoTest do
              error_info
            } = hd(error_info_stack)
 
-    assert 'test/unit/error_info_test.exs' = Keyword.fetch!(error_info, :file)
+    assert ~c"test/unit/error_info_test.exs" = Keyword.fetch!(error_info, :file)
     assert 17 = Keyword.fetch!(error_info, :line)
 
     assert {
              ExUnit.Runner,
              _,
              _,
-             [file: 'lib/ex_unit/runner.ex', line: _]
+             [file: ~c"lib/ex_unit/runner.ex", line: _]
            } = List.last(error_info_stack)
 
     assert 10 = Enum.count(error_info_stack)
@@ -186,7 +186,7 @@ defmodule ErrorInfoTest do
              ExUnit.Runner,
              _,
              _,
-             [file: 'lib/ex_unit/runner.ex', line: _]
+             [file: ~c"lib/ex_unit/runner.ex", line: _]
            } = List.last(error_info_stack)
 
     assert 10 = Enum.count(error_info_stack)

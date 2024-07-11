@@ -39,7 +39,8 @@ defmodule ErrorStorageTest do
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(another_error_info)
 
-      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} = Agent.get(:boom_notifier, & &1)
+      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} =
+        Agent.get(:boom_notifier, & &1)
 
       assert error_stat_1 == %ErrorStorage{
                __max_storage_capacity__: 1,
@@ -244,7 +245,8 @@ defmodule ErrorStorageTest do
 
       ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
 
-      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} = Agent.get(:boom_notifier, & &1)
+      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} =
+        Agent.get(:boom_notifier, & &1)
 
       assert error_stat_1 == %ErrorStorage{
                __max_storage_capacity__: 2,
@@ -259,8 +261,6 @@ defmodule ErrorStorageTest do
                first_occurrence: @timestamp,
                last_occurrence: @timestamp
              }
-
-
     end
   end
 end

@@ -28,7 +28,7 @@ defmodule Support.SwooshFakeMailer do
 
     # Since to addresses must be of the correct type, we send the PID through
     # as a string. Convert it back into a true pid() for mailbox delivery.
-    pid = :erlang.list_to_pid('#{pid_string}')
+    pid = :erlang.list_to_pid(~c"#{pid_string}")
 
     send(pid, {:email_subject, email.subject})
     send(pid, {:email_from, from_addr})
