@@ -138,7 +138,7 @@ defmodule BoomNotifier.ErrorStorage do
   # the crc32 algorithm that was taken from the Exception Notification library
   # for Rails
   @spec generate_error_key(ErrorInfo.t()) :: non_neg_integer()
-  defp generate_error_key(error_info) do
+  def generate_error_key(error_info) do
     error_info
     |> Map.delete(:request)
     |> Map.delete(:metadata)
