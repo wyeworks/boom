@@ -12,6 +12,8 @@ defmodule ErrorStorageTest do
     timestamp: @timestamp
   }
 
+  @error_hash ErrorStorage.generate_error_key(@error_info)
+
   setup_all do
     ErrorStorage.start_link()
     :ok
@@ -31,26 +33,27 @@ defmodule ErrorStorageTest do
         timestamp: another_timestamp
       }
 
+      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(another_error_info)
 
-      [error_stat_1, error_stat_2] =
-        Agent.get(:boom_notifier, fn state -> state end)
-        |> Map.values()
+      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} =
+        Agent.get(:boom_notifier, & &1)
 
       assert error_stat_1 == %ErrorStorage{
-               __max_storage_capacity__: 1,
-               accumulated_occurrences: 1,
-               first_occurrence: another_timestamp,
-               last_occurrence: another_timestamp
-             }
-
-      assert error_stat_2 == %ErrorStorage{
                __max_storage_capacity__: 1,
                accumulated_occurrences: 2,
                first_occurrence: @timestamp,
                last_occurrence: @timestamp
+             }
+
+      assert error_stat_2 == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 1,
+               first_occurrence: another_timestamp,
+               last_occurrence: another_timestamp
              }
     end
   end
@@ -235,26 +238,28 @@ defmodule ErrorStorageTest do
         timestamp: @timestamp
       }
 
+      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(another_error_info)
 
       ErrorStorage.reset_accumulated_errors(:exponential, @error_info)
 
-      [error_stat_1, error_stat_2] =
-        Agent.get(:boom_notifier, fn state -> state end) |> Map.values()
+      %{@error_hash => error_stat_1, ^another_error_hash => error_stat_2} =
+        Agent.get(:boom_notifier, & &1)
 
       assert error_stat_1 == %ErrorStorage{
-               __max_storage_capacity__: 1,
-               accumulated_occurrences: 1,
-               first_occurrence: @timestamp,
-               last_occurrence: @timestamp
-             }
-
-      assert error_stat_2 == %ErrorStorage{
                __max_storage_capacity__: 2,
                accumulated_occurrences: 0,
                first_occurrence: nil,
                last_occurrence: nil
+             }
+
+      assert error_stat_2 == %ErrorStorage{
+               __max_storage_capacity__: 1,
+               accumulated_occurrences: 1,
+               first_occurrence: @timestamp,
+               last_occurrence: @timestamp
              }
     end
   end

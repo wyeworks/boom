@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     name: Build and test
     runs-on: ubuntu-20.04
 
@@ -44,62 +43,73 @@ jobs:
             otp: '23'
           - elixir: '1.13'
             otp: '24'
-            lint: lint
-          - elixir: '1.13'
+          - elixir: '1.14'
+            otp: '23'
+          - elixir: '1.14'
             otp: '24'
+          - elixir: '1.14'
+            otp: '25'
+          - elixir: '1.15'
+            otp: '24'
+          - elixir: '1.15'
+            otp: '25'
+          - elixir: '1.15'
+            otp: '26'
+            lint: lint
+          - elixir: '1.15'
+            otp: '26'
             deps: latest
-
     steps:
-    - uses: actions/checkout@v2
-    - uses: nanasess/setup-chromedriver@v2
+      - uses: actions/checkout@v2
+      - uses: nanasess/setup-chromedriver@v2
 
-    - name: Set up Elixir
-      uses: erlef/setup-beam@v1
-      with:
-        elixir-version: ${{ matrix.elixir }}
-        otp-version: ${{ matrix.otp }}
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
-    - name: Retrieve Mix Dependencies Cache
-      if: matrix.deps != 'latest'
-      uses: actions/cache@v1
-      id: mix-cache
-      with:
-        path: deps
-        key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles('mix.lock') }}
+      - name: Retrieve Mix Dependencies Cache
+        if: matrix.deps != 'latest'
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles('mix.lock') }}
 
-    - name: Remove mix.lock
-      if: matrix.deps == 'latest'
-      run: rm mix.lock
+      - name: Remove mix.lock
+        if: matrix.deps == 'latest'
+        run: rm mix.lock
 
-    - name: Install dependencies
-      if: steps.mix-cache.outputs.cache-hit != 'true'
-      run: mix deps.get
+      - name: Install dependencies
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
 
-    - name: Retrieve PLT Cache
-      uses: actions/cache@v1
-      id: plt-cache
-      with:
-        path: priv/plts
-        key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-plts-v2-${{ hashFiles('mix.lock') }}
-      if: ${{ matrix.lint }}
+      - name: Retrieve PLT Cache
+        uses: actions/cache@v1
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-plts-v2-${{ hashFiles('mix.lock') }}
+        if: ${{ matrix.lint }}
 
-    - name: Create PLTs
-      run: |
-        mkdir -p priv/plts
-        mix dialyzer --plt
-      if: ${{ matrix.lint }}
+      - name: Create PLTs
+        run: |
+          mkdir -p priv/plts
+          mix dialyzer --plt
+        if: ${{ matrix.lint }}
 
-    - name: Check quality
-      run: |
-        mix format --check-formatted
-        mix credo --strict
-        mix dialyzer --no-check
-        mix e2e
-      if: ${{ matrix.lint }}
+      - name: Check quality
+        run: |
+          mix format --check-formatted
+          mix credo --strict
+          mix dialyzer --no-check
+          mix e2e
+        if: ${{ matrix.lint }}
 
-    - name: Run tests
-      run: mix test
+      - name: Run tests
+        run: mix test
 
-    - name: Run e2e test
-      run: mix e2e
-      if: ${{ matrix.lint }}
+      - name: Run e2e test
+        run: mix e2e
+        if: ${{ matrix.lint }}
