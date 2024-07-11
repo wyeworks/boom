@@ -14,9 +14,9 @@
 <% end %>
 <%= if error.metadata do %>
   Metadata:
-  <%= for {source, fields} <- error.metadata do %>
+  <%= for {source, fields} <- Enum.sort(error.metadata) do %>
     <%= source %>:
-      <%= for {k, v} <- fields do %>
+      <%= for {k, v} <- Enum.sort(fields) do %>
         <%= k %>: <%= v %>
       <% end %>
   <% end %>

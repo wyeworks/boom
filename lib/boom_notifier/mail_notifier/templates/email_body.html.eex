@@ -105,10 +105,10 @@
             Metadata:
           </h2>
           <ul class="info-list padded spaced">
-            <%= for {source, fields} <- error.metadata do %>
+            <%= for {source, fields} <- Enum.sort(error.metadata) do %>
               <%= source %>:
               <ul class="info-sublist">
-                <%= for {k, v} <- fields do %>
+                <%= for {k, v} <- Enum.sort(fields) do %>
                   <li><%= k %>: <%= v %> </li>
                 <% end %>
               </ul>
