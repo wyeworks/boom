@@ -1,4 +1,8 @@
 defmodule TestUtils do
+  @moduledoc """
+  Utility functions for testing.
+  """
+
   def above_version?(boundary) do
     [major, minor, patch] = split_version(boundary)
     [system_major, system_minor, system_patch] = split_version(System.version())
