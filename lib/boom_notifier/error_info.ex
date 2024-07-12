@@ -101,7 +101,7 @@ defmodule BoomNotifier.ErrorInfo do
     }
 
   defp build_custom_data(conn, :assigns),
-    do: %{assigns: conn.assigns()}
+    do: %{assigns: conn.assigns}
 
   defp build_custom_data(conn, assigns: [fields: field_names]),
     do: %{
