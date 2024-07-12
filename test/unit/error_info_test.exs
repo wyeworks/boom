@@ -172,7 +172,7 @@ defmodule ErrorInfoTest do
     assert 10 = Enum.count(error_info_stack)
   end
 
-  @tag skip: System.version() >= "1.14.0"
+  @tag skip: TestUtils.above_version?("1.14.0")
   test "Error info includes stacktrace when entry doesn’t contain file and line info" do
     %Plug.Conn.WrapperError{conn: conn, stack: stack} =
       catch_error(get(build_conn(), "nil_access"))
