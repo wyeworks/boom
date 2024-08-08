@@ -51,12 +51,14 @@ defmodule BoomNotifier do
   end
 
   defmacro __using__(config) do
-    quote location: :keep do
+    quote do
       import BoomNotifier
 
-      error_handler_in_use = {:handle_errors, 2} in Module.definitions_in(__MODULE__)
+      error_handler_in_use = Plug.ErrorHandler in @behaviour
 
-      unless error_handler_in_use do
+      if error_handler_in_use do
+        @before_compile BoomNotifier
+      else
         use Plug.ErrorHandler
 
         @impl Plug.ErrorHandler
@@ -104,6 +106,17 @@ defmodule BoomNotifier do
 
           ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
         end
+      end
+    end
+  end
+
+  defmacro __before_compile__(_env) do
+    quote do
+      defoverridable handle_errors: 2
+
+      def handle_errors(conn, error) do
+        super(conn, error)
+        notify_error(conn, error)
       end
     end
   end

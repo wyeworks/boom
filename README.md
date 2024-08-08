@@ -93,29 +93,6 @@ defmodule YourApp.Router do
     ]
 ```
 
-## Setup when `handle_errors/2` is already being used
-
-If you are using or want to use your own implementation of `handle_errors/2` for the` Plug.ErrorHandler` module, be sure to include the usage of `BoomNotifier` after
-that.
-
-In addition, you will have to add the `notify_error/2` callback that `BoomNotifier` provides within your implementation of `handle_errors/2`.
-
-```elixir
-defmodule YourApp.Router do
-  use Phoenix.Router
-
-  use Plug.ErrorHandler
-
-  def handle_errors(conn, error) do
-    # ...
-    notify_error(conn, error)
-    # ...
-  end
-
-  use BoomNotifier,
-    ...
-```
-
 ## Notification Trigger
 
 By default, `BoomNotifier` will send a notification every time an exception is
@@ -294,6 +271,11 @@ defmodule YourApp.Router do
    # ...
 end
 ```
+
+## Implementation details
+
+Boom uses `Plug.ErrorHandler` to trigger notifications.
+If you are already using that module you must use `BoomNotifier` after it.
 
 ## License
 
