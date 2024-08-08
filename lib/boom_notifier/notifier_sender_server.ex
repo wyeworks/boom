@@ -6,6 +6,8 @@ defmodule BoomNotifier.NotifierSenderServer do
   require Logger
   use GenServer
 
+  alias BoomNotifier.ErrorStorage
+
   # Client API
 
   def start_link(_opts) do
@@ -16,27 +18,54 @@ defmodule BoomNotifier.NotifierSenderServer do
     GenServer.cast(__MODULE__, {:notify, notifier, occurrences, options})
   end
 
+  def maybe_notify(caller_mod, error_info) do
+    GenServer.cast(__MODULE__, {:maybe_notify, caller_mod, error_info})
+  end
+
   # Server callbacks
 
   @impl true
   def init(_opts) do
     Process.flag(:trap_exit, true)
-    {:ok, nil}
+    {:ok, %{}}
   end
 
   @impl true
-  def handle_cast({:notify, notifier, occurrences, options}, _state) do
+  def handle_cast({:notify, notifier, occurrences, options}, state) do
     spawn_link(fn ->
       notifier.notify(occurrences, options)
     end)
 
-    {:noreply, nil}
+    {:noreply, state}
   end
 
   @impl true
-  def handle_info({:EXIT, _pid, :normal}, _state), do: {:noreply, nil}
+  def handle_cast({:maybe_notify, settings, error_info}, state) do
+    notification_trigger = Keyword.get(settings, :notification_trigger, :always)
 
-  def handle_info({:EXIT, _pid, {reason, stacktrace}}, _state) do
+    if ErrorStorage.send_notification?(error_info) do
+      occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
+
+      BoomNotifier.Api.walkthrough_notifiers(
+        settings,
+        fn notifier, options -> send(notifier, occurrences, options) end
+      )
+
+      ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
+      # TODO: reset timer that might be scheduled below
+      {:noreply, state}
+    else
+      # TODO: send_after(:timeout_notify) and store timer
+      # It's already ugly to be passing around settings here,
+      # how do we access settings in handle_cast({:timeout_notify, settings, error_info})?
+      {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_info({:EXIT, _pid, :normal}, state), do: {:noreply, state}
+
+  def handle_info({:EXIT, _pid, {reason, stacktrace}}, state) do
     error_info = Exception.format_banner(:error, reason, stacktrace)
 
     failing_notifier =
@@ -52,6 +81,6 @@ defmodule BoomNotifier.NotifierSenderServer do
       "An error occurred when sending a notification: #{error_info} in #{failing_notifier}"
     )
 
-    {:noreply, nil}
+    {:noreply, state}
   end
 end
