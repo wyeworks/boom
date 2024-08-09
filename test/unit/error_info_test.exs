@@ -39,7 +39,7 @@ defmodule ErrorInfoTest do
       options: [
         mailer: Support.BambooFakeMailer,
         from: "me@example.com",
-        to: inspect(self()),
+        to: to_string(ErrorInfoTest),
         subject: "BOOM error caught"
       ]
 
@@ -71,6 +71,7 @@ defmodule ErrorInfoTest do
   end
 
   setup do
+    Process.register(self(), ErrorInfoTest)
     Logger.metadata(name: "Dennis", age: 17)
   end
 

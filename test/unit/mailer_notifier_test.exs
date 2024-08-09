@@ -66,7 +66,7 @@ defmodule MailerNotifierTest do
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: inspect(self()),
+            to: to_string(MailerNotifierTest),
             subject: "BOOM error caught"
           ],
           custom_data: [:assigns, :logger]
@@ -99,7 +99,7 @@ defmodule MailerNotifierTest do
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: inspect(self()),
+            to: to_string(MailerNotifierTest),
             subject: "BOOM error caught",
             max_subject_length: 25
           ]
@@ -113,6 +113,7 @@ defmodule MailerNotifierTest do
       :elixir_config.put(:ignore_module_conflict, false)
 
       setup do
+        Process.register(self(), MailerNotifierTest)
         Logger.metadata(name: "Dennis", age: 17)
       end
 
@@ -153,7 +154,7 @@ defmodule MailerNotifierTest do
       test "Set email using proper from and to addresses" do
         conn = conn(:get, "/")
         catch_error(TestRouter.call(conn, []))
-        email_to = self()
+        email_to = MailerNotifierTest |> to_string()
 
         assert_receive({:email_from, "me@example.com"}, @receive_timeout)
         assert_receive({:email_to, ^email_to}, @receive_timeout)
