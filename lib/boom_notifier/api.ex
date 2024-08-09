@@ -2,19 +2,18 @@ defmodule BoomNotifier.Api do
   require Logger
 
   alias BoomNotifier.ErrorInfo
-  alias BoomNotifier.ErrorStorage
   alias BoomNotifier.NotifierSenderServer
 
   def notify_error(settings, conn, %{kind: :error, reason: %mod{}} = error) do
     ignored_exceptions = Keyword.get(settings, :ignore_exceptions, [])
 
     unless Enum.member?(ignored_exceptions, mod) do
-      dispatch_notify_error(settings, conn, error)
+      trigger_notify_error(settings, conn, error)
     end
   end
 
   def notify_error(settings, conn, error),
-    do: dispatch_notify_error(settings, conn, error)
+    do: trigger_notify_error(settings, conn, error)
 
   def walkthrough_notifiers(settings, callback) do
     case Keyword.get(settings, :notifiers) do
@@ -57,12 +56,10 @@ defmodule BoomNotifier.Api do
     end
   end
 
-  defp dispatch_notify_error(settings, conn, error) do
+  defp trigger_notify_error(settings, conn, error) do
     custom_data = Keyword.get(settings, :custom_data, :nothing)
     error_info = ErrorInfo.build(error, conn, custom_data)
 
-    ErrorStorage.store_error(error_info)
-
-    NotifierSenderServer.maybe_notify(settings, error_info)
+    NotifierSenderServer.async_trigger_notify(settings, error_info)
   end
 end

@@ -14,12 +14,42 @@ defmodule BoomNotifier.NotifierSenderServer do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def send(notifier, occurrences, options) do
+  def async_notify(notifier, occurrences, options) do
     GenServer.cast(__MODULE__, {:notify, notifier, occurrences, options})
   end
 
-  def maybe_notify(caller_mod, error_info) do
-    GenServer.cast(__MODULE__, {:maybe_notify, caller_mod, error_info})
+  def async_trigger_notify(settings, error_info) do
+    GenServer.cast(__MODULE__, {:trigger_notify, settings, error_info})
+  end
+
+  def notify(notifier, occurrences, options) do
+    spawn_link(fn ->
+      notifier.notify(occurrences, options)
+    end)
+  end
+
+  def trigger_notify(settings, error_info) do
+    notification_trigger = Keyword.get(settings, :notification_trigger, :always)
+
+    ErrorStorage.store_error(error_info)
+
+    if ErrorStorage.send_notification?(error_info) do
+      occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
+
+      BoomNotifier.Api.walkthrough_notifiers(
+        settings,
+        fn notifier, options -> notify(notifier, occurrences, options) end
+      )
+
+      ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
+      # TODO: reset timer that might be scheduled below
+      {:ok, %{}}
+    else
+      # TODO: send_after(:timeout_notify) and store timer
+      # It's already ugly to be passing around settings here,
+      # how do we access settings in handle_cast({:timeout_notify, settings, error_info})?
+      {:ok, %{}}
+    end
   end
 
   # Server callbacks
@@ -32,34 +62,16 @@ defmodule BoomNotifier.NotifierSenderServer do
 
   @impl true
   def handle_cast({:notify, notifier, occurrences, options}, state) do
-    spawn_link(fn ->
-      notifier.notify(occurrences, options)
-    end)
+    notify(notifier, occurrences, options)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:maybe_notify, settings, error_info}, state) do
-    notification_trigger = Keyword.get(settings, :notification_trigger, :always)
+  def handle_cast({:trigger_notify, settings, error_info}, state) do
+    {:ok, state_updates} = trigger_notify(settings, error_info)
 
-    if ErrorStorage.send_notification?(error_info) do
-      occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
-
-      BoomNotifier.Api.walkthrough_notifiers(
-        settings,
-        fn notifier, options -> send(notifier, occurrences, options) end
-      )
-
-      ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
-      # TODO: reset timer that might be scheduled below
-      {:noreply, state}
-    else
-      # TODO: send_after(:timeout_notify) and store timer
-      # It's already ugly to be passing around settings here,
-      # how do we access settings in handle_cast({:timeout_notify, settings, error_info})?
-      {:noreply, state}
-    end
+    {:noreply, state |> Map.merge(state_updates)}
   end
 
   @impl true
