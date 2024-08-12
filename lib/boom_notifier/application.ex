@@ -6,7 +6,7 @@ defmodule BoomNotifier.Application do
   def start(_type, _args) do
     children = [
       BoomNotifier.ErrorStorage,
-      BoomNotifier.NotifierSenderServer
+      BoomNotifier.NotificationSender
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)

@@ -2,7 +2,7 @@ defmodule BoomNotifier.Api do
   require Logger
 
   alias BoomNotifier.ErrorInfo
-  alias BoomNotifier.NotifierSenderServer
+  alias BoomNotifier.NotificationSender
 
   def notify_error(settings, conn, %{kind: :error, reason: %mod{}} = error) do
     ignored_exceptions = Keyword.get(settings, :ignore_exceptions, [])
@@ -60,6 +60,6 @@ defmodule BoomNotifier.Api do
     custom_data = Keyword.get(settings, :custom_data, :nothing)
     error_info = ErrorInfo.build(error, conn, custom_data)
 
-    NotifierSenderServer.async_trigger_notify(settings, error_info)
+    NotificationSender.async_trigger_notify(settings, error_info)
   end
 end

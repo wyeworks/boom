@@ -1,4 +1,4 @@
-defmodule BoomNotifier.NotifierSenderServer do
+defmodule BoomNotifier.NotificationSender do
   @moduledoc false
 
   # This GenServer is responsible for sending the notifications in background.
