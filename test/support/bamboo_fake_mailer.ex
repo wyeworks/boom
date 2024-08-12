@@ -12,6 +12,12 @@ defmodule Support.BambooFakeMailer do
       |> String.to_atom()
       |> Process.whereis()
 
+    send_back(pid, email)
+  end
+
+  def send_back(nil, _), do: nil
+
+  def send_back(pid, email) do
     send(pid, {:email_subject, email.subject})
     send(pid, {:email_from, email.from})
     send(pid, {:email_to, email.to})

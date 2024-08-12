@@ -23,14 +23,22 @@ defmodule Support.SwooshFakeMailer do
     # this crashes OTP 21, specifically getting the from_addr via tuple match,
     # so get from_addr via elem/2 separately...
     # %{to: [{_name, email_to}], from: {_, from_addr}} = email
-    %{to: [{_name, email_to}], from: from} = email
-    from_addr = elem(from, 1)
+    %{to: [{_name, email_to}]} = email
 
     # Use email.to to specify test target pid
     pid =
       email_to
       |> String.to_atom()
       |> Process.whereis()
+
+    send_back(pid, email)
+  end
+
+  def send_back(nil, _), do: nil
+
+  def send_back(pid, email) do
+    %{to: [{_name, email_to}], from: from} = email
+    from_addr = elem(from, 1)
 
     send(pid, {:email_subject, email.subject})
     send(pid, {:email_from, from_addr})

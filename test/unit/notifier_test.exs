@@ -19,7 +19,9 @@ defmodule NotifierTest do
       subject = "#{subject_prefix}: #{error_info.reason}"
       body = Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
 
-      send(to_respond_pid, %{exception: %{subject: subject, body: body}})
+      # If test does not wait for a message, pid might be already dead at this point
+      if to_respond_pid,
+        do: send(to_respond_pid, %{exception: %{subject: subject, body: body}})
     end
   end
 
@@ -160,9 +162,6 @@ defmodule NotifierTest do
 
   setup do
     Process.register(self(), NotifierTest)
-
-    # TODO: intentar reiniciar la application BoomNotifier entre
-    # tests en vez de limpiar el error storage.
     Agent.update(:boom_notifier, fn _state -> %{} end)
 
     on_exit(&flush_messages/0)
