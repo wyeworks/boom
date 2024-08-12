@@ -75,8 +75,8 @@ defmodule BoomNotifier.NotificationSender do
 
   @impl true
   def handle_cast({:trigger_notify, settings, error_info}, state) do
-    error_key = ErrorInfo.generate_error_key(error_info)
-    {timer, state} = Map.pop(state, error_key)
+    error_info = error_info |> ErrorInfo.ensure_key()
+    {timer, state} = Map.pop(state, error_info.key)
 
     cancel_timer(timer)
 
@@ -86,7 +86,7 @@ defmodule BoomNotifier.NotificationSender do
 
       {:schedule, timeout} ->
         timer = Process.send_after(self(), {:notify_all, settings, error_info}, timeout)
-        {:noreply, state |> Map.put(error_key, timer)}
+        {:noreply, state |> Map.put(error_info.key, timer)}
     end
   end
 
@@ -113,10 +113,10 @@ defmodule BoomNotifier.NotificationSender do
   end
 
   def handle_info({:notify_all, settings, error_info}, state) do
+    error_info = error_info |> ErrorInfo.ensure_key()
     notify_all(settings, error_info)
-    error_key = ErrorInfo.generate_error_key(error_info)
 
-    {:noreply, state |> Map.delete(error_key)}
+    {:noreply, state |> Map.delete(error_info.key)}
   end
 
   defp cancel_timer(nil), do: nil

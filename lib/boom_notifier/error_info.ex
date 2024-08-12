@@ -53,8 +53,7 @@ defmodule BoomNotifier.ErrorInfo do
         metadata: build_custom_data(conn, custom_data_strategy)
       }
 
-    error_info
-    |> Map.put(:key, generate_error_key(error_info))
+    error_info |> ensure_key()
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
@@ -137,5 +136,9 @@ defmodule BoomNotifier.ErrorInfo do
     |> Map.update(:stack, nil, fn stacktrace -> List.first(stacktrace) end)
     |> inspect()
     |> :erlang.crc32()
+  end
+
+  def ensure_key(%__MODULE__{} = error_info) do
+    error_info |> Map.put_new_lazy(:key, fn -> generate_error_key(error_info) end)
   end
 end
