@@ -8,6 +8,7 @@ defmodule BoomNotifier.ErrorInfo do
 
   @enforce_keys [:reason, :stack, :timestamp]
   defstruct [
+    :key,
     :name,
     :reason,
     :stack,
@@ -40,16 +41,20 @@ defmodule BoomNotifier.ErrorInfo do
   def build(%{reason: reason, stack: stack}, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
-    %__MODULE__{
-      reason: error_reason,
-      stack: stack,
-      controller: get_in(conn.private, [:phoenix_controller]),
-      action: get_in(conn.private, [:phoenix_action]),
-      request: build_request_info(conn),
-      timestamp: DateTime.utc_now(),
-      name: error_name,
-      metadata: build_custom_data(conn, custom_data_strategy)
-    }
+    error_info =
+      %__MODULE__{
+        reason: error_reason,
+        stack: stack,
+        controller: get_in(conn.private, [:phoenix_controller]),
+        action: get_in(conn.private, [:phoenix_action]),
+        request: build_request_info(conn),
+        timestamp: DateTime.utc_now(),
+        name: error_name,
+        metadata: build_custom_data(conn, custom_data_strategy)
+      }
+
+    error_info
+    |> Map.put(:key, generate_error_key(error_info))
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
@@ -116,4 +121,21 @@ defmodule BoomNotifier.ErrorInfo do
       Enum.reduce(options, %{}, fn opt, acc ->
         Map.merge(acc, build_custom_data(conn, opt))
       end)
+
+  # Generates a unique hash key based on the error info. The timestamp and the
+  # request info is removed so we don't get different keys for the same error.
+  #
+  # The map is converted to a string using `inspect()` so we can hash it using
+  # the crc32 algorithm that was taken from the Exception Notification library
+  # for Rails
+  @spec generate_error_key(__MODULE__.t()) :: non_neg_integer()
+  def generate_error_key(error_info) do
+    error_info
+    |> Map.delete(:request)
+    |> Map.delete(:metadata)
+    |> Map.delete(:timestamp)
+    |> Map.update(:stack, nil, fn stacktrace -> List.first(stacktrace) end)
+    |> inspect()
+    |> :erlang.crc32()
+  end
 end

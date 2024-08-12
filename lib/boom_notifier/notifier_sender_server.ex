@@ -6,6 +6,7 @@ defmodule BoomNotifier.NotifierSenderServer do
   require Logger
   use GenServer
 
+  alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
 
   # Client API
@@ -28,27 +29,32 @@ defmodule BoomNotifier.NotifierSenderServer do
     end)
   end
 
+  def notify_all(settings, error_info) do
+    occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
+
+    BoomNotifier.Api.walkthrough_notifiers(
+      settings,
+      fn notifier, options -> notify(notifier, occurrences, options) end
+    )
+  end
+
   def trigger_notify(settings, error_info) do
     notification_trigger = Keyword.get(settings, :notification_trigger, :always)
+    timeout = Keyword.get(settings, :groupping_timeout)
 
     ErrorStorage.store_error(error_info)
 
     if ErrorStorage.send_notification?(error_info) do
-      occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
-
-      BoomNotifier.Api.walkthrough_notifiers(
-        settings,
-        fn notifier, options -> notify(notifier, occurrences, options) end
-      )
+      notify_all(settings, error_info)
 
       ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
-      # TODO: reset timer that might be scheduled below
-      {:ok, %{}}
+      :ok
     else
-      # TODO: send_after(:timeout_notify) and store timer
-      # It's already ugly to be passing around settings here,
-      # how do we access settings in handle_cast({:timeout_notify, settings, error_info})?
-      {:ok, %{}}
+      if timeout do
+        {:schedule, timeout}
+      else
+        :ok
+      end
     end
   end
 
@@ -69,9 +75,19 @@ defmodule BoomNotifier.NotifierSenderServer do
 
   @impl true
   def handle_cast({:trigger_notify, settings, error_info}, state) do
-    {:ok, state_updates} = trigger_notify(settings, error_info)
+    error_key = ErrorInfo.generate_error_key(error_info)
+    {timer, state} = Map.pop(state, error_key)
 
-    {:noreply, state |> Map.merge(state_updates)}
+    cancel_timer(timer)
+
+    case trigger_notify(settings, error_info) do
+      :ok ->
+        {:noreply, state}
+
+      {:schedule, timeout} ->
+        timer = Process.send_after(self(), {:notify_all, settings, error_info}, timeout)
+        {:noreply, state |> Map.put(error_key, timer)}
+    end
   end
 
   @impl true
@@ -95,4 +111,14 @@ defmodule BoomNotifier.NotifierSenderServer do
 
     {:noreply, state}
   end
+
+  def handle_info({:notify_all, settings, error_info}, state) do
+    notify_all(settings, error_info)
+    error_key = ErrorInfo.generate_error_key(error_info)
+
+    {:noreply, state |> Map.delete(error_key)}
+  end
+
+  defp cancel_timer(nil), do: nil
+  defp cancel_timer(timer), do: Process.cancel_timer(timer)
 end

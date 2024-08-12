@@ -12,12 +12,7 @@ defmodule ErrorStorageTest do
     timestamp: @timestamp
   }
 
-  @error_hash ErrorStorage.generate_error_key(@error_info)
-
-  setup_all do
-    ErrorStorage.start_link()
-    :ok
-  end
+  @error_hash ErrorInfo.generate_error_key(@error_info)
 
   setup do
     Agent.update(:boom_notifier, fn _ -> %{} end)
@@ -33,7 +28,7 @@ defmodule ErrorStorageTest do
         timestamp: another_timestamp
       }
 
-      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+      another_error_hash = ErrorInfo.generate_error_key(another_error_info)
 
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(@error_info)
@@ -238,7 +233,7 @@ defmodule ErrorStorageTest do
         timestamp: @timestamp
       }
 
-      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+      another_error_hash = ErrorInfo.generate_error_key(another_error_info)
 
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(another_error_info)
