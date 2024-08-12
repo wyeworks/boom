@@ -395,10 +395,8 @@ defmodule NotifierTest do
     defmodule PlugErrorWithCallback do
       use Plug.ErrorHandler
 
-      def handle_errors(conn, error) do
-        send(self(), :before_callback)
-        notify_error(conn, error)
-        send(self(), :after_callback)
+      def handle_errors(_conn, _error) do
+        send(self(), :handle_errors_called)
       end
 
       use BoomNotifier,
@@ -417,9 +415,8 @@ defmodule NotifierTest do
 
       catch_error(PlugErrorWithCallback.call(conn, []))
 
-      assert_received :before_callback
       assert_receive(%{exception: _exception}, @receive_timeout)
-      assert_received :after_callback
+      assert_received :handle_errors_called
     end
   end
 end
