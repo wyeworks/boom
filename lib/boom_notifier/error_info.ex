@@ -41,19 +41,17 @@ defmodule BoomNotifier.ErrorInfo do
   def build(%{reason: reason, stack: stack}, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
-    error_info =
-      %__MODULE__{
-        reason: error_reason,
-        stack: stack,
-        controller: get_in(conn.private, [:phoenix_controller]),
-        action: get_in(conn.private, [:phoenix_action]),
-        request: build_request_info(conn),
-        timestamp: DateTime.utc_now(),
-        name: error_name,
-        metadata: build_custom_data(conn, custom_data_strategy)
-      }
-
-    error_info |> ensure_key()
+    %__MODULE__{
+      reason: error_reason,
+      stack: stack,
+      controller: get_in(conn.private, [:phoenix_controller]),
+      action: get_in(conn.private, [:phoenix_action]),
+      request: build_request_info(conn),
+      timestamp: DateTime.utc_now(),
+      name: error_name,
+      metadata: build_custom_data(conn, custom_data_strategy)
+    }
+    |> ensure_key()
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
