@@ -136,7 +136,11 @@ defmodule BoomNotifier.ErrorInfo do
     |> :erlang.crc32()
   end
 
-  def ensure_key(%__MODULE__{} = error_info) do
+  def ensure_key(%{key: nil} = error_info) do
+    error_info |> Map.put(:key, generate_error_key(error_info))
+  end
+
+  def ensure_key(%{} = error_info) do
     error_info |> Map.put_new_lazy(:key, fn -> generate_error_key(error_info) end)
   end
 end
