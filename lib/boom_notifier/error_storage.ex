@@ -34,7 +34,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec store_error(ErrorInfo.t()) :: :ok
   def store_error(error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
     timestamp = error_info.timestamp || DateTime.utc_now()
 
     default_error_storage_info = %__MODULE__{
@@ -67,7 +67,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec get_error_stats(ErrorInfo.t()) :: %__MODULE__{}
   def get_error_stats(error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
 
     Agent.get(:boom_notifier, fn state -> state end)
     |> Map.get(error_hash_key)
@@ -81,7 +81,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec send_notification?(ErrorInfo.t()) :: boolean()
   def send_notification?(error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
 
     error_storage_item =
       Agent.get(:boom_notifier, fn state -> state end)
@@ -96,7 +96,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec reset_accumulated_errors(error_strategy, ErrorInfo.t()) :: :ok
   def reset_accumulated_errors(:exponential, error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
 
     Agent.update(
       :boom_notifier,
@@ -108,7 +108,7 @@ defmodule BoomNotifier.ErrorStorage do
   end
 
   def reset_accumulated_errors([exponential: [limit: limit]], error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
 
     Agent.update(
       :boom_notifier,
@@ -120,7 +120,7 @@ defmodule BoomNotifier.ErrorStorage do
   end
 
   def reset_accumulated_errors(:always, error_info) do
-    error_hash_key = ErrorInfo.generate_error_key(error_info)
+    %{key: error_hash_key} = ErrorInfo.ensure_key(error_info)
 
     Agent.update(
       :boom_notifier,

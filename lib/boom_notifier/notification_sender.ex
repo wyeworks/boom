@@ -40,7 +40,7 @@ defmodule BoomNotifier.NotificationSender do
 
   def trigger_notify(settings, error_info) do
     notification_trigger = Keyword.get(settings, :notification_trigger, :always)
-    timeout = Keyword.get(settings, :groupping_timeout)
+    timeout = Keyword.get(settings, :backoff_timeout)
 
     ErrorStorage.store_error(error_info)
 

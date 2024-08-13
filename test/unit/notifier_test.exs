@@ -3,6 +3,7 @@ defmodule NotifierTest do
   use Plug.Test
 
   import ExUnit.CaptureLog
+  import TestUtils
 
   doctest BoomNotifier
 
@@ -149,14 +150,6 @@ defmodule NotifierTest do
 
     def call(_conn, _opts) do
       raise TestException.exception([])
-    end
-  end
-
-  def flush_messages(timeout \\ 10) do
-    receive do
-      _message -> flush_messages()
-    after
-      timeout -> nil
     end
   end
 
