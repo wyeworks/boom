@@ -149,6 +149,26 @@ defmodule YourApp.Router do
     ]
 ```
 
+### Notification trigger timeout
+
+If you've defined a triggering strategy which holds off notification delivering you can define a timeout value
+which will be used to deliver the notification after timeout milliseconds have passed from the last error. The
+timeout counter is reset on new errors and only applies for cases where notifications are not sent.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    notification_trigger: [:exponential],
+    throttle_timeout: :timer.minutes(30),
+    notifier: CustomNotifier
+
+  # ...
+end
+```
+
+
 ## Custom data or Metadata
 
 By default, `BoomNotifier` will **not** include any custom data from your
