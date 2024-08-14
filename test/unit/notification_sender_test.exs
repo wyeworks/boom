@@ -1,5 +1,5 @@
 defmodule BoomNotifier.NotificationSenderTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   import TestUtils
 

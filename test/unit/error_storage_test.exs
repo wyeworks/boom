@@ -1,5 +1,5 @@
 defmodule ErrorStorageTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
