@@ -1,5 +1,5 @@
 defmodule BoomNotifier.NotificationSenderTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
 
   import TestUtils
 
@@ -48,18 +48,12 @@ defmodule BoomNotifier.NotificationSenderTest do
     end
   end
 
-  def cancel_timers() do
-    :sys.get_state(Process.whereis(NotificationSender))
-    |> Map.values()
-    |> Enum.each(&Process.cancel_timer/1)
-  end
-
   setup do
     self() |> Process.register(@pid_name)
     clear_error_storage()
 
     on_exit(&flush_messages/0)
-    on_exit(&cancel_timers/0)
+    on_exit(&cancel_notification_sender_timers/0)
 
     :ok
   end

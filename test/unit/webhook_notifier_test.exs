@@ -1,5 +1,5 @@
 defmodule WebhookNotifierTest do
-  use ExUnit.Case, async: false
+  use BoomNotifier.Case
   use Plug.Test
 
   doctest BoomNotifier

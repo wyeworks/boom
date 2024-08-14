@@ -1,5 +1,5 @@
 defmodule ErrorInfoTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
 
   import Plug.Conn
   import Phoenix.ConnTest

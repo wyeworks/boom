@@ -1,5 +1,5 @@
 defmodule MailerNotifierTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
   use Plug.Test
 
   import TestUtils
