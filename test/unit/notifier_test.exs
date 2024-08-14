@@ -155,7 +155,7 @@ defmodule NotifierTest do
 
   setup do
     Process.register(self(), NotifierTest)
-    Agent.update(:boom_notifier, fn _state -> %{} end)
+    clear_error_storage()
 
     on_exit(&flush_messages/0)
   end

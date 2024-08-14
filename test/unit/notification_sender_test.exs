@@ -56,8 +56,8 @@ defmodule BoomNotifier.NotificationSenderTest do
 
   setup do
     self() |> Process.register(@pid_name)
+    clear_error_storage()
 
-    on_exit(fn -> Agent.update(:boom_notifier, fn _ -> %{} end) end)
     on_exit(&flush_messages/0)
     on_exit(&cancel_timers/0)
 

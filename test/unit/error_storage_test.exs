@@ -4,6 +4,8 @@ defmodule ErrorStorageTest do
   alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
 
+  import TestUtils
+
   @timestamp DateTime.utc_now()
 
   @error_info %ErrorInfo{
@@ -15,7 +17,7 @@ defmodule ErrorStorageTest do
   @error_hash ErrorInfo.generate_error_key(@error_info)
 
   setup do
-    Agent.update(:boom_notifier, fn _ -> %{} end)
+    clear_error_storage()
   end
 
   describe "store_error/1" do
