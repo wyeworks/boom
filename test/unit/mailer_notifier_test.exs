@@ -2,6 +2,8 @@ defmodule MailerNotifierTest do
   use ExUnit.Case
   use Plug.Test
 
+  import TestUtils
+
   alias BoomNotifier.MailNotifier
 
   doctest BoomNotifier
@@ -115,6 +117,8 @@ defmodule MailerNotifierTest do
       setup do
         Process.register(self(), MailerNotifierTest)
         Logger.metadata(name: "Dennis", age: 17)
+
+        on_exit(&flush_messages/0)
       end
 
       test "Raising an error on failure" do
@@ -288,11 +292,11 @@ defmodule MailerNotifierTest do
 
             [second_stack_line | _] = stacktrace_list
 
-            assert "<li>test/unit/mailer_notifier_test.exs:20: MailerNotifierTest.TestController.index/2</li>" =
-                     first_stack_line
+            assert first_stack_line =~
+                     ~r"<li>test/unit/mailer_notifier_test.exs:\d+: MailerNotifierTest.TestController.index/2</li>"
 
-            assert "<li>test/unit/mailer_notifier_test.exs:11: MailerNotifierTest.TestController.action/2</li>" =
-                     second_stack_line
+            assert second_stack_line =~
+                     ~r"<li>test/unit/mailer_notifier_test.exs:\d+: MailerNotifierTest.TestController.action/2</li>"
         end
       end
 
