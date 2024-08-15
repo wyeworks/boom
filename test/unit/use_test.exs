@@ -1,6 +1,8 @@
 defmodule BoomNotifier.UseTest do
   use ExUnit.Case
 
+  import TestUtils
+
   @already_sent {:plug_conn, :sent}
 
   defmodule Notifier do
@@ -15,7 +17,7 @@ defmodule BoomNotifier.UseTest do
   end
 
   setup do
-    Process.register(self(), BoomNotifier.UseTest)
+    force_register_pid(self(), BoomNotifier.UseTest)
 
     %{conn: Plug.Test.conn(:get, "/") |> Map.put(:owner, self())}
   end
