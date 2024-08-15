@@ -11,24 +11,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: '1.9'
-            otp: '21'
-          - elixir: '1.9'
-            otp: '22'
-          - elixir: '1.10'
-            otp: '21'
-          - elixir: '1.10'
-            otp: '22'
-          - elixir: '1.10'
-            otp: '23'
-          - elixir: '1.11'
-            otp: '21'
-          - elixir: '1.11'
-            otp: '22'
-          - elixir: '1.11'
-            otp: '23'
-          - elixir: '1.11'
-            otp: '24'
           - elixir: '1.12'
             otp: '22'
           - elixir: '1.12'
@@ -61,7 +43,6 @@ jobs:
             otp: '25'
           - elixir: '1.16'
             otp: '26'
-            lint: lint
           - elixir: '1.17'
             otp: '25'
           - elixir: '1.17'
@@ -71,6 +52,7 @@ jobs:
           - elixir: '1.17'
             otp: '27'
             deps: latest
+            lint: true
     steps:
       - uses: actions/checkout@v2
       - uses: nanasess/setup-chromedriver@v2
@@ -116,7 +98,6 @@ jobs:
           mix format --check-formatted
           mix credo --strict
           mix dialyzer --no-check
-          mix e2e
         if: ${{ matrix.lint }}
 
       - name: Run tests
