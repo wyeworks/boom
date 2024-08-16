@@ -17,7 +17,10 @@ defmodule BoomNotifier.UseTest do
   end
 
   setup do
-    force_register_pid(self(), BoomNotifier.UseTest)
+    # Even though tests are run sequentially a test example
+    # pid might ocationally be still alive when the next test
+    # example starts
+    register_pid_override(self(), BoomNotifier.UseTest)
 
     %{conn: Plug.Test.conn(:get, "/") |> Map.put(:owner, self())}
   end

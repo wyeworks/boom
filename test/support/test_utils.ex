@@ -7,7 +7,7 @@ defmodule TestUtils do
     Version.compare(System.version(), boundary) == :gt
   end
 
-  def force_register_pid(pid, name) do
+  def register_pid_override(pid, name) do
     unregister_pid(name)
     Process.register(pid, name)
   end
