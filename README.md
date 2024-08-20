@@ -277,6 +277,11 @@ end
 Boom uses `Plug.ErrorHandler` to trigger notifications.
 If you are already using that module you must use `BoomNotifier` after it.
 
+## Compatibility
+
+This library aims to be compatible with Elixir versions from 1.10 to 1.17
+although it might work with other versions.
+
 ## License
 
 BoomNotifier is released under the terms of the [MIT License](https://github.com/wyeworks/boom/blob/master/LICENSE).

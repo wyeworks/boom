@@ -7,7 +7,7 @@ defmodule BoomNotifier.MixProject do
     [
       app: :boom_notifier,
       version: "0.8.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -75,7 +75,7 @@ defmodule BoomNotifier.MixProject do
       {:phoenix, "~> 1.4", only: [:test]},
 
       # Dev dependencies
-      {:credo, "~> 1.6.1", only: [:dev], runtime: false},
+      {:credo, "~> 1.7", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.4.3", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.23", only: :dev}
     ]
