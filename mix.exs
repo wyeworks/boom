@@ -7,7 +7,7 @@ defmodule BoomNotifier.MixProject do
     [
       app: :boom_notifier,
       version: "0.8.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),

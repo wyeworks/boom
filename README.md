@@ -279,9 +279,8 @@ If you are already using that module you must use `BoomNotifier` after it.
 
 ## Compatibility
 
-This library aims to be compatible with [supported Elixir
-versions](https://hexdocs.pm/elixir/compatibility-and-deprecations.html)
-although it might work with older versions.
+This library aims to be compatible with Elixir versions from 1.10 to 1.17
+although it might work with other versions.
 
 ## License
 
