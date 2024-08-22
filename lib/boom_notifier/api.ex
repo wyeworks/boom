@@ -1,4 +1,9 @@
 defmodule BoomNotifier.Api do
+  @moduledoc """
+  BoomNotifier Entrypoint API
+
+  Define functions required by BoomNotifier module when used on a plug app.
+  """
   require Logger
 
   alias BoomNotifier.ErrorInfo
