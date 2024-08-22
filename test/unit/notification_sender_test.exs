@@ -33,19 +33,17 @@ defmodule BoomNotifier.NotificationSenderTest do
   end
 
   def build_error_info(_) do
-    try do
-      raise "an error"
-    rescue
-      e ->
-        error_info =
-          ErrorInfo.build(
-            %{reason: e, stack: __STACKTRACE__},
-            Plug.Test.conn(:get, "/"),
-            :nothing
-          )
+    raise "an error"
+  rescue
+    e ->
+      error_info =
+        ErrorInfo.build(
+          %{reason: e, stack: __STACKTRACE__},
+          Plug.Test.conn(:get, "/"),
+          :nothing
+        )
 
-        %{error_info: error_info}
-    end
+      %{error_info: error_info}
   end
 
   setup do

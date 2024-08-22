@@ -7,11 +7,11 @@ defmodule TestUtils do
     Version.compare(System.version(), boundary) == :gt
   end
 
-  def clear_error_storage() do
+  def clear_error_storage do
     Agent.update(:boom_notifier, fn _ -> %{} end)
   end
 
-  def cancel_notification_sender_timers() do
+  def cancel_notification_sender_timers do
     :sys.get_state(Process.whereis(BoomNotifier.NotificationSender))
     |> Map.values()
     |> Enum.each(&Process.cancel_timer/1)
