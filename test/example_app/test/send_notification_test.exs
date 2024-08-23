@@ -1,5 +1,5 @@
 defmodule ExampleAppWeb.SendNotificationTest do
-  use BoomNotifier.Case, async: true
+  use ExUnit.Case, async: true
   use Wallaby.Feature
 
   def select_email(session, item), do: visit(session, Wallaby.Element.attr(item, "href"))
