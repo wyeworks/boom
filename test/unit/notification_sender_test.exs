@@ -10,12 +10,11 @@ defmodule BoomNotifier.NotificationSenderTest do
   }
 
   @throttle_timeout 500
-  @pid_name __MODULE__
   @receive_timeout 100
 
   @settings_basic [
     notifier: __MODULE__.NotificationSenderTestNotifier,
-    options: [pid_name: @pid_name]
+    options: [pid_name: BoomNotifier.TestMessageProxy]
   ]
 
   @settings_groupping @settings_basic ++
@@ -47,7 +46,6 @@ defmodule BoomNotifier.NotificationSenderTest do
   end
 
   setup do
-    self() |> Process.register(@pid_name)
     clear_error_storage()
 
     on_exit(&flush_messages/0)

@@ -39,7 +39,7 @@ defmodule ErrorInfoTest do
       options: [
         mailer: Support.BambooFakeMailer,
         from: "me@example.com",
-        to: to_string(ErrorInfoTest),
+        to: to_string(BoomNotifier.TestMessageProxy),
         subject: "BOOM error caught"
       ]
 
@@ -71,7 +71,6 @@ defmodule ErrorInfoTest do
   end
 
   setup do
-    Process.register(self(), ErrorInfoTest)
     Logger.metadata(name: "Dennis", age: 17)
   end
 
