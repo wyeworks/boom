@@ -80,6 +80,14 @@ defmodule BoomNotifier.NotificationSenderTest do
       refute_receive({:notify_called, _}, @receive_timeout)
       assert {:schedule, @throttle_timeout} = trigger_notify_resp
     end
+
+    test "sends notification occurrences along error info", %{error_info: error_info} do
+      for _ <- 1..7 do
+        NotificationSender.trigger_notify(@settings_groupping, error_info)
+      end
+
+      assert_receive({:notify_called, %{occurrences: %{accumulated_occurrences: 4}}})
+    end
   end
 
   describe "async call with exponential notification trigger" do
