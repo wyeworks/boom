@@ -1,11 +1,11 @@
 defmodule BoomNotifier.UseTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
 
   @already_sent {:plug_conn, :sent}
 
   defmodule Notifier do
     def notify(%{name: name}, _) do
-      pid = Process.whereis(BoomNotifier.UseTest)
+      pid = Process.whereis(BoomNotifier.TestMessageProxy)
       send(pid, {:notification_sent, name})
     end
   end
@@ -15,8 +15,6 @@ defmodule BoomNotifier.UseTest do
   end
 
   setup do
-    Process.register(self(), BoomNotifier.UseTest)
-
     %{conn: Plug.Test.conn(:get, "/") |> Map.put(:owner, self())}
   end
 
