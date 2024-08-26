@@ -39,7 +39,7 @@ defmodule ErrorInfoTest do
       options: [
         mailer: Support.BambooFakeMailer,
         from: "me@example.com",
-        to: to_string(BoomNotifier.TestMessageProxy),
+        to: "me@example.com",
         subject: "BOOM error caught"
       ]
 
