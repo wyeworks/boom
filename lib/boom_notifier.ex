@@ -28,10 +28,6 @@ defmodule BoomNotifier do
         fn notifier, options -> BoomNotifier.Api.validate_notifiers(notifier, options) end
       )
 
-      def walkthrough_notifiers(callback) do
-        unquote(config) |> BoomNotifier.Api.walkthrough_notifiers(callback)
-      end
-
       def notify_error(conn, error) do
         BoomNotifier.Api.notify_error(unquote(config), conn, error)
       end

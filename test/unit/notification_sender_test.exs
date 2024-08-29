@@ -86,6 +86,8 @@ defmodule BoomNotifier.NotificationSenderTest do
         NotificationSender.trigger_notify(@settings_groupping, error_info)
       end
 
+      assert_receive({:notify_called, %{occurrences: %{accumulated_occurrences: 1}}})
+      assert_receive({:notify_called, %{occurrences: %{accumulated_occurrences: 2}}})
       assert_receive({:notify_called, %{occurrences: %{accumulated_occurrences: 4}}})
     end
   end
