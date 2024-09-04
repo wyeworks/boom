@@ -64,7 +64,7 @@ defmodule BoomNotifier.MixProject do
     [
       {:httpoison, "~> 2.1"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 1.0 or ~> 2.0"},
+      {:plug, "~> 1.16"},
 
       # Delivery service is an end-user choice
       {:bamboo, "~> 2.0", optional: true},
