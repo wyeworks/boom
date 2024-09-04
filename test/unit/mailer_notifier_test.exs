@@ -157,7 +157,7 @@ defmodule MailerNotifierTest do
       test "Set email using proper from and to addresses" do
         conn = conn(:get, "/")
         catch_error(TestRouter.call(conn, []))
-        email_to = BoomNotifier.TestMessageProxy |> to_string()
+        email_to = to_string(BoomNotifier.TestMessageProxy)
 
         assert_receive({:email_from, "me@example.com"}, @receive_timeout)
         assert_receive({:email_to, ^email_to}, @receive_timeout)

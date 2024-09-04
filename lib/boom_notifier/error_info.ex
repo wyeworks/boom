@@ -41,7 +41,7 @@ defmodule BoomNotifier.ErrorInfo do
   def build(%{reason: reason, stack: stack}, conn, custom_data_strategy) do
     {error_reason, error_name} = error_reason(reason)
 
-    %__MODULE__{
+    error_info = %__MODULE__{
       reason: error_reason,
       stack: stack,
       controller: get_in(conn.private, [:phoenix_controller]),
@@ -51,7 +51,8 @@ defmodule BoomNotifier.ErrorInfo do
       name: error_name,
       metadata: build_custom_data(conn, custom_data_strategy)
     }
-    |> ensure_key()
+
+    ensure_key(error_info)
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
@@ -136,11 +137,12 @@ defmodule BoomNotifier.ErrorInfo do
     |> :erlang.crc32()
   end
 
+  @spec ensure_key(__MODULE__.t()) :: __MODULE__.t()
   def ensure_key(%{key: nil} = error_info) do
-    error_info |> Map.put(:key, generate_error_key(error_info))
+    Map.put(error_info, :key, generate_error_key(error_info))
   end
 
   def ensure_key(%{} = error_info) do
-    error_info |> Map.put_new_lazy(:key, fn -> generate_error_key(error_info) end)
+    Map.put_new_lazy(error_info, :key, fn -> generate_error_key(error_info) end)
   end
 end

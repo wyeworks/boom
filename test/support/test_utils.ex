@@ -12,7 +12,9 @@ defmodule TestUtils do
   end
 
   def cancel_notification_sender_timers do
-    :sys.get_state(Process.whereis(BoomNotifier.NotificationSender))
+    BoomNotifier.NotificationSender
+    |> Process.whereis()
+    |> :sys.get_state()
     |> Map.values()
     |> Enum.each(&Process.cancel_timer/1)
   end

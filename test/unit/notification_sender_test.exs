@@ -25,7 +25,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
   defmodule NotificationSenderTestNotifier do
     def notify(error_info, opts) do
-      pid = opts[:pid_name] |> Process.whereis()
+      pid = Process.whereis(opts[:pid_name])
 
       if pid, do: send(pid, {:notify_called, error_info})
     end
@@ -60,7 +60,8 @@ defmodule BoomNotifier.NotificationSenderTest do
     test "sends a notification", %{error_info: error_info} do
       NotificationSender.trigger_notify(@settings_basic, error_info)
 
-      assert_receive({:notify_called, _}, @receive_timeout)
+      {_, rcv_error_info} = assert_receive({:notify_called, _}, @receive_timeout)
+      assert Map.delete(rcv_error_info, :occurrences) == Map.delete(error_info, :occurrences)
     end
   end
 
@@ -68,7 +69,8 @@ defmodule BoomNotifier.NotificationSenderTest do
     test "sends a notification", %{error_info: error_info} do
       NotificationSender.trigger_notify(@settings_groupping, error_info)
 
-      assert_receive({:notify_called, _}, @receive_timeout)
+      {_, rcv_error_info} = assert_receive({:notify_called, _}, @receive_timeout)
+      assert Map.delete(rcv_error_info, :occurrences) == Map.delete(error_info, :occurrences)
     end
 
     test "does not send a second notification", %{error_info: error_info} do
@@ -110,7 +112,9 @@ defmodule BoomNotifier.NotificationSenderTest do
       NotificationSender.async_trigger_notify(@settings_groupping, error_info)
 
       assert_receive({:notify_called, _}, @throttle_timeout + @receive_timeout)
-      assert ErrorStorage.get_error_stats(error_info) |> Map.get(:accumulated_occurrences) == 0
+
+      assert error_info |> ErrorStorage.get_error_stats() |> Map.get(:accumulated_occurrences) ==
+               0
     end
 
     test "does not send a second notification before a timeout", %{error_info: error_info} do
@@ -129,7 +133,11 @@ defmodule BoomNotifier.NotificationSenderTest do
       NotificationSender.async_trigger_notify(@settings_groupping, error_info)
       NotificationSender.async_trigger_notify(@settings_groupping, error_info)
 
-      notification_sender_state = :sys.get_state(Process.whereis(NotificationSender))
+      notification_sender_state =
+        NotificationSender
+        |> Process.whereis()
+        |> :sys.get_state()
+
       error_key = error_info.key
 
       assert notification_sender_state |> Map.keys() |> length() == 1
