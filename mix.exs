@@ -98,6 +98,7 @@ defmodule BoomNotifier.MixProject do
   end
 
   defp run_e2e(_) do
-    Mix.shell().cmd("cd test/example_app && mix deps.get && mix test")
+    exit_status = Mix.shell().cmd("cd test/example_app && mix deps.get && mix test")
+    exit({:shutdown, exit_status})
   end
 end
