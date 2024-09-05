@@ -30,13 +30,12 @@ defmodule BoomNotifier.NotificationSender do
 
   def notify_all(settings, error_info) do
     notification_trigger = Keyword.get(settings, :notification_trigger, :always)
-    occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
-
-    ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
+    occurrences = ErrorStorage.reset(error_info, notification_trigger)
+    error_info = Map.put(error_info, :occurrences, occurrences)
 
     BoomNotifier.walkthrough_notifiers(
       settings,
-      fn notifier, options -> notify(notifier, occurrences, options) end
+      fn notifier, options -> notify(notifier, error_info, options) end
     )
   end
 

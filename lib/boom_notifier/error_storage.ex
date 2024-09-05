@@ -37,19 +37,12 @@ defmodule BoomNotifier.ErrorStorage do
     %{key: error_hash_key} = error_info
     timestamp = error_info.timestamp || DateTime.utc_now()
 
-    default_error_storage_info = %__MODULE__{
-      accumulated_occurrences: 1,
-      first_occurrence: timestamp,
-      last_occurrence: timestamp,
-      __max_storage_capacity__: 1
-    }
-
     Agent.update(
       :boom_notifier,
       &Map.update(
         &1,
         error_hash_key,
-        default_error_storage_info,
+        default_error_storage(timestamp),
         fn error_storage_item ->
           error_storage_item
           |> Map.update!(:accumulated_occurrences, fn current -> current + 1 end)
@@ -88,41 +81,51 @@ defmodule BoomNotifier.ErrorStorage do
   @doc """
   Reset the accumulated_occurrences for the given error info to zero. It also
   increments the max storage capacity based on the notification strategy.
+
+  Returns error storage entry before reset
   """
-  @spec reset_accumulated_errors(error_strategy, ErrorInfo.t()) :: :ok
-  def reset_accumulated_errors(:exponential, error_info) do
-    %{key: error_hash_key} = error_info
+  @spec reset(ErrorInfo.t()) :: %__MODULE__{}
+  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | :always) :: %__MODULE__{}
+  def reset(error_info), do: reset(error_info, nil)
 
-    Agent.update(
-      :boom_notifier,
-      &Map.update!(&1, error_hash_key, fn error_storage_item ->
-        clear_values(error_storage_item)
-        |> Map.update!(:__max_storage_capacity__, fn current -> current * 2 end)
-      end)
-    )
+  def reset(error_info, :exponential) do
+    reset_state(error_info, fn value -> value * 2 end)
   end
 
-  def reset_accumulated_errors([exponential: [limit: limit]], error_info) do
-    %{key: error_hash_key} = error_info
-
-    Agent.update(
-      :boom_notifier,
-      &Map.update!(&1, error_hash_key, fn error_storage_item ->
-        clear_values(error_storage_item)
-        |> Map.update!(:__max_storage_capacity__, fn current -> min(current * 2, limit) end)
-      end)
-    )
+  def reset(error_info, exponential: [limit: limit]) do
+    reset_state(error_info, fn value -> min(value * 2, limit) end)
   end
 
-  def reset_accumulated_errors(:always, error_info) do
+  def reset(error_info, strategy) when strategy in [:always, nil] do
+    reset_state(error_info, nil)
+  end
+
+  defp reset_state(error_info, nil) do
+    reset_state(error_info, fn _ -> 1 end)
+  end
+
+  defp reset_state(error_info, limit_updater_function) do
     %{key: error_hash_key} = error_info
 
-    Agent.update(
+    Agent.get_and_update(
       :boom_notifier,
-      &Map.update!(&1, error_hash_key, fn error_storage_item ->
-        clear_values(error_storage_item)
-        |> Map.replace!(:__max_storage_capacity__, 1)
-      end)
+      fn state ->
+        error_storage_item = Map.get(state, error_hash_key)
+
+        state =
+          Map.update(
+            state,
+            error_hash_key,
+            default_error_storage(),
+            fn error_storage_item ->
+              error_storage_item
+              |> clear_values()
+              |> Map.update!(:__max_storage_capacity__, limit_updater_function)
+            end
+          )
+
+        {error_storage_item, state}
+      end
     )
   end
 
@@ -141,5 +144,14 @@ defmodule BoomNotifier.ErrorStorage do
     max_storage_capacity = Map.get(error_storage_item, :__max_storage_capacity__)
 
     accumulated_occurrences >= max_storage_capacity
+  end
+
+  defp default_error_storage(timestamp \\ nil) do
+    %__MODULE__{
+      accumulated_occurrences: 1,
+      first_occurrence: timestamp,
+      last_occurrence: timestamp,
+      __max_storage_capacity__: 1
+    }
   end
 end
