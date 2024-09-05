@@ -20,7 +20,7 @@ defmodule BoomNotifier.MixProject do
       ],
       aliases: [
         quality: ["format", "credo --strict", "dialyzer"],
-        e2e: ["cmd mix end_to_end_test"]
+        e2e: &run_e2e/1
       ],
       docs: docs(),
       description: description(),
@@ -95,5 +95,10 @@ defmodule BoomNotifier.MixProject do
         Notifiers: Path.wildcard("docs/notifiers/*.md")
       ]
     ]
+  end
+
+  defp run_e2e(_) do
+    exit_status = Mix.shell().cmd("cd test/example_app && mix deps.get && mix test")
+    exit({:shutdown, exit_status})
   end
 end
