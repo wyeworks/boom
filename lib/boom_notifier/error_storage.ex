@@ -42,7 +42,9 @@ defmodule BoomNotifier.ErrorStorage do
       &Map.update(
         &1,
         error_hash_key,
-        default_error_storage(timestamp),
+        timestamp
+        |> default_error_storage()
+        |> Map.put(:accumulated_occurrences, 1),
         fn error_storage_item ->
           error_storage_item
           |> Map.update!(:accumulated_occurrences, fn current -> current + 1 end)
@@ -148,7 +150,7 @@ defmodule BoomNotifier.ErrorStorage do
 
   defp default_error_storage(timestamp \\ nil) do
     %__MODULE__{
-      accumulated_occurrences: 1,
+      accumulated_occurrences: 0,
       first_occurrence: timestamp,
       last_occurrence: timestamp,
       __max_storage_capacity__: 1

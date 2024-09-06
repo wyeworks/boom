@@ -143,6 +143,21 @@ defmodule ErrorStorageTest do
   end
 
   describe "reset/2" do
+    test "it returns the error storage info" do
+      ErrorStorage.store_error(@error_info)
+      error_storage_item = ErrorStorage.reset(@error_info)
+
+      assert %{accumulated_occurrences: 1} = error_storage_item
+    end
+
+    test "it does not fail if error_info is not present" do
+      error_storage_before = ErrorStorage.reset(@error_info)
+      error_storage_after = ErrorStorage.get_error_stats(@error_info)
+
+      assert is_nil(error_storage_before)
+      assert %ErrorStorage{accumulated_occurrences: 0} = error_storage_after
+    end
+
     test "increases the counter when notification trigger is :exponential" do
       ErrorStorage.store_error(@error_info)
 
