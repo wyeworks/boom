@@ -1,4 +1,4 @@
-defmodule BoomNotifier.FakeMailer do
+defmodule BoomNotifier.TestMailer do
   @moduledoc """
   Fake mailer for Swoosh and Bamboo
   """
@@ -54,8 +54,5 @@ defmodule BoomNotifier.FakeMailer do
     value
     |> String.to_existing_atom()
     |> Process.whereis()
-  rescue
-    # raised by to_existing_atom
-    ArgumentError -> nil
   end
 end

@@ -37,7 +37,7 @@ defmodule ErrorInfoTest do
     use BoomNotifier,
       notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
-        mailer: BoomNotifier.FakeMailer,
+        mailer: BoomNotifier.DummyMailer,
         from: "me@example.com",
         to: "me@example.com",
         subject: "BOOM error caught"

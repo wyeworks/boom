@@ -62,7 +62,7 @@ defmodule MailerNotifierTest do
         import Phoenix.Controller
 
         @mail_notifier_module mail_notifier_module
-        @fake_mailer_module BoomNotifier.FakeMailer
+        @fake_mailer_module BoomNotifier.TestMailer
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
@@ -95,7 +95,7 @@ defmodule MailerNotifierTest do
         use Phoenix.Router
 
         @mail_notifier_module mail_notifier_module
-        @fake_mailer_module BoomNotifier.FakeMailer
+        @fake_mailer_module BoomNotifier.TestMailer
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
@@ -376,7 +376,7 @@ defmodule MailerNotifierTest do
   describe "MailNotifier.validate_config" do
     setup do
       options = [
-        mailer: BoomNotifier.FakeMailer,
+        mailer: BoomNotifier.TestMailer,
         from: "boom@mailer",
         to: "user@mail",
         subject: "boom mail",
