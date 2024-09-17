@@ -35,7 +35,7 @@ defmodule BoomNotifier.NotificationSender do
 
     ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
 
-    BoomNotifier.Api.walkthrough_notifiers(
+    BoomNotifier.walkthrough_notifiers(
       settings,
       fn notifier, options -> notify(notifier, occurrences, options) end
     )
