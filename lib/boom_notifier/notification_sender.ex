@@ -6,7 +6,6 @@ defmodule BoomNotifier.NotificationSender do
   require Logger
   use GenServer
 
-  alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
 
   # Client API
@@ -75,7 +74,6 @@ defmodule BoomNotifier.NotificationSender do
 
   @impl true
   def handle_cast({:trigger_notify, settings, error_info}, state) do
-    error_info = error_info |> ErrorInfo.ensure_key()
     {timer, state} = Map.pop(state, error_info.key)
 
     cancel_timer(timer)
@@ -113,7 +111,6 @@ defmodule BoomNotifier.NotificationSender do
   end
 
   def handle_info({:notify_all, settings, error_info}, state) do
-    error_info = error_info |> ErrorInfo.ensure_key()
     notify_all(settings, error_info)
 
     {:noreply, state |> Map.delete(error_info.key)}

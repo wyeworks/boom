@@ -35,7 +35,7 @@ defmodule BoomNotifier.ErrorInfo do
             required(:stack) => Exception.stacktrace(),
             optional(any()) => any()
           },
-          map(),
+          Plug.Conn.t(),
           custom_data_strategy_type
         ) :: __MODULE__.t()
   def build(%{reason: reason, stack: stack}, conn, custom_data_strategy) do
@@ -52,7 +52,7 @@ defmodule BoomNotifier.ErrorInfo do
       metadata: build_custom_data(conn, custom_data_strategy)
     }
 
-    ensure_key(error_info)
+    error_info |> Map.put(:key, generate_error_key(error_info))
   end
 
   defp error_reason(%name{message: reason}), do: {reason, name}
@@ -126,8 +126,7 @@ defmodule BoomNotifier.ErrorInfo do
   # The map is converted to a string using `inspect()` so we can hash it using
   # the crc32 algorithm that was taken from the Exception Notification library
   # for Rails
-  @spec generate_error_key(__MODULE__.t()) :: non_neg_integer()
-  def generate_error_key(error_info) do
+  defp generate_error_key(error_info) do
     error_info
     |> Map.delete(:request)
     |> Map.delete(:metadata)
@@ -135,14 +134,5 @@ defmodule BoomNotifier.ErrorInfo do
     |> Map.update(:stack, nil, fn stacktrace -> List.first(stacktrace) end)
     |> inspect()
     |> :erlang.crc32()
-  end
-
-  @spec ensure_key(__MODULE__.t()) :: __MODULE__.t()
-  def ensure_key(%{key: nil} = error_info) do
-    Map.put(error_info, :key, generate_error_key(error_info))
-  end
-
-  def ensure_key(%{} = error_info) do
-    Map.put_new_lazy(error_info, :key, fn -> generate_error_key(error_info) end)
   end
 end
