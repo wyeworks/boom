@@ -9,7 +9,7 @@ defmodule BoomNotifier.NotificationSenderTest do
     NotificationSender
   }
 
-  @throttle_timeout 500
+  @time_limit 500
   @receive_timeout 100
 
   @settings_basic [
@@ -19,7 +19,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
   @settings_groupping @settings_basic ++
                         [
-                          throttle_timeout: @throttle_timeout,
+                          time_limit: @time_limit,
                           notification_trigger: :exponential
                         ]
 
@@ -80,7 +80,7 @@ defmodule BoomNotifier.NotificationSenderTest do
       trigger_notify_resp = NotificationSender.trigger_notify(@settings_groupping, error_info)
 
       refute_receive({:notify_called, _}, @receive_timeout)
-      assert {:schedule, @throttle_timeout} = trigger_notify_resp
+      assert {:schedule, @time_limit} = trigger_notify_resp
     end
 
     test "sends notification occurrences along error info", %{error_info: error_info} do
@@ -111,7 +111,7 @@ defmodule BoomNotifier.NotificationSenderTest do
     test "sends a second notification after a timeout", %{error_info: error_info} do
       NotificationSender.async_trigger_notify(@settings_groupping, error_info)
 
-      assert_receive({:notify_called, _}, @throttle_timeout + @receive_timeout)
+      assert_receive({:notify_called, _}, @time_limit + @receive_timeout)
 
       assert error_info |> ErrorStorage.get_error_stats() |> Map.get(:accumulated_occurrences) ==
                0
@@ -120,7 +120,7 @@ defmodule BoomNotifier.NotificationSenderTest do
     test "does not send a second notification before a timeout", %{error_info: error_info} do
       NotificationSender.async_trigger_notify(@settings_groupping, error_info)
 
-      refute_receive({:notify_called, _}, @throttle_timeout - 50)
+      refute_receive({:notify_called, _}, @time_limit - 50)
 
       assert ErrorStorage.get_error_stats(error_info) |> Map.get(:accumulated_occurrences) > 0
     end
@@ -145,10 +145,10 @@ defmodule BoomNotifier.NotificationSenderTest do
     end
 
     test(
-      "it does not schedule a notification if throttle_timeout is not specified",
+      "it does not schedule a notification if time_limit is not specified",
       %{error_info: error_info}
     ) do
-      settings = Keyword.delete(@settings_groupping, :throttle_timeout)
+      settings = Keyword.delete(@settings_groupping, :time_limit)
 
       NotificationSender.async_trigger_notify(settings, error_info)
       NotificationSender.async_trigger_notify(settings, error_info)

@@ -41,7 +41,7 @@ defmodule BoomNotifier.NotificationSender do
   end
 
   def trigger_notify(settings, error_info) do
-    timeout = Keyword.get(settings, :throttle_timeout)
+    timeout = Keyword.get(settings, :time_limit)
 
     ErrorStorage.store_error(error_info)
 
