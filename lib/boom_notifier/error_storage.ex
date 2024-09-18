@@ -60,7 +60,7 @@ defmodule BoomNotifier.ErrorStorage do
   @doc """
   Given an error info, it returns the aggregated info stored in the agent.
   """
-  @spec get_error_stats(ErrorInfo.t()) :: %__MODULE__{}
+  @spec get_error_stats(ErrorInfo.t()) :: __MODULE__.t() | nil
   def get_error_stats(error_info) do
     %{key: error_hash_key} = error_info
 
@@ -86,8 +86,8 @@ defmodule BoomNotifier.ErrorStorage do
 
   Returns error storage entry before reset
   """
-  @spec reset(ErrorInfo.t()) :: %__MODULE__{}
-  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | :always) :: %__MODULE__{}
+  @spec reset(ErrorInfo.t()) :: __MODULE__.t()
+  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | :always | nil) :: __MODULE__.t()
   def reset(error_info), do: reset(error_info, nil)
 
   def reset(error_info, :exponential) do
@@ -138,7 +138,7 @@ defmodule BoomNotifier.ErrorStorage do
     |> Map.replace!(:last_occurrence, nil)
   end
 
-  @spec do_send_notification?(__MODULE__.t() | nil) :: boolean()
+  @spec do_send_notification?(nil | __MODULE__.t()) :: boolean()
   defp do_send_notification?(nil), do: false
 
   defp do_send_notification?(error_storage_item) do
