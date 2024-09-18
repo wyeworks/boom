@@ -34,7 +34,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec store_error(ErrorInfo.t()) :: :ok
   def store_error(error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
     timestamp = error_info.timestamp || DateTime.utc_now()
 
     default_error_storage_info = %__MODULE__{
@@ -67,7 +67,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec get_error_stats(ErrorInfo.t()) :: %__MODULE__{}
   def get_error_stats(error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
 
     Agent.get(:boom_notifier, fn state -> state end)
     |> Map.get(error_hash_key)
@@ -81,7 +81,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec send_notification?(ErrorInfo.t()) :: boolean()
   def send_notification?(error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
 
     error_storage_item =
       Agent.get(:boom_notifier, fn state -> state end)
@@ -96,7 +96,7 @@ defmodule BoomNotifier.ErrorStorage do
   """
   @spec reset_accumulated_errors(error_strategy, ErrorInfo.t()) :: :ok
   def reset_accumulated_errors(:exponential, error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
 
     Agent.update(
       :boom_notifier,
@@ -108,7 +108,7 @@ defmodule BoomNotifier.ErrorStorage do
   end
 
   def reset_accumulated_errors([exponential: [limit: limit]], error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
 
     Agent.update(
       :boom_notifier,
@@ -120,7 +120,7 @@ defmodule BoomNotifier.ErrorStorage do
   end
 
   def reset_accumulated_errors(:always, error_info) do
-    error_hash_key = generate_error_key(error_info)
+    %{key: error_hash_key} = error_info
 
     Agent.update(
       :boom_notifier,
@@ -129,23 +129,6 @@ defmodule BoomNotifier.ErrorStorage do
         |> Map.replace!(:__max_storage_capacity__, 1)
       end)
     )
-  end
-
-  # Generates a unique hash key based on the error info. The timestamp and the
-  # request info is removed so we don't get different keys for the same error.
-  #
-  # The map is converted to a string using `inspect()` so we can hash it using
-  # the crc32 algorithm that was taken from the Exception Notification library
-  # for Rails
-  @spec generate_error_key(ErrorInfo.t()) :: non_neg_integer()
-  def generate_error_key(error_info) do
-    error_info
-    |> Map.delete(:request)
-    |> Map.delete(:metadata)
-    |> Map.delete(:timestamp)
-    |> Map.update(:stack, nil, fn stacktrace -> List.first(stacktrace) end)
-    |> inspect()
-    |> :erlang.crc32()
   end
 
   defp clear_values(error_storage_item) do

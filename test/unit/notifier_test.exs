@@ -1,8 +1,11 @@
 defmodule NotifierTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
   use Plug.Test
 
   import ExUnit.CaptureLog
+  import TestUtils
+
+  alias BoomNotifier.TestMessageProxy
 
   doctest BoomNotifier
 
@@ -14,12 +17,14 @@ defmodule NotifierTest do
     @impl BoomNotifier.Notifier
     def notify(error_info, options) do
       subject_prefix = Keyword.get(options, :subject)
-      to_respond_pid = Keyword.get(options, :sender_pid)
+      to_respond_pid = Keyword.get(options, :sender_pid_name) |> Process.whereis()
 
       subject = "#{subject_prefix}: #{error_info.reason}"
       body = Enum.map(error_info.stack, &(Exception.format_stacktrace_entry(&1) <> "\n"))
 
-      send(to_respond_pid, %{exception: %{subject: subject, body: body}})
+      # If test does not wait for a message, pid might be already dead at this point
+      if to_respond_pid,
+        do: send(to_respond_pid, %{exception: %{subject: subject, body: body}})
     end
   end
 
@@ -59,7 +64,7 @@ defmodule NotifierTest do
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught",
-        sender_pid: self()
+        sender_pid_name: TestMessageProxy
       ]
 
     def call(_conn, _opts) do
@@ -74,7 +79,7 @@ defmodule NotifierTest do
           notifier: FakeNotifier,
           options: [
             subject: "BOOM error caught",
-            sender_pid: self()
+            sender_pid_name: TestMessageProxy
           ]
         ]
       ]
@@ -89,7 +94,7 @@ defmodule NotifierTest do
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught",
-        sender_pid: self()
+        sender_pid_name: TestMessageProxy
       ]
 
     def call(_conn, _opts) do
@@ -102,7 +107,7 @@ defmodule NotifierTest do
       notifier: FakeNotifier,
       options: [
         subject: "BOOM error caught",
-        sender_pid: self()
+        sender_pid_name: TestMessageProxy
       ]
 
     def call(_conn, _opts) do
@@ -116,7 +121,7 @@ defmodule NotifierTest do
       notification_trigger: :exponential,
       options: [
         subject: "BOOM error caught",
-        sender_pid: self()
+        sender_pid_name: TestMessageProxy
       ]
 
     def call(_conn, _opts) do
@@ -130,7 +135,7 @@ defmodule NotifierTest do
       notification_trigger: [exponential: [limit: 3]],
       options: [
         subject: "BOOM error caught",
-        sender_pid: self()
+        sender_pid_name: TestMessageProxy
       ]
 
     def call(_conn, _opts) do
@@ -151,7 +156,9 @@ defmodule NotifierTest do
   end
 
   setup do
-    Agent.update(:boom_notifier, fn _state -> %{} end)
+    clear_error_storage()
+
+    on_exit(&flush_messages/0)
   end
 
   test "keeps raising an error on exception" do
@@ -353,7 +360,7 @@ defmodule NotifierTest do
         notifier: FakeNotifier,
         options: [
           subject: "BOOM error caught",
-          sender_pid: self()
+          sender_pid_name: TestMessageProxy
         ],
         ignore_exceptions: [TestException]
 
@@ -367,7 +374,7 @@ defmodule NotifierTest do
         notifier: FakeNotifier,
         options: [
           subject: "BOOM error caught",
-          sender_pid: self()
+          sender_pid_name: TestMessageProxy
         ],
         ignore_exceptions: [TestException]
 
@@ -396,13 +403,14 @@ defmodule NotifierTest do
       use Plug.ErrorHandler
 
       def handle_errors(_conn, _error) do
-        send(self(), :handle_errors_called)
+        test_pid = Process.whereis(TestMessageProxy)
+        send(test_pid, :handle_errors_called)
       end
 
       use BoomNotifier,
         notifier: FakeNotifier,
         options: [
-          sender_pid: self()
+          sender_pid_name: TestMessageProxy
         ]
 
       def call(_conn, _opts) do

@@ -1,39 +1,45 @@
 defmodule ErrorStorageTest do
-  use ExUnit.Case, async: true
+  use BoomNotifier.Case
 
   alias BoomNotifier.ErrorInfo
   alias BoomNotifier.ErrorStorage
 
+  import TestUtils
+
   @timestamp DateTime.utc_now()
 
-  @error_info %ErrorInfo{
-    reason: "Some error information",
-    stack: ["line 1"],
-    timestamp: @timestamp
-  }
+  @error_info ErrorInfo.build(
+                %{
+                  reason: "Some error information",
+                  stack: ["line 1"]
+                },
+                Plug.Test.conn(:get, "/"),
+                :nothing
+              )
+              |> Map.put(:timestamp, @timestamp)
 
-  @error_hash ErrorStorage.generate_error_key(@error_info)
-
-  setup_all do
-    ErrorStorage.start_link()
-    :ok
-  end
+  @error_hash @error_info.key
 
   setup do
-    Agent.update(:boom_notifier, fn _ -> %{} end)
+    clear_error_storage()
   end
 
   describe "store_error/1" do
     test "groups errors by type" do
       another_timestamp = DateTime.utc_now()
 
-      another_error_info = %ErrorInfo{
-        reason: "Another error information",
-        stack: ["line 2"],
-        timestamp: another_timestamp
-      }
+      another_error_info =
+        ErrorInfo.build(
+          %{
+            reason: "Another error information",
+            stack: ["line 2"]
+          },
+          Plug.Test.conn(:get, "/"),
+          :nothing
+        )
+        |> Map.put(:timestamp, another_timestamp)
 
-      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+      %{key: another_error_hash} = another_error_info
 
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(@error_info)
@@ -131,8 +137,8 @@ defmodule ErrorStorageTest do
       assert ErrorStorage.send_notification?(another_error_info)
     end
 
-    test "returns false when error kind does not exist" do
-      refute ErrorStorage.send_notification?(%{})
+    test "returns false when error key is not stored" do
+      refute ErrorStorage.send_notification?(%{key: 123})
     end
   end
 
@@ -232,13 +238,18 @@ defmodule ErrorStorageTest do
     end
 
     test "updates the proper error max capacity" do
-      another_error_info = %ErrorInfo{
-        reason: "Another error information",
-        stack: ["line 2"],
-        timestamp: @timestamp
-      }
+      another_error_info =
+        ErrorInfo.build(
+          %{
+            reason: "Another error information",
+            stack: ["line 2"]
+          },
+          Plug.Test.conn(:get, "/"),
+          :nothing
+        )
+        |> Map.put(:timestamp, @timestamp)
 
-      another_error_hash = ErrorStorage.generate_error_key(another_error_info)
+      %{key: another_error_hash} = another_error_info
 
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(another_error_info)

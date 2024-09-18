@@ -1,6 +1,8 @@
 defmodule MailerNotifierTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
   use Plug.Test
+
+  import TestUtils
 
   alias BoomNotifier.MailNotifier
 
@@ -46,11 +48,11 @@ defmodule MailerNotifierTest do
   #       since we are redefining the router modules for each notifier.
 
   notifiers = [
-    {"Bamboo", BoomNotifier.MailNotifier.Bamboo, Support.BambooFakeMailer},
-    {"Swoosh", BoomNotifier.MailNotifier.Swoosh, Support.SwooshFakeMailer}
+    {"Bamboo", BoomNotifier.MailNotifier.Bamboo},
+    {"Swoosh", BoomNotifier.MailNotifier.Swoosh}
   ]
 
-  for {name, mail_notifier_module, fake_mailer_module} <- notifiers do
+  for {name, mail_notifier_module} <- notifiers do
     describe name do
       # Disable "redefining module" warnings, we have intent.
       :elixir_config.put(:ignore_module_conflict, true)
@@ -60,13 +62,13 @@ defmodule MailerNotifierTest do
         import Phoenix.Controller
 
         @mail_notifier_module mail_notifier_module
-        @fake_mailer_module fake_mailer_module
+        @fake_mailer_module BoomNotifier.TestMailer
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: inspect(self()),
+            to: to_string(BoomNotifier.TestMessageProxy),
             subject: "BOOM error caught"
           ],
           custom_data: [:assigns, :logger]
@@ -93,13 +95,13 @@ defmodule MailerNotifierTest do
         use Phoenix.Router
 
         @mail_notifier_module mail_notifier_module
-        @fake_mailer_module fake_mailer_module
+        @fake_mailer_module BoomNotifier.TestMailer
         use BoomNotifier,
           notifier: @mail_notifier_module,
           options: [
             mailer: @fake_mailer_module,
             from: "me@example.com",
-            to: inspect(self()),
+            to: to_string(BoomNotifier.TestMessageProxy),
             subject: "BOOM error caught",
             max_subject_length: 25
           ]
@@ -114,6 +116,8 @@ defmodule MailerNotifierTest do
 
       setup do
         Logger.metadata(name: "Dennis", age: 17)
+
+        on_exit(&flush_messages/0)
       end
 
       test "Raising an error on failure" do
@@ -153,7 +157,7 @@ defmodule MailerNotifierTest do
       test "Set email using proper from and to addresses" do
         conn = conn(:get, "/")
         catch_error(TestRouter.call(conn, []))
-        email_to = self()
+        email_to = to_string(BoomNotifier.TestMessageProxy)
 
         assert_receive({:email_from, "me@example.com"}, @receive_timeout)
         assert_receive({:email_to, ^email_to}, @receive_timeout)
@@ -287,11 +291,11 @@ defmodule MailerNotifierTest do
 
             [second_stack_line | _] = stacktrace_list
 
-            assert "<li>test/unit/mailer_notifier_test.exs:20: MailerNotifierTest.TestController.index/2</li>" =
-                     first_stack_line
+            assert first_stack_line =~
+                     ~r"<li>test/unit/mailer_notifier_test.exs:\d+: MailerNotifierTest.TestController.index/2</li>"
 
-            assert "<li>test/unit/mailer_notifier_test.exs:11: MailerNotifierTest.TestController.action/2</li>" =
-                     second_stack_line
+            assert second_stack_line =~
+                     ~r"<li>test/unit/mailer_notifier_test.exs:\d+: MailerNotifierTest.TestController.action/2</li>"
         end
       end
 
@@ -372,7 +376,7 @@ defmodule MailerNotifierTest do
   describe "MailNotifier.validate_config" do
     setup do
       options = [
-        mailer: Support.BambooFakeMailer,
+        mailer: BoomNotifier.TestMailer,
         from: "boom@mailer",
         to: "user@mail",
         subject: "boom mail",

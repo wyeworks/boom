@@ -149,6 +149,26 @@ defmodule YourApp.Router do
     ]
 ```
 
+### Notification trigger time limit
+
+If you've defined a triggering strategy which holds off notification delivering you can define a time limit value
+which will be used to deliver the notification after a time limit milliseconds have passed from the last error. The
+time counter is reset on new errors and only applies for cases where notifications are not sent.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    notification_trigger: [:exponential],
+    time_limit: :timer.minutes(30),
+    notifier: CustomNotifier
+
+  # ...
+end
+```
+
+
 ## Custom data or Metadata
 
 By default, `BoomNotifier` will **not** include any custom data from your

@@ -1,5 +1,5 @@
 defmodule ErrorInfoTest do
-  use ExUnit.Case
+  use BoomNotifier.Case
 
   import Plug.Conn
   import Phoenix.ConnTest
@@ -37,9 +37,9 @@ defmodule ErrorInfoTest do
     use BoomNotifier,
       notifier: BoomNotifier.MailNotifier.Bamboo,
       options: [
-        mailer: Support.BambooFakeMailer,
+        mailer: BoomNotifier.DummyMailer,
         from: "me@example.com",
-        to: inspect(self()),
+        to: "me@example.com",
         subject: "BOOM error caught"
       ]
 
