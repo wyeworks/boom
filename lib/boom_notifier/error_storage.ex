@@ -15,7 +15,8 @@ defmodule BoomNotifier.ErrorStorage do
   ]
 
   @type t :: %__MODULE__{}
-  @type error_strategy :: :always | :exponential | [exponential: [limit: non_neg_integer()]]
+  @type error_strategy ::
+          :always | :none | :exponential | [exponential: [limit: non_neg_integer()]]
 
   use Agent, start: {__MODULE__, :start_link, []}
 
@@ -32,8 +33,8 @@ defmodule BoomNotifier.ErrorStorage do
   occurrences is increased and it also updates the first and last time it
   happened.
   """
-  @spec store_error(ErrorInfo.t()) :: :ok
-  def store_error(error_info) do
+  @spec accumulate(ErrorInfo.t()) :: :ok
+  def accumulate(error_info) do
     %{key: error_hash_key} = error_info
     timestamp = error_info.timestamp || DateTime.utc_now()
 
@@ -65,8 +66,8 @@ defmodule BoomNotifier.ErrorStorage do
   @doc """
   Given an error info, it returns the aggregated info stored in the agent.
   """
-  @spec get_error_stats(ErrorInfo.t()) :: %__MODULE__{}
-  def get_error_stats(error_info) do
+  @spec get_stats(ErrorInfo.t()) :: %__MODULE__{}
+  def get_stats(error_info) do
     %{key: error_hash_key} = error_info
 
     Agent.get(:boom_notifier, fn state -> state end)
@@ -94,7 +95,7 @@ defmodule BoomNotifier.ErrorStorage do
   Reset the accumulated_occurrences for the given error info to zero. It also
   increments the max storage capacity based on the notification strategy.
   """
-  @spec reset_accumulated_errors(error_strategy, ErrorInfo.t()) :: :ok
+  @spec reset_accumulated_errors(error_strategy | nil, ErrorInfo.t()) :: :ok
   def reset_accumulated_errors(:exponential, error_info) do
     %{key: error_hash_key} = error_info
 
@@ -119,7 +120,7 @@ defmodule BoomNotifier.ErrorStorage do
     )
   end
 
-  def reset_accumulated_errors(:always, error_info) do
+  def reset_accumulated_errors(value, error_info) when value in [nil, :none, :always] do
     %{key: error_hash_key} = error_info
 
     Agent.update(
@@ -136,6 +137,16 @@ defmodule BoomNotifier.ErrorStorage do
     |> Map.replace!(:accumulated_occurrences, 0)
     |> Map.replace!(:first_occurrence, nil)
     |> Map.replace!(:last_occurrence, nil)
+  end
+
+  def eleapsed(nil), do: 0
+
+  def eleapsed(%__MODULE__{} = error_info) do
+    DateTime.diff(
+      error_info.last_occurrence,
+      error_info.first_occurrence,
+      :millisecond
+    )
   end
 
   @spec do_send_notification?(ErrorInfo.t() | nil) :: boolean()

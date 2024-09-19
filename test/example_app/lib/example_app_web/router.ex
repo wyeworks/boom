@@ -2,7 +2,7 @@ defmodule ExampleAppWeb.Router do
   use ExampleAppWeb, :router
 
   use BoomNotifier,
-    notification_trigger: [exponential: [limit: 8]],
+    count: [exponential: [limit: 8]],
     custom_data: [:assigns, :logger],
     ignore_exceptions: [IgnoreExceptionError],
     notifiers: [

@@ -91,34 +91,38 @@ defmodule YourApp.Router do
         options: # ...
       ]
     ]
+
+    #...
+end
 ```
 
-## Notification Trigger
+## Throttling notifications
 
 By default, `BoomNotifier` will send a notification every time an exception is
 raised.
 
-However, there are different strategies to decide when to send the
-notifications using the `:notification_trigger` option with one of the
-following values: `:always` and `:exponential`.
+There are two throttling mechanisms you can use to reduce notification rate. Counting
+based and time based throttling. The former allows notifications to be delivered
+on exponential error counting and the latter based on time throttling, that is
+if a predefined amount of time has passed from the last error.
 
-### Always
-
-This option is the default one. It will trigger a notification for every
-exception.
+### Count Based Throttle
 
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-    notification_trigger: :always,
     notifiers: [
-      # ...
-    ]
+        # ...
+      ],
+    groupping: :count,
+    count: :exponential,
+    time_limit: :timer.minutes(30)
+end
 ```
 
-### Exponential
+#### Exponential
 
 It uses a formula of `log2(errors_count)` to determine whether to send a
 notification, based on the accumulated error count for each specific
@@ -132,7 +136,7 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-    notification_trigger: :exponential,
+    count: :exponential,
     notifiers: [
       # ...
     ]
@@ -143,31 +147,48 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-    notification_trigger: [exponential: [limit: 100]]
+    count: [exponential: [limit: 100]]
     notifiers: [
       # ...
     ]
 ```
 
-### Notification trigger time limit
-
-If you've defined a triggering strategy which holds off notification delivering you can define a time limit value
-which will be used to deliver the notification after a time limit milliseconds have passed from the last error. The
-time counter is reset on new errors and only applies for cases where notifications are not sent.
+### Time Based Throttle
 
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router
 
   use BoomNotifier,
-    notification_trigger: [:exponential],
+    notifiers: [
+        # ...
+      ],
+    groupping: :time,
+    throttle: :timer.minutes(1)
+end
+```
+
+### Time Limit
+
+Both groupping strategies allow you to define a time limit that tells boom to deliver a notification if the amount
+of time has passed from the last time a notification was sent or error groupping started.
+
+If specified, a notification will be triggered even though the groupping strategy does not met the criteria. For
+time based throttling this is usefull if errors keep appearing before the throttle time and for count based throttle
+to reset (and notify) the grupping after a certain time period.
+
+```elixir
+defmodule YourApp.Router do
+  use Phoenix.Router
+
+  use BoomNotifier,
+    count: [:exponential],
     time_limit: :timer.minutes(30),
     notifier: CustomNotifier
 
   # ...
 end
 ```
-
 
 ## Custom data or Metadata
 
