@@ -118,7 +118,7 @@ defmodule NotifierTest do
   defmodule PlugErrorWithExponentialTriggerNotifier do
     use BoomNotifier,
       notifier: FakeNotifier,
-      notification_trigger: :exponential,
+      count: :exponential,
       options: [
         subject: "BOOM error caught",
         sender_pid_name: TestMessageProxy
@@ -132,7 +132,7 @@ defmodule NotifierTest do
   defmodule PlugErrorWithExponentialTriggerWithLimitNotifier do
     use BoomNotifier,
       notifier: FakeNotifier,
-      notification_trigger: [exponential: [limit: 3]],
+      count: [exponential: [limit: 3]],
       options: [
         subject: "BOOM error caught",
         sender_pid_name: TestMessageProxy
@@ -229,7 +229,7 @@ defmodule NotifierTest do
     assert_receive(%{exception: %{subject: "BOOM error caught: thrown error"}}, @receive_timeout)
   end
 
-  test "reports exception in groups when :notification_trigger setting is :exponential" do
+  test "reports exception in groups when :count setting is :exponential" do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
@@ -239,11 +239,10 @@ defmodule NotifierTest do
     catch_error(PlugErrorWithExponentialTriggerNotifier.call(conn, []))
     assert_receive(%{exception: _}, @receive_timeout)
 
-    {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
-    assert exceptions == 0
+    refute_receive(%{exception: _}, @receive_timeout)
   end
 
-  test "reports exception in groups when :notification_trigger setting is :exponential with limit" do
+  test "reports exception in groups when :count setting is :exponential with limit" do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
@@ -263,11 +262,10 @@ defmodule NotifierTest do
     catch_error(PlugErrorWithExponentialTriggerWithLimitNotifier.call(conn, []))
     assert_receive(%{exception: _}, @receive_timeout)
 
-    {:message_queue_len, exceptions} = Process.info(self(), :message_queue_len)
-    assert exceptions == 0
+    refute_receive(%{exception: _}, @receive_timeout)
   end
 
-  test "reports every exception when :notification_trigger setting is not set" do
+  test "reports every exception when :count setting is not set" do
     conn = conn(:get, "/")
 
     catch_error(PlugErrorWithSingleNotifier.call(conn, []))
