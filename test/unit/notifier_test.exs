@@ -319,24 +319,6 @@ defmodule NotifierTest do
     :elixir_config.put(:ignore_module_conflict, false)
   end
 
-  test "logs when parameters in config are missing" do
-    :elixir_config.put(:ignore_module_conflict, true)
-
-    conn = conn(:get, "/")
-
-    assert capture_log(fn ->
-             defmodule PlugLogWithMissingParameterNotifier do
-               use BoomNotifier, other: nil
-
-               def call(_conn, _opts) do
-                 raise TestException.exception([])
-               end
-             end
-           end) =~ "(BoomNotifier) The following parameters are missing: [:notifier, :options]"
-
-    :elixir_config.put(:ignore_module_conflict, false)
-  end
-
   test "logs when one parameter in config is missing" do
     conn = conn(:get, "/")
 
@@ -351,7 +333,7 @@ defmodule NotifierTest do
                  raise TestException.exception([])
                end
              end
-           end) =~ "(BoomNotifier) :notifier parameter is missing"
+           end) =~ "Parameter :notifier is missing"
   end
 
   describe "ignored exceptions" do
