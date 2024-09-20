@@ -14,30 +14,22 @@ defmodule BoomNotifier.NotificationSender do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def async_notify(notifier, occurrences, options) do
-    GenServer.cast(__MODULE__, {:notify, notifier, occurrences, options})
-  end
-
   def async_trigger_notify(settings, error_info) do
     GenServer.cast(__MODULE__, {:trigger_notify, settings, error_info})
   end
 
-  def notify(notifier, occurrences, options) do
-    spawn_link(fn ->
-      notifier.notify(occurrences, options)
-    end)
-  end
+  @doc """
+  Call notifiers if error_info should trigger a notification
+  according to settings and the acumulated errors.
 
-  def notify_all(settings, error_info) do
-    notification_trigger = Keyword.get(settings, :notification_trigger, :always)
-    occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
+  It returns :ok if notification were triggered or {:schedule, time}
+  if it should be delayed and by how much.
+  """
+  @spec trigger_notify(Keyword.t() | Atom, BoomNotifier.ErrorInfo.t()) ::
+          :ok | {:schedule, non_neg_integer()}
 
-    ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
-
-    BoomNotifier.walkthrough_notifiers(
-      settings,
-      fn notifier, options -> notify(notifier, occurrences, options) end
-    )
+  def trigger_notify(settings, error_info) when is_atom(settings) do
+    trigger_notify(settings.boom_config(), error_info)
   end
 
   def trigger_notify(settings, error_info) do
@@ -57,6 +49,24 @@ defmodule BoomNotifier.NotificationSender do
     end
   end
 
+  defp notify_all(settings, error_info) do
+    notification_trigger = Keyword.get(settings, :notification_trigger, :always)
+    occurrences = Map.put(error_info, :occurrences, ErrorStorage.get_error_stats(error_info))
+
+    ErrorStorage.reset_accumulated_errors(notification_trigger, error_info)
+
+    BoomNotifier.walkthrough_notifiers(
+      settings,
+      fn notifier, options -> notify(notifier, occurrences, options) end
+    )
+  end
+
+  defp notify(notifier, occurrences, options) do
+    spawn_link(fn ->
+      notifier.notify(occurrences, options)
+    end)
+  end
+
   # Server callbacks
 
   @impl true
@@ -72,7 +82,6 @@ defmodule BoomNotifier.NotificationSender do
     {:noreply, state}
   end
 
-  @impl true
   def handle_cast({:trigger_notify, settings, error_info}, state) do
     {timer, state} = Map.pop(state, error_info.key)
 

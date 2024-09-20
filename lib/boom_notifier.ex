@@ -8,6 +8,15 @@ defmodule BoomNotifier do
   alias BoomNotifier.ErrorInfo
   alias BoomNotifier.NotificationSender
 
+  @spec notify_error(Keyword.t() | Atom, Plug.Conn.t(), error :: any()) :: nil
+  @doc """
+  Runs BoomNotifier triggering logic according to the provided configuration which
+  can be specified either as a keyword list or as a module atom which uses BoomNotifier.
+  """
+  def notify_error(settings, conn, error) when is_atom(settings) do
+    notify_error(settings.boom_config(), conn, error)
+  end
+
   def notify_error(settings, conn, %{kind: :error, reason: %mod{}} = error) do
     ignored_exceptions = Keyword.get(settings, :ignore_exceptions, [])
 
@@ -91,7 +100,11 @@ defmodule BoomNotifier do
       )
 
       def notify_error(conn, error) do
-        BoomNotifier.notify_error(unquote(config), conn, error)
+        BoomNotifier.notify_error(__MODULE__, conn, error)
+      end
+
+      def boom_config do
+        unquote(config)
       end
     end
   end
