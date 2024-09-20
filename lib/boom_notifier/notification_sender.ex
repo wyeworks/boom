@@ -25,14 +25,8 @@ defmodule BoomNotifier.NotificationSender do
   It returns :ok if notification were triggered or {:schedule, time}
   if it should be delayed and by how much.
   """
-  @spec trigger_notify(Keyword.t() | Atom, BoomNotifier.ErrorInfo.t()) ::
-          :ok | {:schedule, non_neg_integer()}
-
-  def trigger_notify(settings, error_info) when is_atom(settings) do
-    trigger_notify(settings.boom_config(), error_info)
-  end
-
   def trigger_notify(settings, error_info) do
+    settings = BoomNotifier.to_config(settings)
     timeout = Keyword.get(settings, :time_limit)
 
     ErrorStorage.store_error(error_info)

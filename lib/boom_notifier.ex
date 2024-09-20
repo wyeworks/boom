@@ -8,17 +8,20 @@ defmodule BoomNotifier do
   alias BoomNotifier.ErrorInfo
   alias BoomNotifier.NotificationSender
 
-  @spec notify_error(Keyword.t() | Atom, Plug.Conn.t(), error :: any()) :: nil
+  @spec to_config(Keyword.t() | Atom) :: Keyword.t()
+  def to_config(config) when is_atom(config),
+    do: config.boom_config()
+
+  def to_config(settings),
+    do: settings
+
   @doc """
   Runs BoomNotifier triggering logic according to the provided configuration which
   can be specified either as a keyword list or as a module atom which uses BoomNotifier.
   """
-  def notify_error(settings, conn, error) when is_atom(settings) do
-    notify_error(settings.boom_config(), conn, error)
-  end
-
+  @spec notify_error(Keyword.t(), Plug.Conn.t(), error :: any()) :: nil
   def notify_error(settings, conn, %{kind: :error, reason: %mod{}} = error) do
-    ignored_exceptions = Keyword.get(settings, :ignore_exceptions, [])
+    ignored_exceptions = Keyword.get(to_config(settings), :ignore_exceptions, [])
 
     unless Enum.member?(ignored_exceptions, mod) do
       trigger_notify_error(settings, conn, error)
@@ -53,24 +56,15 @@ defmodule BoomNotifier do
   end
 
   defp run_callback(settings, callback) do
-    missing_keys = Enum.reject([:notifier, :options], &Keyword.has_key?(settings, &1))
-
-    case missing_keys do
-      [] ->
-        callback.(settings[:notifier], settings[:options])
-
-      [missing_key] ->
-        Logger.error("(BoomNotifier) #{inspect(missing_key)} parameter is missing")
-
-      _ ->
-        Logger.error(
-          "(BoomNotifier) The following parameters are missing: #{inspect(missing_keys)}"
-        )
+    if Keyword.has_key?(settings, :notifier) do
+      callback.(settings[:notifier], settings[:options])
+    else
+      Logger.error("Parameter :notifier is missing in #{inspect(settings)}")
     end
   end
 
   defp trigger_notify_error(settings, conn, error) do
-    custom_data = Keyword.get(settings, :custom_data, :nothing)
+    custom_data = Keyword.get(to_config(settings), :custom_data, :nothing)
     error_info = ErrorInfo.build(error, conn, custom_data)
 
     NotificationSender.async_trigger_notify(settings, error_info)
