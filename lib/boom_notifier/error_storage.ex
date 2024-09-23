@@ -37,14 +37,17 @@ defmodule BoomNotifier.ErrorStorage do
     %{key: error_hash_key} = error_info
     timestamp = error_info.timestamp || DateTime.utc_now()
 
+    initial_error_storage =
+      timestamp
+      |> build_error_storage()
+      |> Map.put(:accumulated_occurrences, 1)
+
     Agent.update(
       :boom_notifier,
       &Map.update(
         &1,
         error_hash_key,
-        timestamp
-        |> default_error_storage()
-        |> Map.put(:accumulated_occurrences, 1),
+        initial_error_storage,
         fn error_storage_item ->
           error_storage_item
           |> Map.update!(:accumulated_occurrences, fn current -> current + 1 end)
@@ -87,7 +90,7 @@ defmodule BoomNotifier.ErrorStorage do
   Returns error storage entry before reset
   """
   @spec reset(ErrorInfo.t()) :: __MODULE__.t()
-  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | :always | nil) :: __MODULE__.t()
+  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | any()) :: __MODULE__.t()
   def reset(error_info), do: reset(error_info, nil)
 
   def reset(error_info, :exponential) do
@@ -98,11 +101,7 @@ defmodule BoomNotifier.ErrorStorage do
     reset_state(error_info, fn value -> min(value * 2, limit) end)
   end
 
-  def reset(error_info, strategy) when strategy in [:always, nil] do
-    reset_state(error_info, nil)
-  end
-
-  defp reset_state(error_info, nil) do
+  def reset(error_info, _) do
     reset_state(error_info, fn _ -> 1 end)
   end
 
@@ -118,7 +117,7 @@ defmodule BoomNotifier.ErrorStorage do
           Map.update(
             state,
             error_hash_key,
-            default_error_storage(),
+            build_error_storage(),
             fn error_storage_item ->
               error_storage_item
               |> clear_values()
@@ -148,7 +147,7 @@ defmodule BoomNotifier.ErrorStorage do
     accumulated_occurrences >= max_storage_capacity
   end
 
-  defp default_error_storage(timestamp \\ nil) do
+  defp build_error_storage(timestamp \\ nil) do
     %__MODULE__{
       accumulated_occurrences: 0,
       first_occurrence: timestamp,
