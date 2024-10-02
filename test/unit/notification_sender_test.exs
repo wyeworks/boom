@@ -115,7 +115,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
       assert_receive({:notify_called, _}, @time_limit + @receive_timeout)
 
-      assert error_info |> ErrorStorage.get_error_stats() |> Map.get(:accumulated_occurrences) ==
+      assert error_info |> ErrorStorage.get_stats() |> Map.get(:accumulated_occurrences) ==
                0
     end
 
@@ -124,7 +124,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
       refute_receive({:notify_called, _}, @time_limit - 50)
 
-      assert ErrorStorage.get_error_stats(error_info) |> Map.get(:accumulated_occurrences) > 0
+      assert ErrorStorage.get_stats(error_info) |> Map.get(:accumulated_occurrences) > 0
     end
 
     test(

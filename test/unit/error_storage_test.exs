@@ -64,12 +64,12 @@ defmodule ErrorStorageTest do
     end
   end
 
-  describe "get_error_stats/1" do
+  describe "get_stats/1" do
     test "returns the errors for the proper error kind" do
       ErrorStorage.store_error(@error_info)
       ErrorStorage.store_error(@error_info)
 
-      assert ErrorStorage.get_error_stats(@error_info) ==
+      assert ErrorStorage.get_stats(@error_info) ==
                %ErrorStorage{
                  __max_storage_capacity__: 1,
                  accumulated_occurrences: 2,
@@ -87,7 +87,7 @@ defmodule ErrorStorageTest do
 
       ErrorStorage.store_error(another_error_info)
 
-      assert ErrorStorage.get_error_stats(another_error_info) ==
+      assert ErrorStorage.get_stats(another_error_info) ==
                %ErrorStorage{
                  __max_storage_capacity__: 1,
                  accumulated_occurrences: 1,
@@ -97,7 +97,7 @@ defmodule ErrorStorageTest do
     end
 
     test "returns nil if error info does not exist" do
-      assert ErrorStorage.get_error_stats(@error_info) == nil
+      assert ErrorStorage.get_stats(@error_info) == nil
     end
   end
 
@@ -142,7 +142,7 @@ defmodule ErrorStorageTest do
     end
   end
 
-  describe "reset/2" do
+  describe "reset_stats/2" do
     test "it returns the error storage info" do
       ErrorStorage.store_error(@error_info)
       error_storage_item = ErrorStorage.reset_stats(@error_info)
@@ -152,7 +152,7 @@ defmodule ErrorStorageTest do
 
     test "it does not fail if error_info is not present" do
       error_storage_before = ErrorStorage.reset_stats(@error_info)
-      error_storage_after = ErrorStorage.get_error_stats(@error_info)
+      error_storage_after = ErrorStorage.get_stats(@error_info)
 
       assert is_nil(error_storage_before)
       assert %ErrorStorage{accumulated_occurrences: 0} = error_storage_after

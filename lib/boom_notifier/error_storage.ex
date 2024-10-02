@@ -63,8 +63,8 @@ defmodule BoomNotifier.ErrorStorage do
   @doc """
   Given an error info, it returns the aggregated info stored in the agent.
   """
-  @spec get_error_stats(ErrorInfo.t()) :: __MODULE__.t() | nil
-  def get_error_stats(error_info) do
+  @spec get_stats(ErrorInfo.t()) :: __MODULE__.t() | nil
+  def get_stats(error_info) do
     %{key: error_hash_key} = error_info
 
     Agent.get(:boom_notifier, &Map.get(&1, error_hash_key))
@@ -79,7 +79,7 @@ defmodule BoomNotifier.ErrorStorage do
   @spec send_notification?(ErrorInfo.t()) :: boolean()
   def send_notification?(error_info) do
     error_info
-    |> get_error_stats()
+    |> get_stats()
     |> do_send_notification?()
   end
 
