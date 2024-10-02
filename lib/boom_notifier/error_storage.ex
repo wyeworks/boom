@@ -89,19 +89,19 @@ defmodule BoomNotifier.ErrorStorage do
 
   Returns error storage entry before reset
   """
-  @spec reset(ErrorInfo.t()) :: __MODULE__.t()
-  @spec reset(ErrorInfo.t(), count_strategy :: :exponential | any()) :: __MODULE__.t()
-  def reset(error_info), do: reset(error_info, nil)
+  @spec reset_stats(ErrorInfo.t()) :: __MODULE__.t()
+  @spec reset_stats(ErrorInfo.t(), count_strategy :: :exponential | any()) :: __MODULE__.t()
+  def reset_stats(error_info), do: reset_stats(error_info, nil)
 
-  def reset(error_info, :exponential) do
+  def reset_stats(error_info, :exponential) do
     reset_state(error_info, fn value -> value * 2 end)
   end
 
-  def reset(error_info, exponential: [limit: limit]) do
+  def reset_stats(error_info, exponential: [limit: limit]) do
     reset_state(error_info, fn value -> min(value * 2, limit) end)
   end
 
-  def reset(error_info, _) do
+  def reset_stats(error_info, _) do
     reset_state(error_info, fn _ -> 1 end)
   end
 

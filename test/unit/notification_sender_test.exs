@@ -75,7 +75,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
     test "does not send a second notification", %{error_info: error_info} do
       ErrorStorage.store_error(error_info)
-      ErrorStorage.reset(error_info, :exponential)
+      ErrorStorage.reset_stats(error_info, :exponential)
 
       trigger_notify_resp = NotificationSender.trigger_notify(@settings_groupping, error_info)
 
@@ -105,7 +105,7 @@ defmodule BoomNotifier.NotificationSenderTest do
   describe "repeated async call with exponential notification trigger" do
     setup(%{error_info: error_info}) do
       ErrorStorage.store_error(error_info)
-      ErrorStorage.reset(error_info, :exponential)
+      ErrorStorage.reset_stats(error_info, :exponential)
 
       :ok
     end
