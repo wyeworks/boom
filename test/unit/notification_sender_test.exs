@@ -75,7 +75,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
     test "does not send a second notification", %{error_info: error_info} do
       ErrorStorage.store_error(error_info)
-      ErrorStorage.reset_accumulated_errors(:exponential, error_info)
+      ErrorStorage.reset_stats(error_info, :exponential)
 
       trigger_notify_resp = NotificationSender.trigger_notify(@settings_groupping, error_info)
 
@@ -105,7 +105,9 @@ defmodule BoomNotifier.NotificationSenderTest do
   describe "repeated async call with exponential notification trigger" do
     setup(%{error_info: error_info}) do
       ErrorStorage.store_error(error_info)
-      ErrorStorage.reset_accumulated_errors(:exponential, error_info)
+      ErrorStorage.reset_stats(error_info, :exponential)
+
+      :ok
     end
 
     test "sends a second notification after a timeout", %{error_info: error_info} do
@@ -113,7 +115,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
       assert_receive({:notify_called, _}, @time_limit + @receive_timeout)
 
-      assert error_info |> ErrorStorage.get_error_stats() |> Map.get(:accumulated_occurrences) ==
+      assert error_info |> ErrorStorage.get_stats() |> Map.get(:accumulated_occurrences) ==
                0
     end
 
@@ -122,7 +124,7 @@ defmodule BoomNotifier.NotificationSenderTest do
 
       refute_receive({:notify_called, _}, @time_limit - 50)
 
-      assert ErrorStorage.get_error_stats(error_info) |> Map.get(:accumulated_occurrences) > 0
+      assert ErrorStorage.get_stats(error_info) |> Map.get(:accumulated_occurrences) > 0
     end
 
     test(
